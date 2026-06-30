@@ -86,6 +86,7 @@ export default function AuthModal() {
     city: "",
     state: "",
     pincode: "",
+    language_id: 4,
     role: authModalRole || "buyer",
   });
   // Options for State dropdown (combine states and UTs)
