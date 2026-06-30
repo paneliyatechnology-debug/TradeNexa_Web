@@ -6,6 +6,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Toaster } from "react-hot-toast";
+import { TOAST_DURATION_MS } from "@/utils/toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,20 +32,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full overflow-x-hidden antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
     >
-      <body className="flex min-h-dvh min-w-0 flex-col overflow-x-hidden bg-background text-foreground">
+      <body className="min-h-dvh min-w-0 bg-background text-foreground">
         <AuthProvider>
           <AppProvider>
             <Navbar />
-            <main className="flex min-w-0 flex-1 flex-col overflow-x-hidden">{children}</main>
+            <main className="min-w-0">{children}</main>
             <Footer />
           </AppProvider>
-          <Toaster
-            position="top-left"
-            toastOptions={{ duration: 3000 }}
-            containerStyle={{ top: 72, left: 16 }}
-          />
+          <Toaster position="top-center" toastOptions={{ duration: TOAST_DURATION_MS }} />
         </AuthProvider>
       </body>
     </html>

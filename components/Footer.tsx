@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Mail, ArrowRight, CheckCircle2 } from "lucide-react";
 import { useApp } from "@/app/context/AppContext";
+import { Logo } from "@/components/common/Logo";
 
 export default function Footer() {
   const { openRegisterModal } = useApp();
@@ -36,14 +37,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-5">
           {/* Column 1 - Brand & Desc */}
           <div className="md:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-white font-bold text-lg">
-                T
-              </span>
-              <span className="text-xl font-bold tracking-tight text-slate-900">
-                Trade<span className="text-primary">Nexa</span>
-              </span>
-            </Link>
+            <Logo size="lg" className="mb-4" />
             <p className="text-sm leading-relaxed max-w-sm mb-6 text-slate-500">
               India's digital B2B marketplace connecting buyers with verified sellers. Grow your business and expand your reach across the nation.
             </p>

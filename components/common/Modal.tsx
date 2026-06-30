@@ -24,13 +24,15 @@ export function Modal({
   const bodyRef = useRef<HTMLDivElement>(null);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Disable body scroll when modal is open
+  // Lock page scroll while modal is open (no position restore — avoids jump on close)
   useEffect(() => {
     if (!isOpen) return;
-    const prev = document.body.style.overflow;
+
+    const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
     return () => {
-      document.body.style.overflow = prev;
+      document.body.style.overflow = prevOverflow;
     };
   }, [isOpen]);
 
@@ -65,7 +67,7 @@ export function Modal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4 md:p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-10">
           {/* Backdrop blur overlay */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -77,11 +79,11 @@ export function Modal({
 
           {/* Modal Container */}
           <motion.div
-            initial={{ scale: 0.98, opacity: 0, y: 24 }}
+            initial={{ scale: 0.95, opacity: 0, y: 15 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.98, opacity: 0, y: 24 }}
+            exit={{ scale: 0.95, opacity: 0, y: 15 }}
             transition={{ type: "spring", duration: 0.4 }}
-            className={`relative flex max-h-[92dvh] w-full ${maxWidthClasses[maxWidth]} flex-col overflow-hidden rounded-t-2xl border border-slate-100/50 bg-white shadow-2xl sm:max-h-[85dvh] sm:rounded-2xl`}
+            className={`relative flex max-h-[85vh] w-full ${maxWidthClasses[maxWidth]} flex-col overflow-hidden rounded-2xl border border-slate-100/50 bg-white shadow-2xl`}
           >
             {/* Sticky Header */}
             <div
@@ -104,7 +106,7 @@ export function Modal({
             {/* Scrollable Body */}
             <div
               ref={bodyRef}
-              className="scroll-area flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6 sm:py-6"
+              className="flex-1 overflow-y-auto px-6 py-6 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent"
             >
               {children}
             </div>

@@ -1,32 +1,20 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, ArrowRight, ChevronDown, LogOut, CheckCircle2 } from "lucide-react";
-import { useApp } from "@/app/context/AppContext";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthModal from "@/components/AuthModal";
+import { Logo } from "@/components/common/Logo";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { openRegisterModal } = useApp();
   const { isAuthenticated, user, logoutUser, openAuthModal } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-
-  useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isMobileMenuOpen]);
 
   const topLinks = [
     { name: "Home", href: "/" },
@@ -57,18 +45,11 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-40 w-full border-b border-border bg-white/90 backdrop-blur-lg supports-[backdrop-filter]:bg-white/80">
+      <nav className="sticky top-0 z-40 w-full border-b border-border/70 bg-white/95">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-14 min-h-14 items-center justify-between gap-2 sm:h-16">
-            <div className="min-w-0 flex-shrink-0">
-              <Link href="/" className="flex items-center gap-2">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary text-base font-bold text-white shadow-md shadow-primary/25 sm:h-9 sm:w-9 sm:text-lg">
-                  T
-                </span>
-                <span className="truncate text-lg font-bold tracking-tight text-slate-900 sm:text-xl">
-                  Trade<span className="text-primary">Nexa</span>
-                </span>
-              </Link>
+          <div className="flex h-16 items-center justify-between gap-3">
+            <div className="flex shrink-0 items-center py-0.5">
+              <Logo size="nav" priority />
             </div>
 
             <div className="hidden lg:flex lg:items-center lg:gap-x-6 xl:gap-x-8">
@@ -231,7 +212,7 @@ export default function Navbar() {
               exit={{ opacity: 0, height: 0 }}
               className="border-t border-border bg-white lg:hidden"
             >
-              <div className="scroll-area max-h-[calc(100dvh-3.5rem)] space-y-1 overflow-y-auto overscroll-contain px-4 py-4">
+              <div className="scroll-area max-h-[calc(100dvh-4rem)] space-y-1 overflow-y-auto overscroll-contain px-4 py-4">
                 {navLinks.map((link) => {
                   const isActive = pathname === link.href;
                   return (
