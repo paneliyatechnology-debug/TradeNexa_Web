@@ -12,7 +12,7 @@ import {
 } from "@/types/auth";
 import apiClient from "@/services/apiClient";
 import { API_ENDPOINTS } from "@/config/endpoints";
-import { API_ROLE_IDS } from "@/config/constants";
+import { API_ROLE_IDS, DEFAULT_LANGUAGE_ID } from "@/config/constants";
 import {
   formatMobileNumber,
   getFirebaseVerificationId,
@@ -329,6 +329,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         state: formData.state,
         country: "India",
         pincode: formData.pincode,
+        language_id: DEFAULT_LANGUAGE_ID,
         role_id: userRoleToRoleId(formData.role),
       };
 
