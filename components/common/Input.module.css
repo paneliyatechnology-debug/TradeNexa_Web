@@ -1,0 +1,35 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.5rem;
+}
+
+.label {
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+  color: hsl(210, 10%, 20%);
+}
+
+.input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid hsl(210, 10%, 70%);
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: hsl(210, 60%, 50%);
+  box-shadow: 0 0 0 2px hsla(210, 60%, 50%, 0.2);
+}
+
+.error {
+  border-color: hsl(0, 70%, 60%);
+}
+
+.errorMessage {
+  margin-top: 0.25rem;
+  color: hsl(0, 70%, 50%);
+  font-size: 0.875rem;
+}

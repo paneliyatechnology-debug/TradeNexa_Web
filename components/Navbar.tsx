@@ -1,0 +1,278 @@
+"use client";
+
+import React, { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Menu, X, ArrowRight, User, ChevronDown, LogOut, CheckCircle2 } from "lucide-react";
+import { useApp } from "@/app/context/AppContext";
+import { useAuth } from "@/hooks/useAuth";
+import { motion, AnimatePresence } from "framer-motion";
+import AuthModal from "@/components/AuthModal";
+
+export default function Navbar() {
+  const pathname = usePathname();
+  const { openRegisterModal } = useApp();
+  const { isAuthenticated, user, logoutUser, openAuthModal } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
+  const topLinks = [
+    { name: "Home", href: "/" },
+    { name: "About", href: "/about" },
+    { name: "Categories", href: "/categories" },
+    { name: "Contact", href: "/contact" },
+  ];
+
+  const dropdownLinks = [
+    { name: "How It Works", href: "/how-it-works" },
+    { name: "Why Choose Us", href: "/why-choose-us" },
+    { name: "Seller Benefits", href: "/seller-benefits" },
+    { name: "Buyer Benefits", href: "/buyer-benefits" },
+    { name: "FAQ", href: "/faq" },
+  ];
+
+  const navLinks = [
+    { name: "Home", href: "/" },
+    { name: "About", href: "/about" },
+    { name: "How It Works", href: "/how-it-works" },
+    { name: "Categories", href: "/categories" },
+    { name: "Seller Benefits", href: "/seller-benefits" },
+    { name: "Buyer Benefits", href: "/buyer-benefits" },
+    { name: "Why Choose Us", href: "/why-choose-us" },
+    { name: "FAQ", href: "/faq" },
+    { name: "Contact", href: "/contact" },
+  ];
+
+  return (
+    <>
+      <nav className="sticky top-0 z-40 w-full border-b border-border bg-white/80 backdrop-blur-md">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
+            <div className="flex-shrink-0">
+              <Link href="/" className="flex items-center gap-2">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-lg font-bold text-white shadow-md shadow-primary/20">
+                  T
+                </span>
+                <span className="text-xl font-bold tracking-tight text-slate-900">
+                  Trade<span className="text-primary">Nexa</span>
+                </span>
+              </Link>
+            </div>
+
+            <div className="hidden lg:flex lg:items-center lg:gap-x-6 xl:gap-x-8">
+              {topLinks.slice(0, 3).map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    className={`py-2 text-sm font-medium transition-colors hover:text-primary ${isActive ? "border-b-2 border-primary text-primary" : "text-slate-600"
+                      }`}
+                  >
+                    {link.name}
+                  </Link>
+                );
+              })}
+
+              <div
+                className="relative py-2"
+                onMouseEnter={() => setIsDropdownOpen(true)}
+                onMouseLeave={() => setIsDropdownOpen(false)}
+              >
+                <button className="flex cursor-pointer items-center gap-1 text-sm font-medium text-slate-600 outline-none transition-colors hover:text-primary">
+                  Solutions
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform duration-200 ${isDropdownOpen ? "rotate-180 text-primary" : ""}`}
+                  />
+                </button>
+
+                <AnimatePresence>
+                  {isDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-1/2 z-50 mt-2 w-48 -translate-x-1/2 rounded-xl border border-slate-100 bg-white p-2 shadow-xl"
+                    >
+                      {dropdownLinks.map((link) => {
+                        const isActive = pathname === link.href;
+                        return (
+                          <Link
+                            key={link.name}
+                            href={link.href}
+                            className={`block rounded-lg px-4 py-2.5 text-xs font-semibold transition-colors hover:bg-slate-50 hover:text-primary ${isActive ? "bg-primary/5 text-primary" : "text-slate-600"
+                              }`}
+                          >
+                            {link.name}
+                          </Link>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {topLinks.slice(3).map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    className={`py-2 text-sm font-medium transition-colors hover:text-primary ${isActive ? "border-b-2 border-primary text-primary" : "text-slate-600"
+                      }`}
+                  >
+                    {link.name}
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="hidden items-center gap-3 sm:flex">
+              {isAuthenticated && user ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className="flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-4.5 py-2 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  >
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span>{user.name}</span>
+                    <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${isUserMenuOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {isUserMenuOpen && (
+                      <>
+                        <div className="fixed inset-0 z-10" onClick={() => setIsUserMenuOpen(false)} />
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          className="absolute right-0 z-20 mt-2 w-56 rounded-2xl border border-slate-100 bg-white p-2.5 shadow-xl"
+                        >
+                          <div className="border-b border-slate-100 pb-2 px-3 mb-2">
+                            <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Business catalog</p>
+                            <p className="text-sm font-bold text-slate-900 truncate mt-0.5">{user.company}</p>
+                            <span className="inline-flex items-center gap-1 mt-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-100">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Verified {user.role.toUpperCase()}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setIsUserMenuOpen(false);
+                              logoutUser();
+                            }}
+                            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
+                          >
+                            <LogOut className="h-4 w-4" />
+                            Sign Out
+                          </button>
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <button
+                  onClick={() => openAuthModal("login")}
+                  className="flex items-center gap-1.5 rounded-full bg-primary px-5 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-hover hover:shadow-md cursor-pointer"
+                >
+                  Join Platform
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            <div className="flex lg:hidden">
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="inline-flex items-center justify-center rounded-md p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              >
+                {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="border-t border-border bg-white lg:hidden"
+            >
+              <div className="space-y-1 px-4 py-4">
+                {navLinks.map((link) => {
+                  const isActive = pathname === link.href;
+                  return (
+                    <Link
+                      key={link.name}
+                      href={link.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`block rounded-md px-3 py-2 text-base font-medium ${isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"
+                        }`}
+                    >
+                      {link.name}
+                    </Link>
+                  );
+                })}
+                <div className="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4">
+                  {isAuthenticated && user ? (
+                    <div className="space-y-3">
+                      <div className="rounded-xl bg-slate-50 p-3">
+                        <p className="text-xs text-slate-400 font-bold uppercase">{user.company}</p>
+                        <p className="text-sm font-bold text-slate-800 mt-0.5">{user.name}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          logoutUser();
+                        }}
+                        className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50 py-3 text-sm font-semibold text-red-700 transition-colors"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Sign Out
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          openAuthModal("login");
+                        }}
+                        className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-primary-hover"
+                      >
+                        Join Platform
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          openAuthModal("login");
+                        }}
+                        className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                      >
+                        <User className="h-4 w-4" />
+                        Login
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </nav>
+
+      <AuthModal />
+    </>
+  );
+}
