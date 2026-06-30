@@ -1,3 +1,6 @@
-/** API base — Postman uses {{base_url}}/api/v1/auth/... */
+/**
+ * Client calls same-origin `/api/v1` — Next.js rewrites proxy to the real API (avoids CORS).
+ * Override with NEXT_PUBLIC_API_BASE_URL for direct API access (e.g. mobile apps).
+ */
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.tradenexa.com/api/v1";
+  process.env.NEXT_PUBLIC_API_BASE_URL || "/api/v1";

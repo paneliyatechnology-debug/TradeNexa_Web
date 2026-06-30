@@ -66,10 +66,13 @@ apiClient.interceptors.response.use(
       window.dispatchEvent(new Event("auth_unauthorized"));
     }
 
-    const message =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
-      "An unexpected network error occurred. Please try again.";
+    const message = error.response
+      ? error.response?.data?.message ||
+        error.response?.data?.error ||
+        `Request failed (${error.response.status})`
+      : error.code === "ERR_NETWORK" || !error.response
+        ? "Unable to reach the server. Check your connection or try again."
+        : error.message || "An unexpected network error occurred. Please try again.";
 
     return Promise.reject({
       message,
