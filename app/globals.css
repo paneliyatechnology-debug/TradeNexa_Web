@@ -12,6 +12,7 @@
   --radius: 1rem;
   --shadow-soft: 0 4px 24px -4px rgb(15 23 42 / 0.08);
   --shadow-card: 0 1px 3px rgb(15 23 42 / 0.06), 0 8px 24px -8px rgb(15 23 42 / 0.1);
+  --header-height: 4rem;
 }
 
 @theme inline {

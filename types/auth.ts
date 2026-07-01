@@ -30,14 +30,30 @@ export interface VerifyOtpResponse {
 
 export interface RegisterRequest {
   name: string;
-  company: string;
-  email?: string;
-  address: string;
-  city: string;
-  state: string;
-  pincode: string;
+  email: string;
   role: UserRole;
+  businessTypeId: number;
 }
+
+export interface CompleteProfileFormData {
+  companyName: string;
+  industry: string;
+  gstNumber: string;
+  address: string;
+  country: string;
+  panNumber: string;
+  cinNumber: string;
+  iecNumber: string;
+  businessDescription: string;
+  profileImageFile: File | null;
+  companyLogoFile: File | null;
+  companyBannerFile: File | null;
+}
+
+export type CompleteProfileData = {
+  role: UserRole;
+  data: CompleteProfileFormData;
+};
 
 export interface RegisterResponse {
   is_registered: boolean;

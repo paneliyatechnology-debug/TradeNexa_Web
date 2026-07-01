@@ -8,10 +8,10 @@ import {
   VerifyOtpResponse,
   RegisterResponse,
   RegisterRequest,
+  CompleteProfileData,
 } from "@/types/auth";
 import apiClient from "@/services/apiClient";
 import { API_ENDPOINTS } from "@/config/endpoints";
-import { DEFAULT_LANGUAGE_ID, REGISTER_DEVICE } from "@/config/constants";
 import {
   formatMobileNumber,
   getFirebaseVerificationId,
@@ -20,8 +20,10 @@ import {
   parseAuthSession,
   unwrapApiPayload,
   userRoleToRoleId,
+  ensureRolesLoaded,
   type ApiUserProfile,
 } from "@/utils/authHelpers";
+import { buildProfileFormData } from "@/utils/buildProfileFormData";
 import {
   AsyncOperationState,
   initialOpState,
@@ -34,7 +36,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAuthModalOpen: boolean;
-  authModalStep: "login" | "verify" | "register";
+  authModalStep: "login" | "verify" | "role" | "register";
   authModalRole: UserRole | null;
   authModalPhone: string;
   authModalCountryCode: string;
@@ -43,18 +45,24 @@ interface AuthContextType {
   verifyOtpState: AsyncOperationState<VerifyOtpResponse>;
   resendOtpState: AsyncOperationState<SendOtpResponse>;
   registerState: AsyncOperationState<RegisterResponse>;
+  isCompleteProfileOpen: boolean;
+  completeProfileRole: UserRole | null;
+  completeProfileState: AsyncOperationState<User>;
   loginUser: (token: string, user: User, refreshToken?: string) => void;
   logoutUser: () => Promise<void>;
   updateUser: (user: User) => void;
-  openAuthModal: (step?: "login" | "register", role?: UserRole) => void;
+  openAuthModal: (step?: "login" | "register" | "role", role?: UserRole) => void;
   closeAuthModal: () => void;
-  setAuthModalStep: (step: "login" | "verify" | "register") => void;
+  setAuthModalStep: (step: "login" | "verify" | "role" | "register") => void;
   setAuthModalPhone: (phone: string) => void;
   setAuthModalCountryCode: (code: string) => void;
   sendOtpAction: (phone: string, countryCode: string) => Promise<boolean>;
   verifyOtpAction: (otp: string) => Promise<VerifyOtpResponse | null>;
   resendOtpAction: () => Promise<boolean>;
   registerAction: (formData: RegisterRequest) => Promise<RegisterResponse | null>;
+  openCompleteProfileModal: (role: UserRole) => void;
+  skipCompleteProfile: () => void;
+  completeProfileAction: (payload: CompleteProfileData) => Promise<boolean>;
   resetSendOtp: () => void;
   resetVerifyOtp: () => void;
   resetResendOtp: () => void;
@@ -68,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authModalStep, setAuthModalStep] = useState<"login" | "verify" | "register">("login");
+  const [authModalStep, setAuthModalStep] = useState<"login" | "verify" | "role" | "register">("login");
   const [authModalRole, setAuthModalRole] = useState<UserRole | null>(null);
   const [authModalPhone, setAuthModalPhone] = useState("");
   const [authModalCountryCode, setAuthModalCountryCode] = useState("+91");
@@ -78,6 +86,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [verifyOtpState, setVerifyOtpState] = useState<AsyncOperationState<VerifyOtpResponse>>(initialOpState());
   const [resendOtpState, setResendOtpState] = useState<AsyncOperationState<SendOtpResponse>>(initialOpState());
   const [registerState, setRegisterState] = useState<AsyncOperationState<RegisterResponse>>(initialOpState());
+  const [isCompleteProfileOpen, setIsCompleteProfileOpen] = useState(false);
+  const [completeProfileRole, setCompleteProfileRole] = useState<UserRole | null>(null);
+  const [completeProfileState, setCompleteProfileState] = useState<AsyncOperationState<User>>(initialOpState());
 
   const persistSession = (accessToken: string, userData: User, refreshToken?: string) => {
     if (typeof window !== "undefined") {
@@ -137,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     initAuth();
+    void ensureRolesLoaded();
 
     const handleUnauthorized = () => {
       clearSession();
@@ -170,7 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(updatedUser);
   };
 
-  const openAuthModal = (step: "login" | "register" = "login", role?: UserRole) => {
+  const openAuthModal = (step: "login" | "register" | "role" = "login", role?: UserRole) => {
     setAuthModalStep(step);
     setAuthModalRole(role || null);
     setIsAuthModalOpen(true);
@@ -194,6 +206,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const resetVerifyOtp = () => setVerifyOtpState(initialOpState());
   const resetResendOtp = () => setResendOtpState(initialOpState());
   const resetRegister = () => setRegisterState(initialOpState());
+  const resetCompleteProfile = () => setCompleteProfileState(initialOpState());
+
+  const openCompleteProfileModal = (role: UserRole) => {
+    setCompleteProfileRole(role);
+    setIsCompleteProfileOpen(true);
+  };
+
+  const skipCompleteProfile = () => {
+    setIsCompleteProfileOpen(false);
+    setTimeout(() => {
+      setCompleteProfileRole(null);
+      resetCompleteProfile();
+    }, 300);
+  };
 
   const sendOtpRequest = async (phone: string, countryCode: string) => {
     const mobile_number = formatMobileNumber(countryCode, phone);
@@ -290,23 +316,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       successMessage: "Registration successful",
       fallbackError: "Registration failed",
       action: async () => {
-        const body: Record<string, unknown> = {
-          mobile_number: sessionMobileNumber,
-          full_name: formData.name,
-          company_name: formData.company,
-          address_line_1: formData.address,
-          city: formData.city,
-          state: formData.state,
-          country: "India",
-          pincode: formData.pincode,
-          language_id: DEFAULT_LANGUAGE_ID,
-          role_id: userRoleToRoleId(formData.role),
-          device: REGISTER_DEVICE,
-        };
+        await ensureRolesLoaded();
 
-        if (formData.email?.trim()) {
-          body.email = formData.email.trim();
-        }
+        const body = {
+          mobile_number: sessionMobileNumber,
+          full_name: formData.name.trim(),
+          email: formData.email.trim(),
+          role_id: userRoleToRoleId(formData.role),
+          business_type_id: formData.businessTypeId,
+        };
 
         const response = await apiClient.post(API_ENDPOINTS.REGISTER, body);
         const data = unwrapApiPayload<Record<string, unknown>>(response.data);
@@ -327,6 +345,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const completeProfileAction = async (payload: CompleteProfileData): Promise<boolean> => {
+    if (!user) {
+      showErrorToast("Please sign in to update your profile.");
+      return false;
+    }
+
+    const result = await runApiAction({
+      setState: setCompleteProfileState,
+      successMessage: "Profile updated successfully",
+      fallbackError: "Failed to update profile",
+      action: async () => {
+        const formData = buildProfileFormData(payload);
+
+        const response = await apiClient.put(API_ENDPOINTS.PROFILE, formData, {
+          headers: { "Content-Type": undefined },
+        });
+        const profile = unwrapApiPayload<ApiUserProfile>(response.data);
+        const updatedUser = mapApiProfileToUser(profile);
+
+        if (typeof window !== "undefined") {
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+        }
+        setUser(updatedUser);
+        return updatedUser;
+      },
+    });
+
+    if (result) {
+      skipCompleteProfile();
+      return true;
+    }
+    return false;
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -343,6 +395,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         verifyOtpState,
         resendOtpState,
         registerState,
+        isCompleteProfileOpen,
+        completeProfileRole,
+        completeProfileState,
         loginUser,
         logoutUser,
         updateUser,
@@ -355,6 +410,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         verifyOtpAction,
         resendOtpAction,
         registerAction,
+        openCompleteProfileModal,
+        skipCompleteProfile,
+        completeProfileAction,
         resetSendOtp,
         resetVerifyOtp,
         resetResendOtp,

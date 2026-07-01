@@ -5,4 +5,6 @@ export const API_ENDPOINTS = {
   REFRESH_TOKEN: "/auth/refresh-token",
   LOGOUT: "/auth/logout",
   PROFILE: "/auth/profile",
+  ROLES: "/roles",
+  BUSINESS_TYPES: "/business-types",
 } as const;

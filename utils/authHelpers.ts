@@ -1,14 +1,7 @@
 import type { User, UserRole } from "@/types/auth";
-import { API_ROLE_IDS } from "@/config/constants";
+import { parseUserRole } from "@/utils/roleHelpers";
 
-export function userRoleToRoleId(role: UserRole): number {
-  return API_ROLE_IDS[role];
-}
-
-export function parseUserRole(role: unknown): UserRole {
-  if (role === "seller" || role === "buyer" || role === "both") return role;
-  return "buyer";
-}
+export { userRoleToRoleId, ensureRolesLoaded, parseUserRole } from "@/utils/roleHelpers";
 
 export function formatMobileNumber(countryCode: string, phone: string): string {
   const code = countryCode.startsWith("+") ? countryCode : `+${countryCode}`;
@@ -81,7 +74,7 @@ export function mapApiProfileToUser(profile: ApiUserProfile): User {
     city: String(profile.city ?? ""),
     state: String(addressObj?.state ?? ""),
     pincode: String(addressObj?.pincode ?? ""),
-    role: parseUserRole(profile.role),
+    role: parseUserRole(profile.role, profile.role_id),
     phone: extractPhoneFromMobile(mobile),
     country_code: extractCountryCode(mobile),
   };

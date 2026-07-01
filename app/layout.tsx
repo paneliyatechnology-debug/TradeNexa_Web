@@ -34,11 +34,11 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
     >
-      <body className="min-h-dvh min-w-0 bg-background text-foreground">
+      <body className="flex min-h-dvh min-w-0 flex-col bg-background text-foreground">
         <AuthProvider>
           <AppProvider>
             <Navbar />
-            <main className="min-w-0">{children}</main>
+            <main className="min-w-0 flex-1 pt-[var(--header-height)]">{children}</main>
             <Footer />
           </AppProvider>
           <Toaster position="top-center" toastOptions={{ duration: TOAST_DURATION_MS }} />

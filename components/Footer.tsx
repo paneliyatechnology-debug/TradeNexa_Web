@@ -32,7 +32,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="border-t border-slate-200 bg-slate-50 text-slate-600">
+    <footer className="mt-auto shrink-0 border-t border-slate-200 bg-slate-50 text-slate-600">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-5">
           {/* Column 1 - Brand & Desc */}

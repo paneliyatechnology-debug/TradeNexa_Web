@@ -7,6 +7,7 @@ import { Menu, X, ArrowRight, ChevronDown, LogOut, CheckCircle2 } from "lucide-r
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthModal from "@/components/AuthModal";
+import CompleteProfileModal from "@/components/CompleteProfileModal";
 import { Logo } from "@/components/common/Logo";
 
 export default function Navbar() {
@@ -45,7 +46,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-40 w-full border-b border-border/70 bg-white/95">
+      <nav className="fixed inset-x-0 top-0 z-40 w-full border-b border-border/70 bg-white/95 shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between gap-3">
             <div className="flex shrink-0 items-center py-0.5">
@@ -268,6 +269,7 @@ export default function Navbar() {
       </nav>
 
       <AuthModal />
+      <CompleteProfileModal />
     </>
   );
 }
