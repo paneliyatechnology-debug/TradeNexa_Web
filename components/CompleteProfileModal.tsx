@@ -252,7 +252,6 @@ export default function CompleteProfileModal() {
     if (showBuyerFields) {
       if (!form.industry.trim()) next.industry = "Industry is required";
       if (!form.address.trim()) next.address = "Address is required";
-      if (!form.profileImageFile) next.profileImageFile = "Profile image is required";
     }
 
     if (showSellerFields) {
@@ -261,8 +260,6 @@ export default function CompleteProfileModal() {
       if (!form.businessDescription.trim()) {
         next.businessDescription = "Business description is required";
       }
-      if (!form.companyLogoFile) next.companyLogoFile = "Logo image is required";
-      if (!form.companyBannerFile) next.companyBannerFile = "Banner image is required";
     }
 
     setErrors(next);
@@ -325,7 +322,6 @@ export default function CompleteProfileModal() {
           <ImageUploadField
             label="Logo / Profile Image"
             htmlFor="cp-profile-image"
-            required
             align="center"
             error={errors.profileImageFile}
           >
@@ -350,7 +346,6 @@ export default function CompleteProfileModal() {
             <ImageUploadField
               label="Logo"
               htmlFor="cp-company-logo"
-              required
               error={errors.companyLogoFile}
             >
               <UploadTile
@@ -369,7 +364,6 @@ export default function CompleteProfileModal() {
             <ImageUploadField
               label="Banner"
               htmlFor="cp-company-banner"
-              required
               error={errors.companyBannerFile}
             >
               <UploadTile
