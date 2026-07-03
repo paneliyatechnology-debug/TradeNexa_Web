@@ -1,7 +1,12 @@
-/** Direct backend API — set NEXT_PUBLIC_API_BASE_URL to override per environment */
+/**
+ * Client uses same-origin `/api/v1` (proxied to Railway) to avoid CORS on Vercel/production.
+ * Override NEXT_PUBLIC_API_BASE_URL only if you have backend CORS for your domain.
+ */
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "https://tradenexabackend-production.up.railway.app/api/v1";
+  process.env.NEXT_PUBLIC_API_BASE_URL || "/api/v1";
 
-/** Backend origin without /api/v1 (for media proxy) */
-export const BACKEND_ORIGIN = API_BASE_URL.replace(/\/api\/v1\/?$/, "");
+/** Railway backend origin (server-side proxy target) */
+export const BACKEND_ORIGIN = (
+  process.env.API_PROXY_TARGET?.trim() ||
+  "https://tradenexabackend-production.up.railway.app"
+).replace(/\/$/, "");
