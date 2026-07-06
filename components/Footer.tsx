@@ -4,11 +4,13 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Mail, ArrowRight, CheckCircle2 } from "lucide-react";
 import { useApp } from "@/app/context/AppContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "@/components/common/Logo";
 import { scrollToFirstFormError } from "@/utils/scrollToFormError";
 
 export default function Footer() {
   const { openRegisterModal } = useApp();
+  const { isAuthenticated } = useAuth();
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [subscribed, setSubscribed] = useState(false);
@@ -113,23 +115,29 @@ export default function Footer() {
 
           {/* Column 3 - For Sellers */}
           <div>
-            <h3 className="text-sm font-bold tracking-wider text-slate-900 uppercase mb-4">Join Platform</h3>
+            <h3 className="text-sm font-bold tracking-wider text-slate-900 uppercase mb-4">
+              {isAuthenticated ? "For Business" : "Join Platform"}
+            </h3>
             <ul className="space-y-2.5 text-sm">
-              <li>
-                <button onClick={() => openRegisterModal("seller")} className="hover:text-primary text-left transition-colors">
-                  Become a Seller
-                </button>
-              </li>
-              <li>
-                <button onClick={() => openRegisterModal("buyer")} className="hover:text-primary text-left transition-colors">
-                  Register as Buyer
-                </button>
-              </li>
-              <li>
-                <button onClick={() => openRegisterModal("both")} className="hover:text-primary text-left transition-colors">
-                  Register as Both
-                </button>
-              </li>
+              {!isAuthenticated && (
+                <>
+                  <li>
+                    <button onClick={() => openRegisterModal("seller")} className="hover:text-primary text-left transition-colors">
+                      Become a Seller
+                    </button>
+                  </li>
+                  <li>
+                    <button onClick={() => openRegisterModal("buyer")} className="hover:text-primary text-left transition-colors">
+                      Register as Buyer
+                    </button>
+                  </li>
+                  <li>
+                    <button onClick={() => openRegisterModal("both")} className="hover:text-primary text-left transition-colors">
+                      Register as Both
+                    </button>
+                  </li>
+                </>
+              )}
               <li>
                 <Link href="/seller-benefits" className="hover:text-primary transition-colors">Seller Benefits</Link>
               </li>

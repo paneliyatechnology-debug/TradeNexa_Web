@@ -61,11 +61,12 @@ export default function MarketplaceDetailHeader({
             </div>
           ) : (
             <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-slate-100 bg-slate-50">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-slate-200 bg-slate-200">
                 <CatalogImage
                   src={iconSrc}
                   alt={title}
                   fallbackIcon={FallbackIcon}
+                  fallbackClassName="bg-slate-200"
                   className="h-full w-full object-cover"
                 />
               </div>
@@ -89,7 +90,7 @@ export default function MarketplaceDetailHeader({
 
           {loading ? (
             <div className="flex animate-pulse items-center gap-6">
-              <div className="h-24 w-24 rounded-2xl bg-white/20" />
+              <div className="h-24 w-24 rounded-2xl bg-slate-200 xl:h-28 xl:w-28" />
               <div className="space-y-3">
                 <div className="h-10 w-72 rounded-lg bg-white/20" />
                 <div className="h-5 w-48 rounded bg-white/10" />
@@ -97,11 +98,12 @@ export default function MarketplaceDetailHeader({
             </div>
           ) : (
             <div className="flex flex-wrap items-center gap-6 xl:gap-8">
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-white/20 bg-white/10 shadow-xl backdrop-blur-sm xl:h-28 xl:w-28">
+              <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-slate-300/70 bg-slate-200 shadow-xl xl:h-28 xl:w-28">
                 <CatalogImage
                   src={iconSrc}
                   alt={title}
                   fallbackIcon={FallbackIcon}
+                  fallbackClassName="bg-slate-200"
                   className="h-full w-full object-cover"
                 />
               </div>

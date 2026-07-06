@@ -86,7 +86,11 @@ export default function CategoryProductsLayout({
         {showSidebar && <SubcategoryFilterSidebar {...filterProps} />}
 
         <div className="min-w-0 flex-1">
-          <div className="mb-6 flex flex-col gap-4 lg:mb-8 lg:flex-row lg:items-center lg:justify-between">
+          <div
+            className={`mb-6 flex flex-col gap-4 lg:mb-8 lg:flex-row lg:items-center lg:justify-between${
+              showSidebar ? " mt-5 lg:mt-0" : ""
+            }`}
+          >
             <MarketplaceSearchBar
               size="sm"
               value={search}

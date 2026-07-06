@@ -4,11 +4,15 @@ import React from "react";
 import Link from "next/link";
 import { ArrowRight, MessageSquare, Store, ShoppingCart, ArrowLeftRight } from "lucide-react";
 import { useApp } from "@/app/context/AppContext";
+import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
 import { MARKETPLACE_NAVY } from "@/utils/marketplaceTheme";
 
 export default function CTABanner() {
   const { openRegisterModal } = useApp();
+  const { isAuthenticated } = useAuth();
+
+  if (isAuthenticated) return null;
 
   return (
     <section className={`relative mx-4 my-12 overflow-hidden rounded-3xl bg-gradient-to-br ${MARKETPLACE_NAVY} py-16 sm:mx-8 sm:py-20 lg:mx-12`}>

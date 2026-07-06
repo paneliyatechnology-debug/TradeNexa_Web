@@ -7,6 +7,7 @@ import CTABanner from "@/components/CTABanner";
 import MarketplacePageHero from "@/components/catalog/marketplace/MarketplacePageHero";
 import { MARKETPLACE_CONTAINER } from "@/components/catalog/marketplace/marketplaceLayout";
 import { useApp } from "@/app/context/AppContext";
+import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
 import {
   UserPlus,
@@ -29,6 +30,7 @@ type TabRole = "sellers" | "buyers" | "both";
 
 export default function HowItWorks() {
   const { openRegisterModal } = useApp();
+  const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<TabRole>("sellers");
 
   const sellerSteps = [
@@ -99,6 +101,7 @@ export default function HowItWorks() {
         </Link>
       );
     }
+    if (isAuthenticated) return null;
     const role = activeTab === "sellers" ? "seller" : "both";
     return (
       <button
@@ -110,6 +113,8 @@ export default function HowItWorks() {
       </button>
     );
   };
+
+  const cta = renderCta();
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
@@ -174,7 +179,7 @@ export default function HowItWorks() {
             })}
           </div>
 
-          <div className="mt-12 text-center">{renderCta()}</div>
+          {cta && <div className="mt-12 text-center">{cta}</div>}
         </div>
       </section>
 

@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useApp } from "@/app/context/AppContext";
+import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -28,12 +29,12 @@ import FeatureCard from "@/components/FeatureCard";
 import ProcessStep from "@/components/ProcessStep";
 import Counter from "@/components/Counter";
 import CTABanner from "@/components/CTABanner";
-import FeaturedCategories from "@/components/FeaturedCategories";
 import { MARKETPLACE_CONTAINER } from "@/components/catalog/marketplace/marketplaceLayout";
 import { MARKETPLACE_NAVY } from "@/utils/marketplaceTheme";
 
 export default function Home() {
   const { openRegisterModal } = useApp();
+  const { isAuthenticated } = useAuth();
 
   const processSteps = [
     {
@@ -108,20 +109,24 @@ export default function Home() {
                 transition={{ delay: 0.3 }}
                 className="flex flex-col justify-center gap-3 sm:flex-row lg:justify-start"
               >
-                <button
-                  onClick={() => openRegisterModal("seller")}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-primary px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition hover:bg-primary-hover"
-                >
-                  Join as Seller
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => openRegisterModal("buyer")}
-                  className="flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-8 py-4 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
-                >
-                  Join as Buyer
-                  <Search className="h-4 w-4" />
-                </button>
+                {!isAuthenticated && (
+                  <>
+                    <button
+                      onClick={() => openRegisterModal("seller")}
+                      className="flex items-center justify-center gap-2 rounded-xl bg-primary px-8 py-4 text-sm font-semibold text-white shadow-lg shadow-primary/20 transition hover:bg-primary-hover"
+                    >
+                      Join as Seller
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => openRegisterModal("buyer")}
+                      className="flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-8 py-4 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
+                    >
+                      Join as Buyer
+                      <Search className="h-4 w-4" />
+                    </button>
+                  </>
+                )}
                 <Link
                   href="/categories"
                   className="flex items-center justify-center gap-2 rounded-xl border border-white/20 px-8 py-4 text-sm font-semibold text-blue-100/90 transition hover:bg-white/10 hover:text-white"
@@ -214,15 +219,18 @@ export default function Home() {
                   List your company catalog, expand digital market reach, and receive genuine buyer inquiries daily.
                 </p>
               </div>
-              <button onClick={() => openRegisterModal("seller")} className="text-sm font-semibold text-primary hover:text-primary-hover text-left flex items-center gap-1">
-                Become a Seller <ArrowRight className="h-4 w-4" />
-              </button>
+              {!isAuthenticated && (
+                <button onClick={() => openRegisterModal("seller")} className="text-sm font-semibold text-primary hover:text-primary-hover text-left flex items-center gap-1">
+                  Become a Seller <ArrowRight className="h-4 w-4" />
+                </button>
+              )}
             </motion.div>
           </div>
         </div>
       </section>
 
       {/* Choose Your Role */}
+      {!isAuthenticated && (
       <section className="border-y border-slate-100 bg-white py-16 lg:py-20">
         <div className={MARKETPLACE_CONTAINER}>
           <SectionHeading
@@ -276,6 +284,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      )}
 
       {/* How It Works */}
       <section className="py-16 lg:py-20">
@@ -288,9 +297,6 @@ export default function Home() {
           <ProcessStep steps={processSteps} />
         </div>
       </section>
-
-      {/* 4. Industries Section */}
-      <FeaturedCategories />
 
       {/* Why Choose Us */}
       <section className="border-t border-slate-100 bg-white py-16 lg:py-20">

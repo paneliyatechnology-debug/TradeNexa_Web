@@ -7,6 +7,7 @@ import CTABanner from "@/components/CTABanner";
 import MarketplacePageHero from "@/components/catalog/marketplace/MarketplacePageHero";
 import { MARKETPLACE_CONTAINER } from "@/components/catalog/marketplace/marketplaceLayout";
 import { useApp } from "@/app/context/AppContext";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Shield,
   Target,
@@ -25,6 +26,7 @@ import { motion } from "framer-motion";
 
 export default function About() {
   const { openRegisterModal } = useApp();
+  const { isAuthenticated } = useAuth();
 
   const values = [
     {
@@ -244,6 +246,7 @@ export default function About() {
                       </li>
                     ))}
                   </ul>
+                  {!isAuthenticated && (
                   <button
                     onClick={() => openRegisterModal(card.role)}
                     className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary transition hover:text-primary-hover"
@@ -251,6 +254,7 @@ export default function About() {
                     {card.cta}
                     <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
                   </button>
+                  )}
                 </motion.div>
               );
             })}

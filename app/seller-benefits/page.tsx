@@ -7,10 +7,12 @@ import CTABanner from "@/components/CTABanner";
 import MarketplacePageHero from "@/components/catalog/marketplace/MarketplacePageHero";
 import { MARKETPLACE_CONTAINER } from "@/components/catalog/marketplace/marketplaceLayout";
 import { useApp } from "@/app/context/AppContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Building, Upload, ShieldCheck, Mail, LineChart, Globe } from "lucide-react";
 
 export default function SellerBenefits() {
   const { openRegisterModal } = useApp();
+  const { isAuthenticated } = useAuth();
 
   const benefits = [
     {
@@ -88,12 +90,14 @@ export default function SellerBenefits() {
         title="Empowering Sellers to Scale Digital Trade"
         subtitle="List your business catalog on India's smart marketplace directory. Attract verified procurers and collect direct sales inquiries without paying commission."
       >
+        {!isAuthenticated && (
         <button
           onClick={() => openRegisterModal("seller")}
           className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-8 py-3.5 text-sm font-semibold text-white shadow-md shadow-primary/10 transition hover:bg-primary-hover"
         >
           Get Started as a Seller
         </button>
+        )}
       </MarketplacePageHero>
 
       <section className="flex-1 py-12 lg:py-16">

@@ -35,18 +35,17 @@ export default function MarketplaceCategoryRow({
       className="group flex h-full flex-col rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-200 hover:shadow-lg lg:p-6"
     >
       <div className="flex items-start gap-4">
-        <div
-          className={`flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-full ${theme.iconBg} ring-4 ring-slate-50 shadow-sm lg:h-20 lg:w-20`}
-        >
+        <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-200 ring-4 ring-slate-50 shadow-sm lg:h-20 lg:w-20">
           {imageUrl ? (
             <CatalogImage
               src={imageUrl}
               alt={title}
               fallbackIcon={FallbackIcon}
+              fallbackClassName="bg-slate-200"
               className="h-full w-full object-cover"
             />
           ) : (
-            <FallbackIcon className={`h-9 w-9 ${theme.iconText}`} strokeWidth={1.75} />
+            <FallbackIcon className="h-9 w-9 text-slate-500" strokeWidth={1.75} />
           )}
         </div>
 
