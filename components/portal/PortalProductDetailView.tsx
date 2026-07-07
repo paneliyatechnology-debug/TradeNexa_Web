@@ -26,15 +26,18 @@ import {
 } from "lucide-react";
 import type { ApiProductDetail, ApiProductListItem } from "@/types/catalog";
 import {
+  buildProductGalleryMedia,
   formatPrice,
   formatRating,
   getInitials,
-  getYoutubeThumbnailUrl,
+  getVideoThumbnailUrl,
   resolveImageUrl,
   resolveProductVideos,
+  type GalleryMediaItem,
   type ResolvedProductVideo,
   whatsAppHref,
 } from "@/utils/catalogHelpers";
+import VideoThumb from "@/components/catalog/VideoThumb";
 import {
   buildProductSpecs,
   formatSellerLocation,
@@ -89,30 +92,30 @@ function IconAction({
   );
 }
 
-type GalleryMediaItem =
-  | { id: string; kind: "image"; src: string }
-  | { id: string; kind: "video"; video: ResolvedProductVideo };
-
 function ProductGallery({
   name,
   media,
   activeId,
   onSelect,
+  fallbackPoster,
 }: {
   name: string;
   media: GalleryMediaItem[];
   activeId: string | null;
   onSelect: (id: string) => void;
+  fallbackPoster?: string | null;
 }) {
   const active = media.find((item) => item.id === activeId) ?? media[0] ?? null;
   const displayName = name || "Product";
 
   function renderVideoPlayer(video: ResolvedProductVideo, className: string) {
     if (video.type === "file") {
+      const poster = getVideoThumbnailUrl(video, fallbackPoster) ?? undefined;
       return (
         <video
           key={video.key}
           src={video.src}
+          poster={poster}
           controls
           playsInline
           preload="metadata"
@@ -134,13 +137,12 @@ function ProductGallery({
   }
 
   function renderVideoThumb(video: ResolvedProductVideo) {
-    const youtubeThumb =
-      video.type === "youtube" ? getYoutubeThumbnailUrl(video.src) : null;
+    const thumbUrl = getVideoThumbnailUrl(video, fallbackPoster);
 
-    if (youtubeThumb) {
+    if (thumbUrl) {
       return (
         <>
-          <Image src={youtubeThumb} alt="" fill className="object-cover" unoptimized />
+          <Image src={thumbUrl} alt="" fill className="object-cover" unoptimized />
           <span className="absolute inset-0 flex items-center justify-center bg-black/25">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-[#1565C0] shadow">
               <Play className="ml-0.5 h-4 w-4 fill-current" />
@@ -150,31 +152,7 @@ function ProductGallery({
       );
     }
 
-    if (video.type === "file") {
-      return (
-        <>
-          <video
-            src={video.src}
-            muted
-            playsInline
-            preload="metadata"
-            className="h-full w-full object-cover"
-          />
-          <span className="absolute inset-0 flex items-center justify-center bg-black/25">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-[#1565C0] shadow">
-              <Play className="ml-0.5 h-4 w-4 fill-current" />
-            </span>
-          </span>
-        </>
-      );
-    }
-
-    return (
-      <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-[#0D1B2A] text-white">
-        <Play className="h-5 w-5 fill-white" />
-        <span className="text-[9px] font-bold uppercase tracking-wide">Video</span>
-      </span>
-    );
+    return <VideoThumb src={video.src} poster={null} />;
   }
 
   return (
@@ -373,23 +351,10 @@ export default function PortalProductDetailView({
 
   const videos = useMemo(() => resolveProductVideos(product.videos), [product.videos]);
 
-  const galleryMedia = useMemo(() => {
-    const items: GalleryMediaItem[] = gallery.map((src) => ({
-      id: `image:${src}`,
-      kind: "image",
-      src,
-    }));
-
-    for (const video of videos) {
-      items.push({
-        id: `video:${video.key}`,
-        kind: "video",
-        video,
-      });
-    }
-
-    return items;
-  }, [gallery, videos]);
+  const galleryMedia = useMemo(
+    () => buildProductGalleryMedia(gallery, videos),
+    [gallery, videos]
+  );
 
   const [activeMediaId, setActiveMediaId] = useState<string | null>(galleryMedia[0]?.id ?? null);
 
@@ -517,6 +482,7 @@ export default function PortalProductDetailView({
               media={galleryMedia}
               activeId={activeMedia?.id ?? null}
               onSelect={setActiveMediaId}
+              fallbackPoster={gallery[0] ?? null}
             />
           </div>
         </div>

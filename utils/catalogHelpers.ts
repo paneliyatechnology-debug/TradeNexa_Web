@@ -80,6 +80,56 @@ export interface ResolvedProductVideo {
   type: ProductVideoType;
   src: string;
   embedUrl?: string;
+  /** Best thumbnail for display (API, platform, or fallback). */
+  thumbnail?: string | null;
+  /** Thumbnail supplied explicitly by the API (not auto-generated). */
+  apiThumbnail?: string | null;
+}
+
+function coerceVideoSource(input: unknown): string | null {
+  if (input == null) return null;
+
+  if (typeof input === "string") {
+    const trimmed = input.trim();
+    return trimmed || null;
+  }
+
+  if (typeof input === "object") {
+    const record = input as Record<string, unknown>;
+    for (const key of ["video_url", "video", "url", "file", "src", "path"]) {
+      const value = record[key];
+      if (typeof value === "string" && value.trim()) return value.trim();
+    }
+  }
+
+  return null;
+}
+
+function coerceVideoThumbnail(input: unknown): string | null {
+  if (input == null || typeof input !== "object") return null;
+
+  const record = input as Record<string, unknown>;
+  for (const key of [
+    "thumbnail",
+    "thumb",
+    "poster",
+    "cover",
+    "preview",
+    "image_url",
+    "image",
+  ]) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim()) {
+      return resolveImageUrl(value.trim());
+    }
+  }
+
+  return null;
+}
+
+function resolveVideoSource(entry: unknown): string | null {
+  const raw = coerceVideoSource(entry) ?? (typeof entry === "string" ? entry : null);
+  return raw ? resolveImageUrl(raw) : null;
 }
 
 function getYoutubeEmbedId(url: string): string | null {
@@ -129,6 +179,64 @@ export function getYoutubeThumbnailUrl(src: string): string | null {
   return id ? `https://img.youtube.com/vi/${id}/mqdefault.jpg` : null;
 }
 
+export function getVimeoThumbnailUrl(src: string): string | null {
+  const id = getVimeoEmbedId(src);
+  return id ? `https://vumbnail.com/${id}.jpg` : null;
+}
+
+export function getVideoThumbnailUrl(
+  video: ResolvedProductVideo,
+  fallbackPoster?: string | null
+): string | null {
+  if (video.apiThumbnail) return video.apiThumbnail;
+  if (video.thumbnail) return video.thumbnail;
+  if (video.type === "youtube") return getYoutubeThumbnailUrl(video.src);
+  if (video.type === "vimeo") return getVimeoThumbnailUrl(video.src);
+  return fallbackPoster ?? null;
+}
+
+export type GalleryMediaItem =
+  | { id: string; kind: "image"; src: string }
+  | { id: string; kind: "video"; video: ResolvedProductVideo };
+
+/** Product thumbnail first, then videos with API thumbnails, then gallery, then other videos. */
+export function buildProductGalleryMedia(
+  gallery: string[],
+  videos: ResolvedProductVideo[]
+): GalleryMediaItem[] {
+  const usedImages = new Set<string>();
+  const usedVideos = new Set<string>();
+  const items: GalleryMediaItem[] = [];
+
+  const pushImage = (src: string) => {
+    if (!src || usedImages.has(src)) return;
+    usedImages.add(src);
+    items.push({ id: `image:${src}`, kind: "image", src });
+  };
+
+  const pushVideo = (video: ResolvedProductVideo) => {
+    if (usedVideos.has(video.key)) return;
+    usedVideos.add(video.key);
+    items.push({ id: `video:${video.key}`, kind: "video", video });
+  };
+
+  // 1. Main product thumbnail always first
+  if (gallery[0]) pushImage(gallery[0]);
+
+  // 2. Videos with explicit API thumbnails (high priority)
+  const videosWithApiThumb = videos.filter((v) => v.apiThumbnail);
+  const otherVideos = videos.filter((v) => !v.apiThumbnail);
+  videosWithApiThumb.forEach(pushVideo);
+
+  // 3. Remaining gallery images
+  gallery.slice(1).forEach(pushImage);
+
+  // 4. Other videos last
+  otherVideos.forEach(pushVideo);
+
+  return items;
+}
+
 /** Normalize product video entries from API (strings, objects, or embed links). */
 export function resolveProductVideos(videos: unknown[] | null | undefined): ResolvedProductVideo[] {
   if (!videos?.length) return [];
@@ -137,9 +245,11 @@ export function resolveProductVideos(videos: unknown[] | null | undefined): Reso
   const resolved: ResolvedProductVideo[] = [];
 
   for (const entry of videos) {
-    const src = resolveImageUrl(entry);
+    const src = resolveVideoSource(entry);
     if (!src || seen.has(src)) continue;
     seen.add(src);
+
+    const apiThumbnail = coerceVideoThumbnail(entry);
 
     const youtubeId = getYoutubeEmbedId(src);
     if (youtubeId) {
@@ -148,6 +258,8 @@ export function resolveProductVideos(videos: unknown[] | null | undefined): Reso
         type: "youtube",
         src,
         embedUrl: `https://www.youtube.com/embed/${youtubeId}`,
+        apiThumbnail,
+        thumbnail: apiThumbnail ?? getYoutubeThumbnailUrl(src),
       });
       continue;
     }
@@ -159,11 +271,19 @@ export function resolveProductVideos(videos: unknown[] | null | undefined): Reso
         type: "vimeo",
         src,
         embedUrl: `https://player.vimeo.com/video/${vimeoId}`,
+        apiThumbnail,
+        thumbnail: apiThumbnail ?? getVimeoThumbnailUrl(src),
       });
       continue;
     }
 
-    resolved.push({ key: src, type: "file", src });
+    resolved.push({
+      key: src,
+      type: "file",
+      src,
+      apiThumbnail,
+      thumbnail: apiThumbnail,
+    });
   }
 
   return resolved;
