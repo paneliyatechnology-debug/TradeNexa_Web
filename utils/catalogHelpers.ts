@@ -9,27 +9,51 @@ function proxyBackendMediaUrl(url: URL): string | null {
   return mediaPath ? `/api/media/${mediaPath}` : null;
 }
 
+function coerceImageUrl(input: unknown): string | null {
+  if (input == null) return null;
+
+  if (typeof input === "string") {
+    const trimmed = input.trim();
+    return trimmed || null;
+  }
+
+  if (typeof input === "number" && Number.isFinite(input)) {
+    return String(input);
+  }
+
+  if (typeof input === "object") {
+    const record = input as Record<string, unknown>;
+    for (const key of ["url", "image_url", "image", "path", "src", "thumbnail", "file"]) {
+      const value = record[key];
+      if (typeof value === "string" && value.trim()) return value.trim();
+    }
+  }
+
+  return null;
+}
+
 /**
  * Resolves API image URLs for use in <img> tags.
  * Backend /media/* URLs are rewritten to same-origin /api/media/* because
  * Railway sets Cross-Origin-Resource-Policy: same-origin (blocks cross-site images).
  */
-export function resolveImageUrl(url: string | null | undefined): string | null {
-  if (!url) return null;
+export function resolveImageUrl(url: unknown): string | null {
+  const normalized = coerceImageUrl(url);
+  if (!normalized) return null;
 
-  if (url.startsWith("data:")) return url;
+  if (normalized.startsWith("data:")) return normalized;
 
-  if (url.startsWith("http://") || url.startsWith("https://")) {
+  if (normalized.startsWith("http://") || normalized.startsWith("https://")) {
     try {
-      const proxied = proxyBackendMediaUrl(new URL(url));
+      const proxied = proxyBackendMediaUrl(new URL(normalized));
       if (proxied) return proxied;
     } catch {
-      return url;
+      return normalized;
     }
-    return url;
+    return normalized;
   }
 
-  const cleanUrl = url.startsWith("/") ? url : `/${url}`;
+  const cleanUrl = normalized.startsWith("/") ? normalized : `/${normalized}`;
 
   if (cleanUrl.startsWith("/media/")) {
     const mediaPath = cleanUrl.slice("/media/".length);
@@ -87,8 +111,10 @@ export function formatLocation(city: string | null, state: string | null, countr
   return parts.length > 0 ? parts.join(", ") : "India";
 }
 
-export function getInitials(name: string): string {
-  return name.trim().charAt(0).toUpperCase() || "?";
+export function getInitials(name: string | null | undefined): string {
+  if (!name || typeof name !== "string") return "?";
+  const trimmed = name.trim();
+  return trimmed.charAt(0).toUpperCase() || "?";
 }
 
 export function productGradient(id: number): string {

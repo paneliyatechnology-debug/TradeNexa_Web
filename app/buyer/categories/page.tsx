@@ -1,44 +1,96 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import Link from "next/link";
-import { LayoutGrid, Loader2 } from "lucide-react";
+import { LayoutGrid, Loader2, Search } from "lucide-react";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
+import PortalSearchBar from "@/components/portal/PortalSearchBar";
+import PortalEmptyState from "@/components/portal/PortalEmptyState";
 import PortalInfiniteScroll from "@/components/portal/PortalInfiniteScroll";
 import { fetchCategories } from "@/services/catalogService";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useLoadMoreList } from "@/hooks/useLoadMoreList";
 import { getCategoryFallbackIcon } from "@/utils/categoryIcons";
 
 export default function BuyerCategoriesPage() {
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search);
+
   const fetchPage = useCallback(
     (page: number) =>
       fetchCategories({
         page,
         limit: 16,
+        search: debouncedSearch || undefined,
         is_active: true,
         sort_by: "name",
         sort_order: "asc",
       }),
-    []
+    [debouncedSearch]
   );
 
-  const { items: categories, loading, loadingMore, hasMore, loadMore } = useLoadMoreList({
+  const {
+    items: categories,
+    pagination,
+    loading,
+    loadingMore,
+    hasMore,
+    loadMore,
+    error,
+  } = useLoadMoreList({
     fetchPage,
+    resetDeps: [debouncedSearch],
   });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
       <PortalPageHeader title="Categories" subtitle="Browse products by industry" />
+
+      <PortalSearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search categories..."
+        className="mb-4"
+      />
+
+      {error ? (
+        <p className="mb-4 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-600">{error}</p>
+      ) : null}
+
+      {!loading && categories.length > 0 ? (
+        <p className="mb-4 text-sm text-[#546E7A]">
+          Showing <span className="font-semibold text-[#0D1B2A]">{categories.length}</span>
+          {pagination.total > categories.length ? (
+            <>
+              {" "}
+              of <span className="font-semibold text-[#0D1B2A]">{pagination.total}</span>
+            </>
+          ) : null}{" "}
+          categories
+          {debouncedSearch ? (
+            <>
+              {" "}
+              for &ldquo;<span className="font-semibold text-[#1565C0]">{debouncedSearch}</span>&rdquo;
+            </>
+          ) : null}
+        </p>
+      ) : null}
+
       {loading ? (
         <div className="flex items-center justify-center gap-2 py-16 text-sm text-[#546E7A]">
           <Loader2 className="h-5 w-5 animate-spin text-[#1565C0]" />
           Loading categories...
         </div>
       ) : categories.length === 0 ? (
-        <div className="mt-8 text-center text-sm text-[#546E7A]">
-          <LayoutGrid className="mx-auto mb-2 h-8 w-8" />
-          No categories available
-        </div>
+        <PortalEmptyState
+          icon={search.trim() ? Search : LayoutGrid}
+          title={search.trim() ? "No categories found" : "No categories available"}
+          description={
+            search.trim()
+              ? "Try a different search term or clear the search."
+              : "Categories will appear here when available."
+          }
+        />
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -48,7 +100,7 @@ export default function BuyerCategoriesPage() {
                 <Link
                   key={cat.id}
                   href={`/buyer/category/${cat.id}`}
-                  className="flex items-center gap-3 rounded-2xl border border-[#E8ECF0] bg-white p-4 transition hover:shadow-md"
+                  className="flex items-center gap-3 rounded-2xl border border-[#E8ECF0] bg-white p-4 transition hover:border-[#1565C0]/30 hover:shadow-md"
                 >
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E8EFF9]">
                     <Icon className="h-5 w-5 text-[#1565C0]" />
