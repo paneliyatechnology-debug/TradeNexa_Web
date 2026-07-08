@@ -969,24 +969,12 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
       register: "Create profile",
     };
 
-    const titles: Record<AuthStep, string> = {
-      login: "Authenticate",
-      verify: "Secure verification",
-      role: "Account type",
-      register: "Register",
-    };
-
     const step = authModalStep as AuthStep;
 
     return (
-      <div className="space-y-0.5">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-          {subtitles[step] ?? "TradeNexa"}
-        </p>
-        <span className="text-base font-semibold tracking-tight text-slate-900">
-          {titles[step] ?? "TradeNexa Portal"}
-        </span>
-      </div>
+      <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+        {subtitles[step] ?? "TradeNexa"}
+      </p>
     );
   };
 
