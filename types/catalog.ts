@@ -57,6 +57,8 @@ export interface ApiProductListItem {
   created_at: string;
   subcategory_id?: number | null;
   subcategory_name?: string | null;
+  /** Present when the products list API is called with an access token */
+  is_wishlist?: boolean;
 }
 
 export interface ApiProductMediaItem {

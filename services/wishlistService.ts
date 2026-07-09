@@ -1,42 +1,63 @@
-import { fetchProductById } from "@/services/catalogService";
-import type { ApiProductDetail, ApiProductListItem } from "@/types/catalog";
-import { resolveImageUrl } from "@/utils/catalogHelpers";
+import apiClient from "@/services/apiClient";
+import { API_ENDPOINTS } from "@/config/endpoints";
+import { unwrapApiPayload } from "@/utils/authHelpers";
+import type { ApiProductListItem } from "@/types/catalog";
+import type { WishlistListParams, WishlistListResult, WishlistToggleResponse } from "@/types/wishlist";
+import { normalizeWishlistEntry, unwrapWishlistListPayload } from "@/utils/wishlistHelpers";
 
-export function mapProductDetailToListItem(product: ApiProductDetail): ApiProductListItem {
+function buildWishlistParams(params?: WishlistListParams) {
   return {
-    id: product.id,
-    name: product.basic_details.name,
-    slug: product.slug,
-    thumbnail: resolveImageUrl(product.images.thumbnail),
-    price: product.pricing.price,
-    currency: "INR",
-    moq: product.pricing.minimum_order_quantity,
-    unit: product.pricing.unit,
-    supplier_name: product.seller.company.name,
-    verified: true,
-    rating: product.ratings.average,
-    city: product.seller.location.city,
-    state: product.seller.location.state,
-    is_trending: product.marketplace.is_trending ?? false,
-    created_at: product.created_at,
-    subcategory_id: product.basic_details.subcategory?.id ?? null,
-    subcategory_name: product.basic_details.subcategory?.name ?? null,
+    page: params?.page ?? 1,
+    limit: params?.limit ?? 20,
+    search: params?.search ?? "",
   };
 }
 
-export async function fetchWishlistProducts(productIds: number[]): Promise<ApiProductListItem[]> {
-  if (productIds.length === 0) return [];
+/** GET /api/v1/wishlist — paginated wishlist products (requires auth). */
+export async function fetchWishlist(params?: WishlistListParams): Promise<WishlistListResult> {
+  const page = params?.page ?? 1;
+  const limit = params?.limit ?? 20;
 
-  const results = await Promise.all(
-    productIds.map(async (id) => {
-      try {
-        const product = await fetchProductById(id);
-        return product ? mapProductDetailToListItem(product) : null;
-      } catch {
-        return null;
-      }
-    })
-  );
+  const response = await apiClient.get(API_ENDPOINTS.WISHLIST, {
+    params: buildWishlistParams(params),
+  });
+  const data = unwrapApiPayload<unknown>(response.data);
+  const paginated = unwrapWishlistListPayload(data, page, limit);
+  const results = paginated.results
+    .map(normalizeWishlistEntry)
+    .filter((item): item is ApiProductListItem => item !== null);
 
-  return results.filter((item): item is ApiProductListItem => item !== null);
+  const total =
+    paginated.pagination.total > 0 ? paginated.pagination.total : results.length;
+
+  return {
+    pagination: {
+      ...paginated.pagination,
+      total,
+      totalPages:
+        paginated.pagination.totalPages > 0
+          ? paginated.pagination.totalPages
+          : total > 0
+            ? Math.max(1, Math.ceil(total / limit))
+            : 0,
+    },
+    results,
+  };
+}
+
+/** POST /api/v1/wishlist/toggle — add/remove product from wishlist. */
+export async function toggleWishlistApi(
+  productId: number,
+  currentlyWishlisted?: boolean
+): Promise<boolean> {
+  const response = await apiClient.post(API_ENDPOINTS.WISHLIST_TOGGLE, {
+    product_id: productId,
+  });
+  const data = unwrapApiPayload<WishlistToggleResponse>(response.data);
+
+  if (typeof data.is_wishlist === "boolean") return data.is_wishlist;
+  if (typeof data.is_favourite === "boolean") return data.is_favourite;
+  if (currentlyWishlisted !== undefined) return !currentlyWishlisted;
+
+  return true;
 }

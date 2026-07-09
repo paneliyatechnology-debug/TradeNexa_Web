@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import Link from "next/link";
 
 interface PortalStatCardProps {
   title: string;
@@ -7,6 +8,7 @@ interface PortalStatCardProps {
   color: string;
   bg: string;
   compact?: boolean;
+  href?: string;
 }
 
 export default function PortalStatCard({
@@ -16,13 +18,12 @@ export default function PortalStatCard({
   color,
   bg,
   compact = false,
+  href,
 }: PortalStatCardProps) {
-  return (
-    <div
-      className={`surface-card-hover rounded-xl ${compact ? "p-4" : "p-5"}`}
-    >
+  const content = (
+    <>
       <div className={`inline-flex rounded-xl ${compact ? "mb-3 p-2" : "mb-4 p-2.5"} ${bg}`}>
-        <Icon className={`${compact ? "h-4 w-4" : "h-5 w-5"} ${color}`} />
+        <Icon className={`${compact ? "h-4 w-4" : "h-5 w-5"} ${color}`} strokeWidth={2} />
       </div>
       <p className={`font-semibold tracking-tight text-portal-fg ${compact ? "text-lg" : "text-2xl"}`}>
         {value}
@@ -30,6 +31,20 @@ export default function PortalStatCard({
       <p className={`mt-1 font-medium text-portal-muted ${compact ? "text-xs" : "text-sm"}`}>
         {title}
       </p>
-    </div>
+    </>
   );
+
+  const className = `surface-card-hover rounded-xl ${compact ? "p-4" : "p-5"} ${
+    href ? "relative z-0 block cursor-pointer transition hover:border-primary/30 hover:shadow-md" : ""
+  }`;
+
+  if (href) {
+    return (
+      <Link href={href} className={className} aria-label={`${title}: ${value}`}>
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className={className}>{content}</div>;
 }

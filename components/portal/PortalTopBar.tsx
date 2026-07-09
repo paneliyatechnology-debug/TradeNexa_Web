@@ -3,8 +3,9 @@
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeftRight, Bell, Globe, LogOut, Menu } from "lucide-react";
+import { ArrowLeftRight, Bell, Globe, Heart, LogOut, Menu } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useWishlist } from "@/hooks/useWishlist";
 import { useActiveRole } from "@/context/ActiveRoleContext";
 import { Logo } from "@/components/common/Logo";
 import PortalTooltip from "@/components/portal/PortalTooltip";
@@ -19,6 +20,7 @@ interface PortalTopBarProps {
 export default function PortalTopBar({ title: _title, subtitle: _subtitle, accent: _accent = "buyer", onMenuClick }: PortalTopBarProps) {
   const router = useRouter();
   const { logoutUser } = useAuth();
+  const { wishlistTotal } = useWishlist();
   const { canSwitchRole, activeRole, setActiveRole } = useActiveRole();
 
   function switchRole() {
@@ -66,6 +68,23 @@ export default function PortalTopBar({ title: _title, subtitle: _subtitle, accen
                   {activeRole === "buyer" ? "Switch to Seller" : "Switch to Buyer"}
                 </span>
               </button>
+            </PortalTooltip>
+          ) : null}
+
+          {activeRole === "buyer" ? (
+            <PortalTooltip label={wishlistTotal > 0 ? `Wishlist (${wishlistTotal})` : "Wishlist"}>
+              <Link
+                href="/buyer/wishlist"
+                className="relative flex h-9 w-9 items-center justify-center rounded-lg text-portal-muted transition-colors hover:bg-portal-bg"
+                aria-label={`Wishlist${wishlistTotal > 0 ? `, ${wishlistTotal} saved` : ""}`}
+              >
+                <Heart className="h-5 w-5" strokeWidth={2} />
+                {wishlistTotal > 0 ? (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-white">
+                    {wishlistTotal > 9 ? "9+" : wishlistTotal}
+                  </span>
+                ) : null}
+              </Link>
             </PortalTooltip>
           ) : null}
 

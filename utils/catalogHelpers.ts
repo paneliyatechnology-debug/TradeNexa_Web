@@ -1,5 +1,6 @@
 import type { PaginatedResult, ApiProductListItem } from "@/types/catalog";
 import { API_BASE_URL, BACKEND_ORIGIN } from "@/config/api";
+import { parseWishlistFlag, readProductWishlistFlag } from "@/utils/wishlistHelpers";
 
 function proxyBackendMediaUrl(url: URL): string | null {
   const backendHost = new URL(BACKEND_ORIGIN).host;
@@ -303,6 +304,12 @@ export function unwrapPaginatedResult<T>(payload: unknown): PaginatedResult<T> {
 export function normalizeProductListItem(
   item: Partial<ApiProductListItem> & Pick<ApiProductListItem, "id" | "name" | "price">
 ): ApiProductListItem {
+  const raw = item as Record<string, unknown>;
+  const wishlistFlag =
+    item.is_wishlist !== undefined
+      ? parseWishlistFlag(item.is_wishlist)
+      : readProductWishlistFlag(raw);
+
   return {
     id: item.id,
     name: item.name,
@@ -321,6 +328,7 @@ export function normalizeProductListItem(
     created_at: item.created_at ?? "",
     subcategory_id: item.subcategory_id ?? null,
     subcategory_name: item.subcategory_name ?? null,
+    ...(wishlistFlag !== undefined ? { is_wishlist: wishlistFlag } : {}),
   };
 }
 

@@ -351,8 +351,12 @@ export default function PortalProductDetailView({
   const { isWishlisted, toggleWishlist } = useWishlist();
   const [descExpanded, setDescExpanded] = useState(false);
 
-  const { basic_details: basic, pricing, marketplace, ratings } = product;
-  const wishlisted = isWishlisted(product.id);
+  const { basic_details: basic, pricing, marketplace, ratings, user_actions } = product;
+  const hasWishlistAction = user_actions?.is_favourite != null;
+  const wishlisted = isWishlisted(
+    product.id,
+    user_actions?.is_favourite === true
+  );
 
   const gallery = useMemo(() => {
     const rawUrls = [
@@ -514,14 +518,16 @@ export default function PortalProductDetailView({
           <IconAction onClick={() => void handleShare()} label="Share">
             <Share2 className="h-4 w-4" />
           </IconAction>
-          <IconAction
-            onClick={() => toggleWishlist(product.id)}
-            label="Wishlist"
-            active={wishlisted}
-            danger
-          >
-            <Heart className={`h-4 w-4 ${wishlisted ? "fill-red-500 text-red-500" : ""}`} />
-          </IconAction>
+          {hasWishlistAction ? (
+            <IconAction
+              onClick={() => void toggleWishlist(product.id, wishlisted)}
+              label="Wishlist"
+              active={wishlisted}
+              danger
+            >
+              <Heart className={`h-4 w-4 ${wishlisted ? "fill-red-500 text-red-500" : ""}`} />
+            </IconAction>
+          ) : null}
         </div>
       </motion.div>
 
@@ -757,14 +763,16 @@ export default function PortalProductDetailView({
           <IconAction onClick={() => void handleShare()} label="Share">
             <Share2 className="h-4 w-4" />
           </IconAction>
-          <IconAction
-            onClick={() => toggleWishlist(product.id)}
-            label="Wishlist"
-            active={wishlisted}
-            danger
-          >
-            <Heart className={`h-4 w-4 ${wishlisted ? "fill-red-500 text-red-500" : ""}`} />
-          </IconAction>
+          {hasWishlistAction ? (
+            <IconAction
+              onClick={() => void toggleWishlist(product.id, wishlisted)}
+              label="Wishlist"
+              active={wishlisted}
+              danger
+            >
+              <Heart className={`h-4 w-4 ${wishlisted ? "fill-red-500 text-red-500" : ""}`} />
+            </IconAction>
+          ) : null}
           {contactPhone ? (
             <a
               href={whatsAppHref(contactPhone, inquiryMessage)}

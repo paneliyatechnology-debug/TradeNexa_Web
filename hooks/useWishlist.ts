@@ -13,18 +13,27 @@ export function useWishlist() {
   const onWebsite = !isPortalPath(pathname);
 
   const toggleWishlist = useCallback(
-    (productId: number) => {
-      if (onWebsite && !isAuthenticated) {
+    async (productId: number, currentlyWishlisted?: boolean) => {
+      if (!isAuthenticated) {
         openAuthModal("login");
         return;
       }
-      ctx.toggleWishlist(productId);
+      await ctx.toggleWishlist(productId, currentlyWishlisted);
     },
-    [ctx, onWebsite, isAuthenticated, openAuthModal]
+    [ctx, isAuthenticated, openAuthModal]
+  );
+
+  const removeFromWishlist = useCallback(
+    async (productId: number) => {
+      if (!isAuthenticated) return;
+      await ctx.removeFromWishlist(productId);
+    },
+    [ctx, isAuthenticated]
   );
 
   return {
     ...ctx,
     toggleWishlist,
+    removeFromWishlist,
   };
 }

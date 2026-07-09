@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -91,34 +91,62 @@ function buildAccountDetailRows(user: User | null) {
 export default function PortalProfileView({ variant, menuItems }: PortalProfileViewProps) {
   const router = useRouter();
   const { user, logoutUser } = useAuth();
-  const { wishlistedIds } = useWishlist();
+  const { wishlistTotal, refreshWishlist } = useWishlist();
   const theme = themes[variant];
+
+  useEffect(() => {
+    if (variant === "buyer") {
+      void refreshWishlist();
+    }
+  }, [refreshWishlist, variant]);
 
   const displayName = variant === "seller" ? user?.company || user?.name || "Seller" : user?.name || "Buyer";
   const secondaryLine = variant === "seller" ? user?.name : user?.company;
   const initial = (displayName || "U").charAt(0).toUpperCase();
   const accountDetails = buildAccountDetailRows(user);
 
-  const stats =
-    variant === "buyer"
-      ? [
-          { title: "Wishlist", value: String(wishlistedIds.length), icon: Heart, color: "text-[#FF6D00]", bg: "bg-orange-50" },
-          { title: "Account Type", value: "Buyer", icon: ShieldCheck, color: "text-[#2E7D32]", bg: "bg-emerald-50" },
-          {
-            title: "Company",
-            value: user?.company ? (user.company.length > 12 ? `${user.company.slice(0, 12)}…` : user.company) : "—",
-            icon: Building2,
-            color: "text-[#1565C0]",
-            bg: "bg-blue-50",
-          },
-          { title: "Status", value: "Active", icon: BadgeCheck, color: "text-[#8B5CF6]", bg: "bg-violet-50" },
-        ]
-      : [
-          { title: "New Leads", value: "48", icon: MessageSquare, color: "text-[#FF6D00]", bg: "bg-orange-50" },
-          { title: "Profile Views", value: "1.2k", icon: Eye, color: "text-[#2E7D32]", bg: "bg-emerald-50" },
-          { title: "Listings", value: "24", icon: Package, color: "text-[#1565C0]", bg: "bg-blue-50" },
-          { title: "Status", value: "Verified", icon: BadgeCheck, color: "text-[#F59E0B]", bg: "bg-amber-50" },
-        ];
+  const buyerStats: {
+    title: string;
+    value: string;
+    icon: LucideIcon;
+    color: string;
+    bg: string;
+    href?: string;
+  }[] = [
+    {
+      title: "Wishlist",
+      value: String(wishlistTotal),
+      icon: Heart,
+      color: wishlistTotal > 0 ? "fill-red-500 text-red-500" : "text-[#FF6D00]",
+      bg: wishlistTotal > 0 ? "bg-red-50" : "bg-orange-50",
+      href: "/buyer/wishlist",
+    },
+    { title: "Account Type", value: "Buyer", icon: ShieldCheck, color: "text-[#2E7D32]", bg: "bg-emerald-50" },
+    {
+      title: "Company",
+      value: user?.company ? (user.company.length > 12 ? `${user.company.slice(0, 12)}…` : user.company) : "—",
+      icon: Building2,
+      color: "text-[#1565C0]",
+      bg: "bg-blue-50",
+    },
+    { title: "Status", value: "Active", icon: BadgeCheck, color: "text-[#8B5CF6]", bg: "bg-violet-50" },
+  ] ;
+
+  const sellerStats: {
+    title: string;
+    value: string;
+    icon: LucideIcon;
+    color: string;
+    bg: string;
+    href?: string;
+  }[] = [
+    { title: "New Leads", value: "48", icon: MessageSquare, color: "text-[#FF6D00]", bg: "bg-orange-50" },
+    { title: "Profile Views", value: "1.2k", icon: Eye, color: "text-[#2E7D32]", bg: "bg-emerald-50" },
+    { title: "Listings", value: "24", icon: Package, color: "text-[#1565C0]", bg: "bg-blue-50" },
+    { title: "Status", value: "Verified", icon: BadgeCheck, color: "text-[#F59E0B]", bg: "bg-amber-50" },
+  ] ;
+
+  const stats = variant === "buyer" ? buyerStats : sellerStats;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
@@ -167,6 +195,7 @@ export default function PortalProfileView({ variant, menuItems }: PortalProfileV
               icon={stat.icon}
               color={stat.color}
               bg={stat.bg}
+              href={stat.href}
             />
           ))}
         </div>
@@ -177,14 +206,21 @@ export default function PortalProfileView({ variant, menuItems }: PortalProfileV
           {menuItems.map((item, index) => {
             const Icon = item.icon;
             const color = quickActionColors[index % quickActionColors.length];
+            const isWishlistAction = variant === "buyer" && item.label === "Wishlist";
+            const iconClass =
+              isWishlistAction && wishlistTotal > 0 ? "fill-red-500 text-red-500" : color;
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className="group flex flex-col items-center gap-2 rounded-2xl border border-[#E8ECF0] bg-white p-3 shadow-sm transition hover:border-[#1565C0]/30 hover:shadow-md sm:p-4"
               >
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#E8ECF0] bg-white transition group-hover:scale-105 sm:h-16 sm:w-16">
-                  <Icon className={`h-6 w-6 sm:h-7 sm:w-7 ${color}`} />
+                <div
+                  className={`flex h-14 w-14 items-center justify-center rounded-2xl border border-[#E8ECF0] bg-white transition group-hover:scale-105 sm:h-16 sm:w-16 ${
+                    isWishlistAction && wishlistTotal > 0 ? "bg-red-50" : ""
+                  }`}
+                >
+                  <Icon className={`h-6 w-6 sm:h-7 sm:w-7 ${iconClass}`} strokeWidth={2} />
                 </div>
                 <span className="line-clamp-2 text-center text-[10px] font-bold text-[#546E7A] sm:text-[11px]">
                   {item.label}
