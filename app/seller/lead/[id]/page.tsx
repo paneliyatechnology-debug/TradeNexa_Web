@@ -11,17 +11,19 @@ import RfqStatusBadge from "@/components/rfq/RfqStatusBadge";
 import { SubmitQuotationFormModal } from "@/components/rfq/SubmitQuotationForm";
 import { ReviseQuotationFormModal } from "@/components/rfq/ReviseQuotationForm";
 import { UpdateQuotationFormModal } from "@/components/rfq/UpdateQuotationForm";
-import { fetchSellerRfqById, findSellerQuotationForRfq } from "@/services/rfqService";
+import { fetchSellerRfqById, findSellerQuotationForRfq, withdrawQuotation } from "@/services/rfqService";
 import type { ApiQuotation, ApiRfqDetail } from "@/types/rfq";
 import { formatPrice } from "@/utils/catalogHelpers";
 import {
   canSellerSubmitQuotation,
   canSellerUpdateQuotation,
+  canSellerWithdrawQuotation,
   formatRfqDate,
   formatRfqLocation,
   formatRfqQuantity,
   isQuotationRevisionPending,
 } from "@/utils/rfqHelpers";
+import { showErrorToast, showSuccessToast } from "@/utils/toast";
 
 function MetaPill({
   icon: Icon,
@@ -60,6 +62,7 @@ export default function SellerLeadDetailPage() {
   const [showQuoteForm, setShowQuoteForm] = useState(false);
   const [showReviseForm, setShowReviseForm] = useState(false);
   const [showUpdateForm, setShowUpdateForm] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
 
   const load = useCallback(async () => {
     if (invalidId) return;
@@ -83,6 +86,23 @@ export default function SellerLeadDetailPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  async function handleWithdraw(quotationId: number) {
+    setWithdrawing(true);
+    try {
+      await withdrawQuotation(quotationId);
+      showSuccessToast("Quotation withdrawn");
+      await load();
+    } catch (err) {
+      const message =
+        err && typeof err === "object" && "message" in err
+          ? String((err as { message: string }).message)
+          : "Failed to withdraw quotation";
+      showErrorToast(message);
+    } finally {
+      setWithdrawing(false);
+    }
+  }
 
   if (invalidId) {
     return (
@@ -223,6 +243,16 @@ export default function SellerLeadDetailPage() {
                   >
                     View in My Quotations
                   </Link>
+                  {canSellerWithdrawQuotation(existingQuotation.status) ? (
+                    <button
+                      type="button"
+                      disabled={withdrawing}
+                      onClick={() => void handleWithdraw(existingQuotation.id)}
+                      className="cursor-pointer rounded-lg border border-red-200 px-3 py-1.5 text-xs font-bold text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Withdraw
+                    </button>
+                  ) : null}
                 </>
               }
             />

@@ -122,13 +122,15 @@ export function normalizeQuotation(raw: unknown): ApiQuotation | null {
   if (id == null) return null;
 
   const seller = readRecord(item.seller);
+  const rfq = readRecord(item.rfq);
+  const product = readRecord(item.product) ?? readRecord(rfq?.product);
 
   return {
     id,
-    rfq_id: pickNumber(item.rfq_id),
+    rfq_id: pickNumber(item.rfq_id) ?? pickNumber(rfq?.id),
     rfq_status:
       pickString(item.rfq_status) ??
-      pickString(readRecord(item.rfq)?.status),
+      pickString(rfq?.status),
     status: pickString(item.status) as QuotationStatus | null,
     price: pickNumber(item.price),
     quantity: pickNumber(item.quantity),
@@ -153,6 +155,14 @@ export function normalizeQuotation(raw: unknown): ApiQuotation | null {
     seller_name: pickString(item.seller_name) ?? pickString(seller?.name),
     seller_company:
       pickString(item.seller_company) ?? pickString(seller?.company_name) ?? pickString(seller?.company),
+    rfq_title:
+      pickString(item.rfq_title) ??
+      pickString(rfq?.title) ??
+      pickString(item.title),
+    product_name:
+      pickString(item.product_name) ??
+      pickString(rfq?.product_name) ??
+      pickString(product?.name),
     created_at: pickString(item.created_at),
     updated_at: pickString(item.updated_at),
   };

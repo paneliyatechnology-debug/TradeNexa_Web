@@ -19,6 +19,8 @@ interface QuotationCardProps {
   actions?: React.ReactNode;
   /** When false, shows "Your quotation" instead of seller identity. */
   showSellerInfo?: boolean;
+  /** When true, shows RFQ product/title instead of seller identity (seller list view). */
+  showProductName?: boolean;
   /** Dim inactive quotes and show status explanation (buyer view). */
   emphasizeStatus?: boolean;
   /** RFQ status helps detect negotiation when quotation status is still "Submitted". */
@@ -29,6 +31,7 @@ export default function QuotationCard({
   quotation,
   actions,
   showSellerInfo = true,
+  showProductName = false,
   emphasizeStatus = false,
   rfqStatus,
 }: QuotationCardProps) {
@@ -44,6 +47,8 @@ export default function QuotationCard({
   const contact = quotation.seller_name?.trim();
   const sellerPrimary = company || contact || "Seller";
   const sellerSecondary = company && contact ? contact : null;
+  const productPrimary =
+    quotation.product_name?.trim() || quotation.rfq_title?.trim() || "Quotation";
 
   return (
     <article
@@ -55,7 +60,15 @@ export default function QuotationCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          {showSellerInfo ? (
+          {showProductName ? (
+            <p
+              className={`truncate text-base font-extrabold sm:text-lg ${
+                inactive ? "text-[#546E7A]" : "text-[#0D1B2A]"
+              }`}
+            >
+              {productPrimary}
+            </p>
+          ) : showSellerInfo ? (
             <>
               <p
                 className={`truncate text-base font-extrabold sm:text-lg ${

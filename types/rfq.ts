@@ -95,6 +95,8 @@ export interface ApiQuotation {
   total_amount?: number | null;
   seller_name?: string | null;
   seller_company?: string | null;
+  rfq_title?: string | null;
+  product_name?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
 }

@@ -122,6 +122,7 @@ export default function SellerQuotationsPage() {
               <QuotationCard
                 key={quotation.id}
                 quotation={quotation}
+                showProductName
                 rfqStatus={quotation.rfq_status}
                 actions={
                   <>
