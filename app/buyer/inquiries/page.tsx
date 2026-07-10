@@ -16,7 +16,7 @@ import { isRfqPostedToday, rfqTabToApiStatus } from "@/utils/rfqHelpers";
 
 const tabs = ["all", "draft", "published", "open", "closed", "cancelled", "expired"] as const;
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 6;
 
 export default function BuyerInquiriesPage() {
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("all");
@@ -63,7 +63,7 @@ export default function BuyerInquiriesPage() {
       ? "Post a requirement to receive quotes from verified sellers."
       : `You don't have any RFQs in the ${activeTab} state.`;
 
-  const showPostPrompt = !loading && pagination.total > 0 && pagination.total <= 5;
+  const showPostPrompt = !loading && pagination.total > 0 && pagination.total <= PAGE_SIZE;
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 lg:px-8">

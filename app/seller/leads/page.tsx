@@ -16,7 +16,7 @@ import { isRfqPostedToday, rfqTabToApiStatus } from "@/utils/rfqHelpers";
 
 const tabs = ["all", "open", "published", "closed"] as const;
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 6;
 
 export default function SellerLeadsPage() {
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("all");
@@ -58,7 +58,7 @@ export default function SellerLeadsPage() {
       ? "New buyer requirements matching your categories will appear here."
       : `No buyer requirements are currently ${activeTab}.`;
 
-  const showCatalogPrompt = !loading && pagination.total > 0 && pagination.total <= 5;
+  const showCatalogPrompt = !loading && pagination.total > 0 && pagination.total <= PAGE_SIZE;
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
