@@ -31,6 +31,7 @@ export function normalizeRfqListItem(raw: unknown): ApiRfqListItem | null {
   const subcategory = readRecord(item.subcategory);
   const product = readRecord(item.product);
   const buyer = readRecord(item.buyer);
+  const company = readRecord(item.company);
 
   return {
     id,
@@ -42,7 +43,10 @@ export function normalizeRfqListItem(raw: unknown): ApiRfqListItem | null {
     unit: pickString(item.unit),
     category_id: pickNumber(item.category_id) ?? pickNumber(category?.id),
     subcategory_id: pickNumber(item.subcategory_id) ?? pickNumber(subcategory?.id),
-    category_name: pickString(item.category_name) ?? pickString(category?.name),
+    category_name:
+      pickString(item.category_name) ??
+      pickString(category?.name) ??
+      (typeof item.category === "string" ? pickString(item.category) : null),
     subcategory_name: pickString(item.subcategory_name) ?? pickString(subcategory?.name),
     city: pickString(item.city) ?? pickString(buyer?.city),
     state: pickString(item.state) ?? pickString(buyer?.state),
@@ -60,7 +64,14 @@ export function normalizeRfqListItem(raw: unknown): ApiRfqListItem | null {
     updated_at: pickString(item.updated_at),
     buyer_name: pickString(item.buyer_name) ?? pickString(buyer?.name) ?? pickString(buyer?.full_name),
     buyer_company:
-      pickString(item.buyer_company) ?? pickString(buyer?.company_name) ?? pickString(buyer?.company),
+      pickString(item.buyer_company) ??
+      pickString(item.company_name) ??
+      pickString(item.buyer_company_name) ??
+      pickString(company?.company_name) ??
+      pickString(company?.name) ??
+      pickString(buyer?.company_name) ??
+      pickString(buyer?.company) ??
+      pickString(buyer?.business_name),
     product_id: pickNumber(item.product_id) ?? pickNumber(product?.id),
     product_name: pickString(item.product_name) ?? pickString(product?.name),
   };
@@ -74,6 +85,7 @@ export function normalizeRfqDetail(raw: unknown): ApiRfqDetail | null {
   const subcategory = readRecord(item.subcategory);
   const product = readRecord(item.product);
   const buyer = readRecord(item.buyer);
+  const company = readRecord(item.company);
 
   return {
     ...base,
@@ -100,14 +112,25 @@ export function normalizeRfqDetail(raw: unknown): ApiRfqDetail | null {
       : base.subcategory_id
         ? { id: base.subcategory_id, name: base.subcategory_name ?? undefined }
         : null,
-    buyer: buyer
-      ? {
-          name: pickString(buyer.name) ?? pickString(buyer.full_name) ?? undefined,
-          company_name: pickString(buyer.company_name) ?? pickString(buyer.company) ?? undefined,
-          city: pickString(buyer.city) ?? undefined,
-          state: pickString(buyer.state) ?? undefined,
-        }
-      : null,
+    buyer:
+      buyer || company || base.buyer_name || base.buyer_company
+        ? {
+            name:
+              pickString(buyer?.name) ??
+              pickString(buyer?.full_name) ??
+              base.buyer_name ??
+              undefined,
+            company_name:
+              pickString(buyer?.company_name) ??
+              pickString(buyer?.company) ??
+              pickString(company?.company_name) ??
+              pickString(company?.name) ??
+              base.buyer_company ??
+              undefined,
+            city: pickString(buyer?.city) ?? undefined,
+            state: pickString(buyer?.state) ?? undefined,
+          }
+        : null,
     my_quotation:
       normalizeQuotation(item.my_quotation) ??
       normalizeQuotation(item.seller_quotation) ??

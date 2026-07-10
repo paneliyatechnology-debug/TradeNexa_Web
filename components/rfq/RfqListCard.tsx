@@ -31,7 +31,10 @@ export default function RfqListCard({ rfq, href, variant = "buyer", meta }: RfqL
   const isNew = isSeller && isRfqRecentlyPosted(rfq.created_at);
 
   const buyerSubtitle =
-    meta ?? ([rfq.buyer_company, rfq.buyer_name].filter(Boolean).join(" · ") || null);
+    meta ??
+    (isSeller
+      ? rfq.buyer_company?.trim() || null
+      : [rfq.buyer_company, rfq.buyer_name].filter(Boolean).join(" · ") || null);
 
   const hoverBorder = "hover:border-[#1565C0]/40";
   const hoverTitle = "group-hover:text-[#1565C0]";

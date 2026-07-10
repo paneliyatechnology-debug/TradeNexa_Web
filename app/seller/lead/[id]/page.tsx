@@ -145,7 +145,7 @@ export default function SellerLeadDetailPage() {
   const revisionPending =
     existingQuotation != null ? isQuotationRevisionPending(existingQuotation, rfq.status) : false;
   const quantity = formatRfqQuantity(rfq);
-  const buyerLine = [rfq.buyer_company, rfq.buyer_name].filter(Boolean).join(" · ");
+  const buyerLine = rfq.buyer_company?.trim() || null;
   const locationLine = rfq.city || rfq.state ? formatRfqLocation(rfq) : null;
 
   return (

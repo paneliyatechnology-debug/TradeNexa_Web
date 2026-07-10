@@ -148,7 +148,7 @@ export default function SellerLeadsPage() {
                     rfq={rfq}
                     href={`/seller/lead/${rfq.id}`}
                     variant="seller"
-                    meta={rfq.buyer_company ?? rfq.buyer_name ?? undefined}
+                    meta={rfq.buyer_company ?? undefined}
                   />
                 ))}
               </div>
