@@ -13,4 +13,9 @@ export const API_ENDPOINTS = {
   BANNERS: "/banners",
   WISHLIST: "/wishlist",
   WISHLIST_TOGGLE: "/wishlist/toggle",
+  RFQS: "/rfqs",
+  RFQS_LATEST: "/rfqs/latest",
+  RFQS_MY: "/rfqs/my",
+  RFQS_SELLER_FEED: "/rfqs/seller/feed",
+  RFQS_SELLER_QUOTATIONS: "/rfqs/seller/quotations",
 } as const;

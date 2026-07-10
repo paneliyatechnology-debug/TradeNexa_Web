@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useId, useRef, useState } from "react";
+import React, { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, ChevronDown, Loader2 } from "lucide-react";
 import { inputClassName } from "./FormField";
 
@@ -15,11 +16,14 @@ interface SelectProps {
   value?: string;
   onChange?: (e: { target: { value: string; id?: string; name?: string } }) => void;
   placeholder?: string;
+  searchPlaceholder?: string;
   error?: boolean;
   disabled?: boolean;
   className?: string;
   name?: string;
   required?: boolean;
+  /** Type in the select field to filter options (default: true) */
+  searchable?: boolean;
   /** Infinite-scroll: more pages available */
   hasMore?: boolean;
   /** Infinite-scroll: loading next page */
@@ -28,40 +32,153 @@ interface SelectProps {
   onLoadMore?: () => void;
 }
 
+interface MenuPosition {
+  top: number;
+  left: number;
+  width: number;
+  maxHeight: number;
+  placement: "bottom" | "top";
+}
+
+const MENU_GAP = 6;
+const VIEWPORT_PADDING = 12;
+const PREFERRED_MAX_HEIGHT = 240;
+const MIN_MENU_HEIGHT = 96;
+
 export function Select({
   id,
   options,
   value = "",
   onChange,
   placeholder = "Select an option",
+  searchPlaceholder,
   error,
   disabled,
   className = "",
   name,
   required,
+  searchable,
   hasMore = false,
   loadingMore = false,
   onLoadMore,
 }: SelectProps) {
   const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [mounted, setMounted] = useState(false);
+  const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const listboxId = useId();
   const loadMoreLock = useRef(false);
 
+  const showSearch = searchable !== false;
+  const inputPlaceholder = searchPlaceholder ?? `Type to search — ${placeholder}`;
+
   const selected = options.find((opt) => opt.value === value) ?? null;
+
+  const filteredOptions = useMemo(() => {
+    if (!showSearch || !open) return options;
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return options;
+    return options.filter((opt) => opt.label.toLowerCase().includes(query));
+  }, [options, open, searchQuery, showSearch]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!open) setSearchQuery("");
+  }, [open]);
+
+  useEffect(() => {
+    if (!open || !showSearch) return;
+    const timer = window.setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 0);
+    return () => window.clearTimeout(timer);
+  }, [open, showSearch]);
+
+  function openMenu() {
+    if (disabled || open) return;
+    setSearchQuery("");
+    setOpen(true);
+  }
+
+  function closeMenu() {
+    setOpen(false);
+    setSearchQuery("");
+    inputRef.current?.blur();
+  }
+
+  function toggleMenu() {
+    if (disabled) return;
+    if (open) closeMenu();
+    else openMenu();
+  }
+
+  function updateMenuPosition() {
+    const anchor = triggerRef.current;
+    if (!anchor) return;
+
+    const rect = anchor.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom - VIEWPORT_PADDING;
+    const spaceAbove = rect.top - VIEWPORT_PADDING;
+
+    const openBelow = spaceBelow >= MIN_MENU_HEIGHT || spaceBelow >= spaceAbove;
+
+    if (openBelow) {
+      const maxHeight = Math.min(PREFERRED_MAX_HEIGHT, Math.max(MIN_MENU_HEIGHT, spaceBelow - MENU_GAP));
+      setMenuPosition({
+        top: rect.bottom + MENU_GAP,
+        left: rect.left,
+        width: rect.width,
+        maxHeight,
+        placement: "bottom",
+      });
+      return;
+    }
+
+    const maxHeight = Math.min(PREFERRED_MAX_HEIGHT, Math.max(MIN_MENU_HEIGHT, spaceAbove - MENU_GAP));
+    setMenuPosition({
+      top: rect.top - MENU_GAP - maxHeight,
+      left: rect.left,
+      width: rect.width,
+      maxHeight,
+      placement: "top",
+    });
+  }
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setMenuPosition(null);
+      return;
+    }
+
+    updateMenuPosition();
+    const raf = window.requestAnimationFrame(updateMenuPosition);
+
+    window.addEventListener("scroll", updateMenuPosition, true);
+    window.addEventListener("resize", updateMenuPosition);
+
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", updateMenuPosition, true);
+      window.removeEventListener("resize", updateMenuPosition);
+    };
+  }, [open, options.length, filteredOptions.length]);
 
   useEffect(() => {
     if (!open) return;
 
     const handlePointerDown = (event: MouseEvent | TouchEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
+      const target = event.target as Node;
+      if (triggerRef.current?.contains(target) || menuRef.current?.contains(target)) return;
+      closeMenu();
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") closeMenu();
     };
 
     document.addEventListener("mousedown", handlePointerDown);
@@ -74,12 +191,6 @@ export function Select({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const selectedEl = listRef.current?.querySelector<HTMLElement>('[aria-selected="true"]');
-    selectedEl?.scrollIntoView({ block: "nearest" });
-  }, [open, value]);
 
   useEffect(() => {
     if (!loadingMore) loadMoreLock.current = false;
@@ -96,56 +207,74 @@ export function Select({
 
   function selectOption(nextValue: string) {
     onChange?.({ target: { value: nextValue, id, name } });
-    setOpen(false);
+    closeMenu();
   }
 
-  return (
-    <div ref={rootRef} className="relative">
-      <button
-        id={id}
-        type="button"
-        disabled={disabled}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        aria-controls={listboxId}
-        aria-invalid={!!error}
-        aria-required={required}
-        onClick={() => {
-          if (!disabled) setOpen((prev) => !prev);
+  function handleTriggerKeyDown(event: React.KeyboardEvent) {
+    if (!showSearch) return;
+
+    if (event.key === "Escape") {
+      closeMenu();
+      return;
+    }
+
+    if (event.key === "Enter" && open && filteredOptions.length === 1) {
+      event.preventDefault();
+      selectOption(filteredOptions[0].value);
+      return;
+    }
+
+    if (!open && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      openMenu();
+      setSearchQuery(event.key);
+      event.preventDefault();
+    }
+  }
+
+  const openRing = open ? "border-blue-500 ring-2 ring-blue-500/20" : "";
+  const errorRing = error ? "border-red-300 focus:border-red-500 focus:ring-red-500/20" : "";
+
+  const triggerClass = `flex h-12 w-full items-center rounded-lg border bg-white px-3 text-left text-sm outline-none transition-all duration-200 appearance-none ${
+    error ? errorRing : `border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 ${openRing}`
+  } ${disabled ? "cursor-not-allowed opacity-60" : ""} ${className}`;
+
+  const menu =
+    open && !disabled && menuPosition ? (
+      <div
+        ref={menuRef}
+        style={{
+          position: "fixed",
+          top: menuPosition.top,
+          left: menuPosition.left,
+          width: menuPosition.width,
+          maxHeight: menuPosition.maxHeight,
+          zIndex: 9999,
         }}
-        className={`${inputClassName(error)} flex h-12 w-full items-center justify-between gap-2 text-left appearance-none pr-10 ${
-          !selected ? "text-slate-400" : "text-slate-900"
-        } ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"} ${className}`}
-      >
-        <span className="truncate">{selected?.label ?? placeholder}</span>
-      </button>
-
-      <ChevronDown
-        className={`pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 transition ${
-          open ? "rotate-180" : ""
+        className={`flex flex-col overflow-hidden border border-slate-200 bg-white shadow-[0_12px_40px_-12px_rgba(15,23,42,0.22)] ${
+          menuPosition.placement === "bottom" ? "rounded-xl" : "rounded-xl"
         }`}
-      />
-
-      {open && !disabled ? (
+      >
         <ul
           ref={listRef}
           id={listboxId}
           role="listbox"
           aria-labelledby={id}
           onScroll={(e) => maybeLoadMore(e.currentTarget)}
-          className="absolute left-0 right-0 top-full z-[80] mt-2 max-h-56 overflow-y-auto overscroll-contain rounded-xl border border-slate-200 bg-white p-1 shadow-[0_8px_32px_-8px_rgba(15,23,42,0.15)]"
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-1 [scrollbar-color:#CBD5E1_transparent] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#CBD5E1]"
         >
-          {options.length === 0 && !loadingMore ? (
-            <li className="px-3.5 py-2.5 text-sm text-slate-400">{placeholder}</li>
+          {filteredOptions.length === 0 && !loadingMore ? (
+            <li className="px-3 py-2.5 text-sm text-slate-400">
+              {searchQuery.trim() ? "No results found" : placeholder}
+            </li>
           ) : (
             <>
-              {options.map((opt) => {
+              {filteredOptions.map((opt) => {
                 const isSelected = opt.value === value;
                 return (
                   <li key={opt.value} role="option" aria-selected={isSelected}>
                     <button
                       type="button"
-                      className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
+                      className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                         isSelected
                           ? "bg-primary/8 font-semibold text-primary"
                           : "text-slate-700 hover:bg-slate-50"
@@ -158,8 +287,8 @@ export function Select({
                   </li>
                 );
               })}
-              {(hasMore || loadingMore) && (
-                <li className="flex items-center justify-center gap-2 px-3.5 py-2.5 text-xs text-slate-400">
+              {!searchQuery.trim() && (hasMore || loadingMore) ? (
+                <li className="flex items-center justify-center gap-2 px-3 py-2.5 text-xs text-slate-400">
                   {loadingMore ? (
                     <>
                       <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
@@ -169,11 +298,74 @@ export function Select({
                     "Scroll for more"
                   )}
                 </li>
-              )}
+              ) : null}
             </>
           )}
         </ul>
-      ) : null}
+      </div>
+    ) : null;
+
+  return (
+    <div ref={triggerRef} className={`relative ${open ? "z-30" : ""}`}>
+      <div className="relative">
+        {showSearch ? (
+          <input
+            ref={inputRef}
+            id={id}
+            type="text"
+            role="combobox"
+            disabled={disabled}
+            aria-haspopup="listbox"
+            aria-expanded={open}
+            aria-controls={listboxId}
+            aria-autocomplete="list"
+            aria-invalid={!!error}
+            aria-required={required}
+            readOnly={!open}
+            value={open ? searchQuery : (selected?.label ?? "")}
+            placeholder={selected || open ? inputPlaceholder : placeholder}
+            onChange={(e) => {
+              if (open) setSearchQuery(e.target.value);
+            }}
+            onFocus={() => {
+              if (!disabled) openMenu();
+            }}
+            onKeyDown={handleTriggerKeyDown}
+            className={`${triggerClass} pr-10 ${!open && !selected ? "text-slate-400" : "text-slate-900"} ${
+              open ? "cursor-text" : "cursor-pointer"
+            }`}
+          />
+        ) : (
+          <button
+            id={id}
+            type="button"
+            disabled={disabled}
+            aria-haspopup="listbox"
+            aria-expanded={open}
+            aria-controls={listboxId}
+            aria-invalid={!!error}
+            aria-required={required}
+            onClick={toggleMenu}
+            className={`${triggerClass} pr-10 ${!selected ? "text-slate-400" : "text-slate-900"} cursor-pointer`}
+          >
+            <span className="truncate">{selected?.label ?? placeholder}</span>
+          </button>
+        )}
+
+        <button
+          type="button"
+          tabIndex={-1}
+          disabled={disabled}
+          aria-label={open ? "Close options" : "Open options"}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={toggleMenu}
+          className="absolute right-0 top-0 flex h-full w-10 items-center justify-center text-slate-400 transition hover:text-slate-600 disabled:pointer-events-none"
+        >
+          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+        </button>
+      </div>
+
+      {mounted && menu ? createPortal(menu, document.body) : null}
     </div>
   );
 }

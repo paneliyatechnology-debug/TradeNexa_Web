@@ -1,5 +1,6 @@
 import React from "react";
-import { inputClassName } from "./FormField";
+import { dateInputClassName, inputClassName } from "./FormField";
+import { openDatePicker } from "./DateInput";
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   id: string;
@@ -15,9 +16,32 @@ export const Input: React.FC<InputProps> = ({
   error,
   icon: Icon,
   className = "",
+  type,
+  onClick,
   ...rest
 }) => {
-  const inputStyles = `${inputClassName(error)} ${Icon ? "pl-11" : ""} ${className}`;
+  const isPickerInput = type === "date" || type === "datetime-local" || type === "month" || type === "time";
+  const inputStyles = `${isPickerInput ? dateInputClassName(error) : inputClassName(error)} ${Icon ? "pl-11" : ""} ${className}`;
+
+  const pickerHandlers = isPickerInput
+    ? {
+        onClick: (e: React.MouseEvent<HTMLInputElement>) => {
+          openDatePicker(e.currentTarget);
+          onClick?.(e);
+        },
+      }
+    : { onClick };
+
+  const inputEl = (
+    <input
+      id={id}
+      type={type}
+      className={inputStyles}
+      aria-invalid={!!error}
+      {...pickerHandlers}
+      {...rest}
+    />
+  );
 
   if (label) {
     return (
@@ -32,7 +56,7 @@ export const Input: React.FC<InputProps> = ({
           {Icon && (
             <Icon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           )}
-          <input id={id} className={inputStyles} aria-invalid={!!error} {...rest} />
+          {inputEl}
         </div>
       </div>
     );
@@ -42,10 +66,10 @@ export const Input: React.FC<InputProps> = ({
     return (
       <div className="relative">
         <Icon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-        <input id={id} className={inputStyles} aria-invalid={!!error} {...rest} />
+        {inputEl}
       </div>
     );
   }
 
-  return <input id={id} className={inputStyles} aria-invalid={!!error} {...rest} />;
+  return inputEl;
 };

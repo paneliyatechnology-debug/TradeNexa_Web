@@ -81,7 +81,7 @@ export default function ProductWizardStepper({
                     aria-current={isActive ? "step" : undefined}
                     aria-label={`${step.label}${isCompleted ? ", completed" : isActive ? ", current" : ""}`}
                     onClick={() => canClick && onStepClick(idx)}
-                    className="group flex flex-col items-center gap-2 focus-visible:outline-none disabled:cursor-not-allowed"
+                    className="group flex cursor-pointer flex-col items-center gap-2 focus-visible:outline-none disabled:cursor-not-allowed"
                   >
                     <motion.span
                       layout

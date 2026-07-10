@@ -1,65 +1,198 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
+import { FileText, Loader2, Plus } from "lucide-react";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
-import { demoInquiries, type InquiryStatus } from "@/data/portalDemo";
+import PortalEmptyState from "@/components/portal/PortalEmptyState";
+import PortalPagination from "@/components/portal/PortalPagination";
+import RfqListCard from "@/components/rfq/RfqListCard";
+import RfqListSidebar from "@/components/rfq/RfqListSidebar";
+import RfqListToolbar from "@/components/rfq/RfqListToolbar";
+import { fetchMyRfqs } from "@/services/rfqService";
+import { usePaginatedList } from "@/hooks/usePaginatedList";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { isRfqPostedToday, rfqTabToApiStatus } from "@/utils/rfqHelpers";
 
-const tabs = ["all", "pending", "quoted", "closed"] as const;
-const statusStyles: Record<InquiryStatus, string> = {
-  pending: "bg-amber-50 text-amber-700",
-  quoted: "bg-emerald-50 text-emerald-700",
-  closed: "bg-slate-100 text-slate-600",
-};
+const tabs = ["all", "draft", "published", "open", "closed", "cancelled", "expired"] as const;
+
+const PAGE_SIZE = 5;
 
 export default function BuyerInquiriesPage() {
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("all");
-  const filtered =
-    activeTab === "all" ? demoInquiries : demoInquiries.filter((i) => i.status === activeTab);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search);
+
+  const fetchPage = useCallback(
+    (page: number) =>
+      fetchMyRfqs({
+        page,
+        limit: PAGE_SIZE,
+        sort_by: "created_at",
+        sort_order: "desc",
+        status: rfqTabToApiStatus(activeTab),
+        search: debouncedSearch || undefined,
+      }),
+    [activeTab, debouncedSearch]
+  );
+
+  const { items, pagination, loading, error, goToPage } = usePaginatedList({
+    fetchPage,
+    resetDeps: [activeTab, debouncedSearch],
+  });
+
+  const newTodayCount = useMemo(
+    () => items.filter((rfq) => isRfqPostedToday(rfq.created_at)).length,
+    [items]
+  );
+
+  const quotesOnPage = useMemo(
+    () => items.reduce((sum, rfq) => sum + (rfq.quotations_count ?? 0), 0),
+    [items]
+  );
+
+  const hasSearch = debouncedSearch.trim().length > 0;
+  const emptyTitle = hasSearch
+    ? "No RFQs match your search"
+    : activeTab === "all"
+      ? "No RFQs yet"
+      : `No ${activeTab} RFQs`;
+  const emptyDescription = hasSearch
+    ? `No results for "${debouncedSearch.trim()}". Try a different keyword or clear the search.`
+    : activeTab === "all"
+      ? "Post a requirement to receive quotes from verified sellers."
+      : `You don't have any RFQs in the ${activeTab} state.`;
+
+  const showPostPrompt = !loading && pagination.total > 0 && pagination.total <= 5;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-5 sm:px-6 lg:px-8">
-      <PortalPageHeader title="My Inquiries" subtitle="Track your RFQs and quotes" />
-      <div className="mb-6 flex gap-2 overflow-x-auto pb-1">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => setActiveTab(tab)}
-            className={`shrink-0 rounded-full px-4 py-2 text-xs font-bold capitalize transition ${
-              activeTab === tab ? "bg-[#1565C0] text-white" : "bg-white text-[#546E7A] border border-[#E0E6ED]"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-      <div className="space-y-3">
-        {filtered.map((inquiry) => (
-          <div key={inquiry.id} className="rounded-2xl border border-[#E8ECF0] bg-white p-4">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="font-extrabold text-[#0D1B2A]">{inquiry.productName}</p>
-                <p className="text-xs text-[#546E7A]">{inquiry.supplierName}</p>
-              </div>
-              <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold capitalize ${statusStyles[inquiry.status]}`}>
-                {inquiry.status}
+    <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
+      <PortalPageHeader
+        title="My RFQs"
+        subtitle="Track your requirements and seller quotes"
+        action={
+          <div className="flex items-center gap-2">
+            {newTodayCount > 0 ? (
+              <span className="inline-flex items-center rounded-full bg-[#E3F2FD] px-3 py-1 text-xs font-bold text-[#1565C0]">
+                {newTodayCount} new today
               </span>
-            </div>
-            <p className="mt-2 text-sm text-[#546E7A]">{inquiry.message}</p>
-            <div className="mt-3 flex items-center justify-between text-xs text-[#546E7A]">
-              <span>Qty: {inquiry.quantity}</span>
-              <span>{inquiry.date}</span>
-            </div>
+            ) : null}
+            <Link
+              href="/buyer/post-requirement"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#1565C0] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#1255A8] active:scale-[0.98]"
+            >
+              <Plus className="h-4 w-4" />
+              New RFQ
+            </Link>
           </div>
-        ))}
+        }
+      />
+
+      <RfqListToolbar
+        loading={loading}
+        countLabel={`${pagination.total} RFQ${pagination.total === 1 ? "" : "s"}`}
+        search={{
+          value: search,
+          onChange: setSearch,
+          placeholder: "Search RFQs by title, category, or description...",
+        }}
+        filters={
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className={`shrink-0 cursor-pointer rounded-full px-3 py-1.5 text-[11px] font-bold capitalize transition ${
+                  activeTab === tab
+                    ? "bg-[#1565C0] text-white shadow-sm"
+                    : "bg-white text-[#546E7A] ring-1 ring-[#E0E6ED] hover:ring-[#1565C0]/30"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        }
+      />
+
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_240px] lg:gap-6">
+        <div>
+          {error ? (
+            <p className="mb-4 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-600">{error}</p>
+          ) : null}
+
+          {loading ? (
+            <div className="flex items-center justify-center gap-2 py-20 text-sm text-[#546E7A]">
+              <Loader2 className="h-5 w-5 animate-spin text-[#1565C0]" />
+              Loading RFQs...
+            </div>
+          ) : items.length === 0 ? (
+            <PortalEmptyState
+              icon={FileText}
+              title={emptyTitle}
+              description={emptyDescription}
+              action={
+                hasSearch ? (
+                  <button
+                    type="button"
+                    onClick={() => setSearch("")}
+                    className="cursor-pointer rounded-xl border border-[#E0E6ED] px-4 py-2 text-sm font-bold text-[#546E7A]"
+                  >
+                    Clear search
+                  </button>
+                ) : activeTab === "all" ? (
+                  <Link
+                    href="/buyer/post-requirement"
+                    className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-[#1565C0] px-4 py-2 text-sm font-bold text-white"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Post Requirement
+                  </Link>
+                ) : undefined
+              }
+            />
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {items.map((rfq) => (
+                  <RfqListCard key={rfq.id} rfq={rfq} href={`/buyer/rfq/${rfq.id}`} variant="buyer" />
+                ))}
+              </div>
+              <PortalPagination
+                pagination={pagination}
+                onPageChange={goToPage}
+                loading={loading}
+                itemLabel="RFQs"
+                compact
+              />
+            </>
+          )}
+
+          {showPostPrompt ? (
+            <div className="mt-6 rounded-2xl border border-dashed border-[#E0E6ED] bg-[#FAFBFC] p-5 text-center">
+              <p className="text-sm font-bold text-[#0D1B2A]">Need more quotes?</p>
+              <p className="mt-1 text-xs text-[#546E7A]">
+                Post a new requirement or publish drafts so sellers can start quoting.
+              </p>
+              <Link
+                href="/buyer/post-requirement"
+                className="mt-3 inline-flex cursor-pointer items-center gap-1 rounded-xl border border-[#E0E6ED] bg-white px-4 py-2 text-xs font-bold text-[#546E7A] transition hover:border-[#1565C0]/40 hover:text-[#1565C0]"
+              >
+                Post requirement
+              </Link>
+            </div>
+          ) : null}
+        </div>
+
+        <RfqListSidebar
+          stats={[
+            { label: "Total RFQs", value: loading ? "—" : pagination.total },
+            { label: "New today", value: loading ? "—" : newTodayCount, highlight: newTodayCount > 0 },
+            { label: "Quotes on this page", value: loading ? "—" : quotesOnPage, highlight: quotesOnPage > 0 },
+          ]}
+        />
       </div>
-      <Link
-        href="/buyer/send-inquiry"
-        className="mt-6 flex w-full items-center justify-center rounded-2xl bg-[#1565C0] py-3.5 text-sm font-bold text-white"
-      >
-        New Inquiry
-      </Link>
     </div>
   );
 }

@@ -1,59 +1,198 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
+import { Inbox, Loader2, MessageSquare } from "lucide-react";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
-import { demoLeads, type LeadStatus } from "@/data/portalDemo";
+import PortalEmptyState from "@/components/portal/PortalEmptyState";
+import PortalPagination from "@/components/portal/PortalPagination";
+import RfqListCard from "@/components/rfq/RfqListCard";
+import RfqListSidebar from "@/components/rfq/RfqListSidebar";
+import RfqListToolbar from "@/components/rfq/RfqListToolbar";
+import { fetchSellerRfqFeed } from "@/services/rfqService";
+import { usePaginatedList } from "@/hooks/usePaginatedList";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { isRfqPostedToday, rfqTabToApiStatus } from "@/utils/rfqHelpers";
 
-const tabs = ["all", "new", "responded", "won", "lost"] as const;
-const statusStyles: Record<LeadStatus, string> = {
-  new: "bg-blue-50 text-blue-700",
-  responded: "bg-violet-50 text-violet-700",
-  won: "bg-emerald-50 text-emerald-700",
-  lost: "bg-slate-100 text-slate-600",
-};
+const tabs = ["all", "open", "published", "closed"] as const;
+
+const PAGE_SIZE = 5;
 
 export default function SellerLeadsPage() {
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("all");
-  const filtered = activeTab === "all" ? demoLeads : demoLeads.filter((l) => l.status === activeTab);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search);
+
+  const fetchPage = useCallback(
+    (page: number) =>
+      fetchSellerRfqFeed({
+        page,
+        limit: PAGE_SIZE,
+        sort_by: "created_at",
+        sort_order: "desc",
+        status: rfqTabToApiStatus(activeTab),
+        search: debouncedSearch || undefined,
+      }),
+    [activeTab, debouncedSearch]
+  );
+
+  const { items, pagination, loading, error, goToPage } = usePaginatedList({
+    fetchPage,
+    resetDeps: [activeTab, debouncedSearch],
+  });
+
+  const newTodayCount = useMemo(
+    () => items.filter((rfq) => isRfqPostedToday(rfq.created_at)).length,
+    [items]
+  );
+
+  const hasSearch = debouncedSearch.trim().length > 0;
+  const emptyTitle = hasSearch
+    ? "No RFQs match your search"
+    : activeTab === "all"
+      ? "No RFQs in your feed"
+      : `No ${activeTab} RFQs`;
+  const emptyDescription = hasSearch
+    ? `No results for "${debouncedSearch.trim()}". Try a different keyword or clear the search.`
+    : activeTab === "all"
+      ? "New buyer requirements matching your categories will appear here."
+      : `No buyer requirements are currently ${activeTab}.`;
+
+  const showCatalogPrompt = !loading && pagination.total > 0 && pagination.total <= 5;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-5 sm:px-6 lg:px-8">
-      <PortalPageHeader title="Lead Inbox" subtitle="Buyer inquiries and RFQs" />
-      <div className="mb-6 flex gap-2 overflow-x-auto pb-1">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => setActiveTab(tab)}
-            className={`shrink-0 rounded-full px-4 py-2 text-xs font-bold capitalize ${
-              activeTab === tab ? "bg-[#FF6D00] text-white" : "bg-white text-[#546E7A] border border-[#E0E6ED]"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-      <div className="space-y-3">
-        {filtered.map((lead) => (
+    <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
+      <PortalPageHeader
+        title="RFQ Feed"
+        subtitle="Buyer requirements you can quote on"
+        action={
+          newTodayCount > 0 ? (
+            <span className="inline-flex items-center rounded-full bg-[#E3F2FD] px-3 py-1 text-xs font-bold text-[#1565C0]">
+              {newTodayCount} new today
+            </span>
+          ) : null
+        }
+      />
+
+      <RfqListToolbar
+        loading={loading}
+        countLabel={`${pagination.total} RFQ${pagination.total === 1 ? "" : "s"} in feed`}
+        search={{
+          value: search,
+          onChange: setSearch,
+          placeholder: "Search RFQs by title, buyer, or category...",
+        }}
+        filters={
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className={`shrink-0 cursor-pointer rounded-full px-3 py-1.5 text-[11px] font-bold capitalize transition ${
+                  activeTab === tab
+                    ? "bg-[#1565C0] text-white shadow-sm"
+                    : "bg-white text-[#546E7A] ring-1 ring-[#E0E6ED] hover:ring-[#1565C0]/30"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        }
+        trailing={
           <Link
-            key={lead.id}
-            href={`/seller/lead/${lead.id}`}
-            className="block rounded-2xl border border-[#E8ECF0] bg-white p-4 transition hover:shadow-md"
+            href="/seller/quotations"
+            className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-[#546E7A] ring-1 ring-[#E0E6ED] transition hover:ring-[#1565C0]/40 hover:text-[#1565C0]"
           >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="font-extrabold text-[#0D1B2A]">{lead.buyerName}</p>
-                <p className="text-xs text-[#546E7A]">{lead.company} · {lead.location}</p>
-              </div>
-              <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold capitalize ${statusStyles[lead.status]}`}>
-                {lead.status}
-              </span>
-            </div>
-            <p className="mt-2 text-sm text-[#0D1B2A]">{lead.requirement}</p>
-            <p className="mt-2 text-xs text-[#546E7A]">{lead.time} · {lead.quantity}</p>
+            <MessageSquare className="h-3.5 w-3.5" />
+            My Quotations
           </Link>
-        ))}
+        }
+      />
+
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_240px] lg:gap-6">
+        <div>
+          {error ? (
+            <p className="mb-4 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-600">{error}</p>
+          ) : null}
+
+          {loading ? (
+            <div className="flex items-center justify-center gap-2 py-20 text-sm text-[#546E7A]">
+              <Loader2 className="h-5 w-5 animate-spin text-[#1565C0]" />
+              Loading RFQs...
+            </div>
+          ) : items.length === 0 ? (
+            <PortalEmptyState
+              icon={Inbox}
+              title={emptyTitle}
+              description={emptyDescription}
+              action={
+                hasSearch ? (
+                  <button
+                    type="button"
+                    onClick={() => setSearch("")}
+                    className="cursor-pointer rounded-xl border border-[#E0E6ED] px-4 py-2 text-sm font-bold text-[#546E7A]"
+                  >
+                    Clear search
+                  </button>
+                ) : undefined
+              }
+            />
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {items.map((rfq) => (
+                  <RfqListCard
+                    key={rfq.id}
+                    rfq={rfq}
+                    href={`/seller/lead/${rfq.id}`}
+                    variant="seller"
+                    meta={rfq.buyer_company ?? rfq.buyer_name ?? undefined}
+                  />
+                ))}
+              </div>
+              <PortalPagination
+                pagination={pagination}
+                onPageChange={goToPage}
+                loading={loading}
+                itemLabel="RFQs"
+                compact
+              />
+            </>
+          )}
+
+          {showCatalogPrompt ? (
+            <div className="mt-6 rounded-2xl border border-dashed border-[#E0E6ED] bg-[#FAFBFC] p-5 text-center">
+              <p className="text-sm font-bold text-[#0D1B2A]">Want more leads?</p>
+              <p className="mt-1 text-xs text-[#546E7A]">
+                Keep your catalog up to date so buyers can find you for matching requirements.
+              </p>
+              <Link
+                href="/seller/catalog"
+                className="mt-3 inline-flex cursor-pointer items-center gap-1 rounded-xl border border-[#E0E6ED] bg-white px-4 py-2 text-xs font-bold text-[#546E7A] transition hover:border-[#1565C0]/40 hover:text-[#1565C0]"
+              >
+                Manage catalog
+              </Link>
+            </div>
+          ) : null}
+        </div>
+
+        <RfqListSidebar
+          stats={[
+            { label: "Total in feed", value: loading ? "—" : pagination.total },
+            { label: "New today", value: loading ? "—" : newTodayCount, highlight: newTodayCount > 0 },
+          ]}
+          action={
+            <Link
+              href="/seller/quotations"
+              className="flex cursor-pointer items-center justify-between rounded-2xl border border-[#E8ECF0] bg-white p-4 text-sm font-bold text-[#546E7A] transition hover:border-[#1565C0]/40 hover:text-[#1565C0]"
+            >
+              My Quotations
+              <MessageSquare className="h-4 w-4" />
+            </Link>
+          }
+        />
       </div>
     </div>
   );

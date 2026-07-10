@@ -1,39 +1,277 @@
 "use client";
 
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Calendar, Clock, Loader2, MapPin, Package, Wallet } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import PortalBackLink from "@/components/portal/PortalBackLink";
-import { demoLeads } from "@/data/portalDemo";
-import { showSuccessToast } from "@/utils/toast";
+import QuotationCard from "@/components/rfq/QuotationCard";
+import RfqStatusBadge from "@/components/rfq/RfqStatusBadge";
+import { SubmitQuotationFormModal } from "@/components/rfq/SubmitQuotationForm";
+import { ReviseQuotationFormModal } from "@/components/rfq/ReviseQuotationForm";
+import { UpdateQuotationFormModal } from "@/components/rfq/UpdateQuotationForm";
+import { fetchSellerRfqById, findSellerQuotationForRfq } from "@/services/rfqService";
+import type { ApiQuotation, ApiRfqDetail } from "@/types/rfq";
+import { formatPrice } from "@/utils/catalogHelpers";
+import {
+  canSellerSubmitQuotation,
+  canSellerUpdateQuotation,
+  formatRfqDate,
+  formatRfqLocation,
+  formatRfqQuantity,
+  isQuotationRevisionPending,
+} from "@/utils/rfqHelpers";
+
+function MetaPill({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F4F6F9] px-3 py-1 text-xs font-semibold text-[#546E7A]">
+      <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
+      <span className="text-[#90A4AE]">{label}</span>
+      <span className="text-[#0D1B2A]">{value}</span>
+    </span>
+  );
+}
+
+function PageShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-full bg-[#F7F8FA]">
+      <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 lg:px-8">{children}</div>
+    </div>
+  );
+}
 
 export default function SellerLeadDetailPage() {
   const params = useParams();
-  const lead = demoLeads.find((l) => l.id === params.id) ?? demoLeads[0];
+  const rfqId = Number(params.id);
+  const invalidId = !rfqId || Number.isNaN(rfqId);
+
+  const [rfq, setRfq] = useState<ApiRfqDetail | null>(null);
+  const [existingQuotation, setExistingQuotation] = useState<ApiQuotation | null>(null);
+  const [loading, setLoading] = useState(!invalidId);
+  const [showQuoteForm, setShowQuoteForm] = useState(false);
+  const [showReviseForm, setShowReviseForm] = useState(false);
+  const [showUpdateForm, setShowUpdateForm] = useState(false);
+
+  const load = useCallback(async () => {
+    if (invalidId) return;
+    setLoading(true);
+    try {
+      const detail = await fetchSellerRfqById(rfqId);
+      setRfq(detail);
+
+      const embedded = detail?.my_quotation ?? null;
+      const quotation = embedded ?? (detail ? await findSellerQuotationForRfq(rfqId) : null);
+      setExistingQuotation(quotation);
+      setShowQuoteForm(false);
+    } catch {
+      setRfq(null);
+      setExistingQuotation(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [invalidId, rfqId]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (invalidId) {
+    return (
+      <PageShell>
+        <PortalBackLink href="/seller/leads" label="RFQ Feed" />
+        <p className="mt-4 text-sm text-red-600">Invalid RFQ id</p>
+      </PageShell>
+    );
+  }
+
+  if (loading) {
+    return (
+      <PageShell>
+        <div className="border-b border-[#E8ECF0] pb-4">
+          <PortalBackLink href="/seller/leads" label="RFQ Feed" />
+        </div>
+        <div className="flex items-center justify-center gap-2 py-20 text-sm text-[#546E7A]">
+          <Loader2 className="h-5 w-5 animate-spin text-[#1565C0]" />
+          Loading RFQ...
+        </div>
+      </PageShell>
+    );
+  }
+
+  if (!rfq) {
+    return (
+      <PageShell>
+        <div className="border-b border-[#E8ECF0] pb-4">
+          <PortalBackLink href="/seller/leads" label="RFQ Feed" />
+        </div>
+        <p className="mt-6 text-sm text-[#546E7A]">RFQ not found or no longer available.</p>
+        <Link href="/seller/leads" className="mt-4 inline-block cursor-pointer text-sm font-semibold text-[#1565C0]">
+          Back to feed
+        </Link>
+      </PageShell>
+    );
+  }
+
+  const canSubmit = canSellerSubmitQuotation(existingQuotation);
+  const revisionPending =
+    existingQuotation != null ? isQuotationRevisionPending(existingQuotation, rfq.status) : false;
+  const quantity = formatRfqQuantity(rfq);
+  const buyerLine = [rfq.buyer_company, rfq.buyer_name].filter(Boolean).join(" · ");
+  const locationLine = rfq.city || rfq.state ? formatRfqLocation(rfq) : null;
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-5 sm:px-6 lg:px-8">
-      <PortalBackLink href="/seller/leads" label="All Leads" />
-      <div className="rounded-3xl border border-[#E8ECF0] bg-white p-6">
-        <p className="text-xs font-bold uppercase tracking-wider text-[#FF6D00]">{lead.status}</p>
-        <h2 className="mt-2 text-xl font-extrabold text-[#0D1B2A]">{lead.buyerName}</h2>
-        <p className="text-sm text-[#546E7A]">{lead.company} · {lead.location}</p>
-        <div className="mt-6 rounded-2xl bg-[#F4F6F9] p-4">
-          <p className="text-sm font-extrabold text-[#0D1B2A]">Requirement</p>
-          <p className="mt-2 text-sm text-[#546E7A]">{lead.requirement}</p>
-          <p className="mt-2 text-xs text-[#546E7A]">Quantity: {lead.quantity}</p>
-        </div>
-        <button
-          type="button"
-          onClick={() => showSuccessToast("Quote sent to buyer!")}
-          className="mt-6 w-full rounded-2xl bg-[#1565C0] py-3.5 text-sm font-bold text-white"
-        >
-          Send Quote
-        </button>
-        <Link href="/seller/leads" className="mt-3 block text-center text-sm font-semibold text-[#546E7A]">
-          Back to inbox
-        </Link>
+    <PageShell>
+      <div className="mb-5 border-b border-[#E8ECF0] pb-4">
+        <PortalBackLink href="/seller/leads" label="RFQ Feed" />
       </div>
-    </div>
+
+      <article className="rounded-2xl border border-[#E8ECF0] bg-white p-5 shadow-sm sm:p-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <RfqStatusBadge status={rfq.status} />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F4F6F9] px-3 py-1 text-xs font-semibold text-[#546E7A]">
+            <Calendar className="h-3.5 w-3.5" />
+            Posted {formatRfqDate(rfq.created_at)}
+          </span>
+        </div>
+
+        <div className="mt-4">
+          <h1 className="text-xl font-extrabold text-[#0D1B2A] sm:text-2xl">{rfq.title}</h1>
+          {buyerLine ? (
+            <p className="mt-1 text-sm font-semibold text-[#546E7A]">
+              {buyerLine}
+              {locationLine ? ` · ${locationLine}` : ""}
+            </p>
+          ) : null}
+          {rfq.category_name || rfq.subcategory_name ? (
+            <p className="mt-0.5 text-xs font-medium text-[#90A4AE]">
+              {[rfq.category_name, rfq.subcategory_name].filter(Boolean).join(" · ")}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="mt-5 border-t border-[#F0F2F5] pt-5">
+          <p className="text-xs font-bold uppercase tracking-wide text-[#90A4AE]">Requirement</p>
+          <p className="mt-2 text-sm leading-relaxed text-[#546E7A]">
+            {rfq.description || "No description provided."}
+          </p>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          {quantity ? <MetaPill icon={Package} label="Qty" value={quantity} /> : null}
+          <MetaPill
+            icon={Clock}
+            label="Deadline"
+            value={formatRfqDate(rfq.quotation_deadline)}
+          />
+          {rfq.expected_price != null ? (
+            <MetaPill
+              icon={Wallet}
+              label="Expected"
+              value={formatPrice(rfq.expected_price, rfq.currency)}
+            />
+          ) : null}
+          {locationLine ? <MetaPill icon={MapPin} label="Location" value={locationLine} /> : null}
+        </div>
+
+        {canSubmit ? (
+          <button
+            type="button"
+            onClick={() => setShowQuoteForm(true)}
+            className="mt-6 w-full cursor-pointer rounded-2xl bg-[#1565C0] py-3.5 text-sm font-bold text-white transition hover:bg-[#1255A8]"
+          >
+            Send Quote
+          </button>
+        ) : null}
+
+        {!canSubmit && existingQuotation ? (
+          <div className="mt-6 border-t border-[#F0F2F5] pt-6">
+            <QuotationCard
+              quotation={existingQuotation}
+              showSellerInfo={false}
+              rfqStatus={rfq.status}
+              actions={
+                <>
+                  {revisionPending ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowReviseForm(true)}
+                      className="cursor-pointer rounded-lg bg-[#1565C0] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#1255A8]"
+                    >
+                      Revise quote
+                    </button>
+                  ) : canSellerUpdateQuotation(existingQuotation.status) ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowUpdateForm(true)}
+                      className="cursor-pointer rounded-lg bg-[#1565C0] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#1255A8]"
+                    >
+                      Update quote
+                    </button>
+                  ) : null}
+                  <Link
+                    href="/seller/quotations"
+                    className="cursor-pointer rounded-lg border border-[#E0E6ED] px-3 py-1.5 text-xs font-bold text-[#546E7A]"
+                  >
+                    View in My Quotations
+                  </Link>
+                </>
+              }
+            />
+          </div>
+        ) : null}
+      </article>
+
+      {canSubmit ? (
+        <SubmitQuotationFormModal
+          isOpen={showQuoteForm}
+          onClose={() => setShowQuoteForm(false)}
+          rfqTitle={rfq.title}
+          rfqId={rfq.id}
+          defaultQuantity={rfq.quantity}
+          defaultUnit={rfq.unit}
+          onSubmitted={() => {
+            void load();
+          }}
+        />
+      ) : null}
+
+      {existingQuotation && revisionPending ? (
+        <ReviseQuotationFormModal
+          isOpen={showReviseForm}
+          onClose={() => setShowReviseForm(false)}
+          quotation={existingQuotation}
+          onRevised={() => {
+            void load();
+          }}
+        />
+      ) : null}
+
+      {existingQuotation && !revisionPending && canSellerUpdateQuotation(existingQuotation.status) ? (
+        <UpdateQuotationFormModal
+          isOpen={showUpdateForm}
+          onClose={() => setShowUpdateForm(false)}
+          quotation={existingQuotation}
+          onUpdated={() => {
+            void load();
+          }}
+        />
+      ) : null}
+
+      <Link
+        href="/seller/leads"
+        className="mt-4 block cursor-pointer text-center text-sm font-semibold text-[#546E7A] transition hover:text-[#1565C0]"
+      >
+        Back to inbox
+      </Link>
+    </PageShell>
   );
 }

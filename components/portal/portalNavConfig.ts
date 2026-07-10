@@ -23,8 +23,10 @@ export const buyerNavItems: PortalNavItem[] = [
     label: "Inquiries",
     href: "/buyer/inquiries",
     icon: MessageSquare,
-    match: (p) => p.startsWith("/buyer/inquir"),
-    badge: 2,
+    match: (p) =>
+      p.startsWith("/buyer/inquir") ||
+      p.startsWith("/buyer/rfq") ||
+      p.startsWith("/buyer/post-requirement"),
   },
   {
     label: "Profile",
@@ -58,8 +60,7 @@ export const sellerNavItems: PortalNavItem[] = [
     label: "Leads",
     href: "/seller/leads",
     icon: MessageSquare,
-    match: (p) => p.startsWith("/seller/lead"),
-    badge: 3,
+    match: (p) => p.startsWith("/seller/lead") || p.startsWith("/seller/quotations"),
   },
   {
     label: "Analytics",

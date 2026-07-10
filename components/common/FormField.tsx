@@ -60,3 +60,6 @@ export const inputClassName = (hasError?: boolean) =>
       ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/20"
       : "border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
   }`;
+
+export const dateInputClassName = (hasError?: boolean, className = "") =>
+  `${inputClassName(hasError)} date-input cursor-pointer ${className}`.trim();
