@@ -47,7 +47,7 @@ function ProductsPageContent() {
     clearCityFilter,
     hasLocationFilter,
     cityFilterParams,
-  } = useCityFilter();
+  } = useCityFilter({ syncFromGeo: true });
 
   useEffect(() => {
     let cancelled = false;

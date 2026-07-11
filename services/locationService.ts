@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "@/config/api";
 import apiClient from "@/services/apiClient";
 import { API_ENDPOINTS } from "@/config/endpoints";
 import { unwrapApiPayload } from "@/utils/authHelpers";
@@ -8,9 +9,11 @@ import {
   type ApiState,
   type CitiesPageResult,
   type CityListParams,
+  type ResolvedGeoLocation,
   type StateListParams,
   type StatesPageResult,
 } from "@/types/location";
+import { matchNearestIndiaLocation } from "@/utils/indiaNearestLocation";
 
 function buildLocationParams(params?: StateListParams | CityListParams) {
   const query: Record<string, string | number | boolean> = {
@@ -45,4 +48,203 @@ export async function fetchCities(params: CityListParams): Promise<CitiesPageRes
   });
   const data = unwrapApiPayload<unknown>(response.data);
   return unwrapPaginatedResult<ApiCity>(data);
+}
+
+interface PlaceNames {
+  cityName: string;
+  stateName: string;
+  stateCode?: string;
+}
+
+function pickBestNamedMatch<T extends { name: string }>(
+  items: T[],
+  needle: string
+): T | null {
+  if (!items.length) return null;
+  const q = needle.trim().toLowerCase();
+  if (!q) return items[0] ?? null;
+
+  return (
+    items.find((item) => item.name.toLowerCase() === q) ??
+    items.find((item) => item.name.toLowerCase().startsWith(q)) ??
+    items.find((item) => item.name.toLowerCase().includes(q)) ??
+    items.find((item) => q.includes(item.name.toLowerCase())) ??
+    items[0] ??
+    null
+  );
+}
+
+function cleanPlaceToken(value: string): string {
+  return value
+    .replace(/\b(district|taluka|tehsil|division|municipality|city|town)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Public fetch — avoids apiClient interceptors during geo bootstrap. */
+async function publicLocationGet<T>(path: string, query: Record<string, string | number | boolean>) {
+  const url = new URL(`${API_BASE_URL}${path}`);
+  Object.entries(query).forEach(([key, value]) => {
+    url.searchParams.set(key, String(value));
+  });
+
+  const response = await fetch(url.toString(), {
+    method: "GET",
+    headers: { Accept: "application/json" },
+  });
+  if (!response.ok) {
+    throw new Error(`Location API ${path} failed (${response.status})`);
+  }
+  const json = (await response.json()) as unknown;
+  const data = unwrapApiPayload<unknown>(json);
+  return unwrapPaginatedResult<T>(data);
+}
+
+async function resolvePlaceNamesFromCoordinates(
+  lat: number,
+  lng: number
+): Promise<PlaceNames | null> {
+  // Fast path: offline nearest Indian city (works even if reverse-geocode is blocked).
+  const offline = matchNearestIndiaLocation(lat, lng);
+
+  try {
+    const url = new URL("https://api.bigdatacloud.net/data/reverse-geocode-client");
+    url.searchParams.set("latitude", String(lat));
+    url.searchParams.set("longitude", String(lng));
+    url.searchParams.set("localityLanguage", "en");
+
+    const response = await fetch(url.toString(), { method: "GET" });
+    if (response.ok) {
+      const data = (await response.json()) as {
+        countryCode?: string;
+        city?: string;
+        locality?: string;
+        principalSubdivision?: string;
+        principalSubdivisionCode?: string;
+        localityInfo?: {
+          administrative?: Array<{ name?: string; adminLevel?: number }>;
+        };
+      };
+
+      const country = (data.countryCode ?? "").toUpperCase();
+      const stateName = cleanPlaceToken(data.principalSubdivision?.trim() || "");
+      const adminCity =
+        data.localityInfo?.administrative
+          ?.filter((entry) => (entry.adminLevel ?? 0) >= 5)
+          .map((entry) => cleanPlaceToken(entry.name?.trim() || ""))
+          .find((name) => name.length >= 2) || "";
+      const cityName =
+        cleanPlaceToken(data.city?.trim() || "") ||
+        cleanPlaceToken(data.locality?.trim() || "") ||
+        adminCity;
+
+      const codeRaw = data.principalSubdivisionCode?.trim() || "";
+      const stateCode = codeRaw.includes("-")
+        ? codeRaw.split("-").pop()?.toUpperCase()
+        : codeRaw.toUpperCase() || undefined;
+
+      if (country === "IN" && stateName) {
+        return {
+          cityName: cityName || offline?.cityName || stateName,
+          stateName,
+          stateCode: stateCode || offline?.stateCode,
+        };
+      }
+    }
+  } catch {
+    /* offline fallback */
+  }
+
+  if (!offline) return null;
+  return {
+    cityName: offline.cityName,
+    stateName: offline.stateName,
+    stateCode: offline.stateCode,
+  };
+}
+
+async function findStateId(place: PlaceNames): Promise<ApiState | null> {
+  const byName = await publicLocationGet<ApiState>("/locations/states", {
+    country_id: INDIA_COUNTRY_ID,
+    page: 1,
+    limit: 10,
+    search: place.stateName,
+    is_active: true,
+    sort_by: "name",
+    sort_order: "asc",
+  });
+  let state = pickBestNamedMatch(byName.results, place.stateName);
+
+  if (!state && place.stateCode) {
+    const byCode = await publicLocationGet<ApiState>("/locations/states", {
+      country_id: INDIA_COUNTRY_ID,
+      page: 1,
+      limit: 5,
+      code: place.stateCode,
+      is_active: true,
+      sort_by: "name",
+      sort_order: "asc",
+    });
+    state =
+      byCode.results.find(
+        (item) => (item.code ?? "").toUpperCase() === place.stateCode!.toUpperCase()
+      ) ??
+      byCode.results[0] ??
+      null;
+  }
+
+  return state;
+}
+
+async function findCityId(stateId: number, cityName: string): Promise<ApiCity | null> {
+  const queries = Array.from(
+    new Set(
+      [cityName, cleanPlaceToken(cityName), cityName.split(/\s+/)[0] ?? ""]
+        .map((value) => value.trim())
+        .filter((value) => value.length >= 2)
+    )
+  );
+
+  for (const query of queries) {
+    const result = await publicLocationGet<ApiCity>("/locations/cities", {
+      state_id: stateId,
+      page: 1,
+      limit: 20,
+      search: query,
+      is_active: true,
+      sort_by: "name",
+      sort_order: "asc",
+    });
+    const match = pickBestNamedMatch(result.results, query);
+    if (match) return match;
+  }
+
+  return null;
+}
+
+/**
+ * Resolve browser lat/lng → state_id/city_id via:
+ * place names → GET /locations/states?search= → GET /locations/cities?search=
+ */
+export async function resolveLocationFromCoordinates(
+  lat: number,
+  lng: number
+): Promise<ResolvedGeoLocation | null> {
+  const place = await resolvePlaceNamesFromCoordinates(lat, lng);
+  if (!place?.stateName) return null;
+
+  const state = await findStateId(place);
+  if (!state) return null;
+
+  const city = await findCityId(state.id, place.cityName);
+  if (!city) return null;
+
+  return {
+    state_id: state.id,
+    city_id: city.id,
+    state_name: state.name,
+    city_name: city.name,
+    lat,
+    lng,
+  };
 }

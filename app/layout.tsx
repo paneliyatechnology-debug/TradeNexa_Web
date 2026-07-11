@@ -6,6 +6,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { ActiveRoleProvider } from "@/context/ActiveRoleContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { ChatProvider } from "@/context/ChatContext";
+import { GeoLocationProvider } from "@/context/GeoLocationContext";
 import AppChrome from "@/components/layout/AppChrome";
 import { Toaster } from "react-hot-toast";
 import { TOAST_DURATION_MS } from "@/utils/toast";
@@ -41,9 +42,11 @@ export default function RootLayout({
           <ActiveRoleProvider>
             <WishlistProvider>
               <ChatProvider>
-                <AppProvider>
-                  <AppChrome>{children}</AppChrome>
-                </AppProvider>
+                <GeoLocationProvider>
+                  <AppProvider>
+                    <AppChrome>{children}</AppChrome>
+                  </AppProvider>
+                </GeoLocationProvider>
               </ChatProvider>
             </WishlistProvider>
           </ActiveRoleProvider>

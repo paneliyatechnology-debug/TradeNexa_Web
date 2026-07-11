@@ -28,7 +28,7 @@ export default function BuyerSearchPage() {
     clearCityFilter,
     hasLocationFilter,
     cityFilterParams,
-  } = useCityFilter();
+  } = useCityFilter({ syncFromGeo: true });
 
   const fetchPage = useCallback(
     (page: number) =>

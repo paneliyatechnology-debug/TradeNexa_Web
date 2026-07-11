@@ -31,3 +31,13 @@ export type CitiesPageResult = PaginatedResult<ApiCity>;
 
 /** India — matches locations API `country_id=1`. */
 export const INDIA_COUNTRY_ID = 1;
+
+/** Result of resolving browser coordinates to platform state/city IDs. */
+export interface ResolvedGeoLocation {
+  state_id: number;
+  city_id: number;
+  state_name: string;
+  city_name: string;
+  lat: number;
+  lng: number;
+}
