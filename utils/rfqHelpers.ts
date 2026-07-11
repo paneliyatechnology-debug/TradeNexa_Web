@@ -399,6 +399,10 @@ export function rfqStatusClass(status?: string | null): string {
   const value = (status ?? "").toUpperCase();
   if (value.includes("DRAFT")) return "bg-slate-100 text-slate-600";
   if (value.includes("PUBLISH") || value.includes("OPEN")) return "bg-emerald-50 text-emerald-700";
+  if (value.includes("QUOTATION_RECEIVED")) return "bg-sky-50 text-sky-700";
+  if (value.includes("NEGOTIAT")) return "bg-amber-50 text-amber-700";
+  if (value.includes("AWARD")) return "bg-indigo-50 text-indigo-700";
+  if (value.includes("COMPLETE")) return "bg-teal-50 text-teal-700";
   if (value.includes("CLOSE")) return "bg-violet-50 text-violet-700";
   if (value.includes("CANCEL")) return "bg-red-50 text-red-600";
   if (value.includes("EXPIRE")) return "bg-slate-200 text-slate-700";
@@ -639,6 +643,41 @@ export function computeQuotationTotalWithGst(
 export function rfqTabToApiStatus(tab: string): string | undefined {
   if (tab === "all") return undefined;
   return tab.toUpperCase();
+}
+
+/** Buyer RFQ list filters — full lifecycle. */
+export const BUYER_RFQ_STATUS_TABS = [
+  "all",
+  "draft",
+  "published",
+  "open",
+  "quotation_received",
+  "negotiation",
+  "awarded",
+  "completed",
+  "expired",
+  "cancelled",
+  "closed",
+] as const;
+
+/**
+ * Seller lead filters — statuses sellers typically see.
+ * Omits draft / expired / cancelled (buyer-owned lifecycle).
+ */
+export const SELLER_RFQ_STATUS_TABS = [
+  "all",
+  "published",
+  "open",
+  "quotation_received",
+  "negotiation",
+  "awarded",
+  "completed",
+  "closed",
+] as const;
+
+export function formatRfqStatusTabLabel(tab: string): string {
+  if (!tab || tab === "all") return "All";
+  return formatRfqStatus(tab);
 }
 
 /** Seller can submit a new quote only when they have none, or withdrew the previous one. */

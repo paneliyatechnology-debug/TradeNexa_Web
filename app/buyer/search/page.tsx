@@ -2,7 +2,7 @@
 
 import React, { useCallback } from "react";
 import Link from "next/link";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, X } from "lucide-react";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalProductCard from "@/components/portal/PortalProductCard";
 import PortalEmptyState from "@/components/portal/PortalEmptyState";
@@ -70,8 +70,20 @@ export default function BuyerSearchPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by product, category, or supplier..."
-            className="w-full rounded-2xl border border-[#E0E6ED] bg-white py-3.5 pl-12 pr-4 text-sm outline-none transition focus:border-[#1565C0] focus:ring-2 focus:ring-[#1565C0]/20"
+            className={`w-full rounded-2xl border border-[#E0E6ED] bg-white py-3.5 pl-12 text-sm outline-none transition focus:border-[#1565C0] focus:ring-2 focus:ring-[#1565C0]/20 ${
+              query ? "pr-12" : "pr-4"
+            }`}
           />
+          {query ? (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              aria-label="Clear search"
+              className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-[#546E7A] transition hover:bg-[#F4F6F9] hover:text-[#0D1B2A]"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          ) : null}
         </div>
         <LocationFilterBar
           idPrefix="buyer-search"

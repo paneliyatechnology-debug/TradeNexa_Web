@@ -15,6 +15,24 @@ import type {
   RelatedProductsParams,
 } from "@/types/catalog";
 
+/** Logged-in user id → sent as `seller_id` on product list APIs. */
+function getLoggedInUserId(): number | undefined {
+  if (typeof window === "undefined") return undefined;
+  try {
+    const raw = localStorage.getItem("user");
+    if (!raw) return undefined;
+    const user = JSON.parse(raw) as { id?: string | number; user_id?: number | null };
+    if (typeof user.user_id === "number" && Number.isFinite(user.user_id) && user.user_id > 0) {
+      return user.user_id;
+    }
+    const fromId = Number(user.id);
+    if (Number.isFinite(fromId) && fromId > 0) return fromId;
+  } catch {
+    /* ignore */
+  }
+  return undefined;
+}
+
 function buildParams(params?: CatalogListParams | ProductListParams | MyProductListParams) {
   const query: Record<string, string | number | boolean> = {
     page: params?.page ?? 1,
@@ -38,6 +56,9 @@ function buildParams(params?: CatalogListParams | ProductListParams | MyProductL
   }
   if (params && "is_trending" in params && params.is_trending !== undefined) {
     query.is_trending = params.is_trending;
+  }
+  if (params && "seller_id" in params && params.seller_id) {
+    query.seller_id = params.seller_id;
   }
   const brandId = (params as MyProductListParams | undefined)?.brand_id;
   if (brandId && !query.brand_id) query.brand_id = brandId;
@@ -192,8 +213,12 @@ export async function findSubcategoryById(subcategoryId: number): Promise<{
 export async function fetchProducts(
   params?: ProductListParams
 ): Promise<PaginatedResult<ApiProductListItem>> {
+  const sellerId = params?.seller_id ?? getLoggedInUserId();
   const response = await apiClient.get(API_ENDPOINTS.PRODUCTS, {
-    params: buildParams(params),
+    params: buildParams({
+      ...params,
+      ...(sellerId ? { seller_id: sellerId } : {}),
+    }),
   });
   const data = unwrapApiPayload<unknown>(response.data);
   const paginated = unwrapPaginatedResult<ApiProductListItem>(data);
@@ -219,8 +244,9 @@ export async function fetchMyProducts(
 }
 
 export async function fetchTrendingProducts(
-  params?: CatalogListParams & { city_id?: number }
+  params?: CatalogListParams & { city_id?: number; seller_id?: number }
 ): Promise<PaginatedResult<ApiProductListItem>> {
+  const sellerId = params?.seller_id ?? getLoggedInUserId();
   const query: Record<string, string | number> = {
     page: params?.page ?? 1,
     limit: params?.limit ?? 10,
@@ -229,6 +255,7 @@ export async function fetchTrendingProducts(
   };
   if (params?.search?.trim()) query.search = params.search.trim();
   if (params?.city_id) query.city_id = params.city_id;
+  if (sellerId) query.seller_id = sellerId;
 
   const response = await apiClient.get(`${API_ENDPOINTS.PRODUCTS}/trending`, { params: query });
   const data = unwrapApiPayload<unknown>(response.data);
@@ -253,6 +280,7 @@ export async function fetchProductById(id: number): Promise<ApiProductDetail | n
 export async function fetchRelatedProducts(
   params: RelatedProductsParams
 ): Promise<PaginatedResult<ApiProductListItem>> {
+  const sellerId = params.seller_id ?? getLoggedInUserId();
   const response = await apiClient.get(`${API_ENDPOINTS.PRODUCTS}/related`, {
     params: {
       product_id: params.product_id,
@@ -261,6 +289,7 @@ export async function fetchRelatedProducts(
       limit: params.limit ?? 10,
       sort_by: params.sort_by ?? "name",
       sort_order: params.sort_order ?? "asc",
+      ...(sellerId ? { seller_id: sellerId } : {}),
     },
   });
   const data = unwrapApiPayload<unknown>(response.data);

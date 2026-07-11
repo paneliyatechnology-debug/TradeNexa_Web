@@ -5,9 +5,13 @@ export type RfqStatus =
   | "DRAFT"
   | "PUBLISHED"
   | "OPEN"
-  | "CLOSED"
-  | "CANCELLED"
+  | "QUOTATION_RECEIVED"
+  | "NEGOTIATION"
+  | "AWARDED"
+  | "COMPLETED"
   | "EXPIRED"
+  | "CANCELLED"
+  | "CLOSED"
   | string;
 
 export type QuotationStatus =

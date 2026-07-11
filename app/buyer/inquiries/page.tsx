@@ -13,9 +13,14 @@ import { useChat } from "@/context/ChatContext";
 import { fetchMyRfqs } from "@/services/rfqService";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import { isRfqPostedToday, rfqTabToApiStatus } from "@/utils/rfqHelpers";
+import {
+  BUYER_RFQ_STATUS_TABS,
+  formatRfqStatusTabLabel,
+  isRfqPostedToday,
+  rfqTabToApiStatus,
+} from "@/utils/rfqHelpers";
 
-const tabs = ["all", "draft", "published", "open", "closed", "cancelled", "expired"] as const;
+const tabs = BUYER_RFQ_STATUS_TABS;
 
 const PAGE_SIZE = 6;
 
@@ -58,16 +63,17 @@ export default function BuyerInquiriesPage() {
   );
 
   const hasSearch = debouncedSearch.trim().length > 0;
+  const tabLabel = formatRfqStatusTabLabel(activeTab).toLowerCase();
   const emptyTitle = hasSearch
     ? "No RFQs match your search"
     : activeTab === "all"
       ? "No RFQs yet"
-      : `No ${activeTab} RFQs`;
+      : `No ${tabLabel} RFQs`;
   const emptyDescription = hasSearch
     ? `No results for "${debouncedSearch.trim()}". Try a different keyword or clear the search.`
     : activeTab === "all"
       ? "Post a requirement to receive quotes from verified sellers."
-      : `You don't have any RFQs in the ${activeTab} state.`;
+      : `You don't have any RFQs in the ${tabLabel} state.`;
 
   const showPostPrompt = !loading && pagination.total > 0 && pagination.total <= PAGE_SIZE;
 
@@ -109,13 +115,13 @@ export default function BuyerInquiriesPage() {
                 key={tab}
                 type="button"
                 onClick={() => setActiveTab(tab)}
-                className={`shrink-0 cursor-pointer rounded-full px-3 py-1.5 text-[11px] font-bold capitalize transition ${
+                className={`shrink-0 cursor-pointer rounded-full px-3 py-1.5 text-[11px] font-bold transition ${
                   activeTab === tab
                     ? "bg-[#1565C0] text-white shadow-sm"
                     : "bg-white text-[#546E7A] ring-1 ring-[#E0E6ED] hover:ring-[#1565C0]/30"
                 }`}
               >
-                {tab}
+                {formatRfqStatusTabLabel(tab)}
               </button>
             ))}
           </div>

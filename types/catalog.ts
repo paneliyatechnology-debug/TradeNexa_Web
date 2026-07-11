@@ -192,6 +192,11 @@ export interface ProductListParams extends CatalogListParams {
   brand_id?: number;
   city_id?: number;
   is_trending?: boolean;
+  /**
+   * Logged-in buyer user id — backend uses this for wishlist / personalization
+   * on public product list endpoints.
+   */
+  seller_id?: number;
 }
 
 /** GET /api/v1/products/my — authenticated seller's own listings */
@@ -202,4 +207,5 @@ export interface MyProductListParams extends ProductListParams {
 export interface RelatedProductsParams extends CatalogListParams {
   product_id: number;
   subcategory_id: number;
+  seller_id?: number;
 }
