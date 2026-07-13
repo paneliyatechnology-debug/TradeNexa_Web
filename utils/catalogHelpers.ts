@@ -1,6 +1,6 @@
 import type { PaginatedResult, ApiProductListItem } from "@/types/catalog";
 import { API_BASE_URL, BACKEND_ORIGIN } from "@/config/api";
-import { parseApprovalStatus } from "@/utils/productApprovalHelpers";
+import { extractApprovalStatus, parseApprovalStatus } from "@/utils/productApprovalHelpers";
 import { parseWishlistFlag, readProductWishlistFlag } from "@/utils/wishlistHelpers";
 
 function proxyBackendMediaUrl(url: URL): string | null {
@@ -354,7 +354,7 @@ export function normalizeProductListItem(
       : null) ??
     "Supplier";
 
-  const approvalStatus = parseApprovalStatus(raw.approval_status ?? item.approval_status);
+  const approvalStatus = extractApprovalStatus(raw) ?? parseApprovalStatus(item.approval_status);
   const reviewVersion =
     typeof raw.review_version === "number"
       ? raw.review_version

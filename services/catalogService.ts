@@ -2,7 +2,7 @@ import apiClient from "@/services/apiClient";
 import { API_ENDPOINTS } from "@/config/endpoints";
 import { unwrapApiPayload } from "@/utils/authHelpers";
 import { unwrapPaginatedResult, normalizeProductListItem } from "@/utils/catalogHelpers";
-import { parseApprovalStatus } from "@/utils/productApprovalHelpers";
+import { extractApprovalStatus, parseApprovalStatus } from "@/utils/productApprovalHelpers";
 import type {
   ApiCategory,
   ApiCategoryDetail,
@@ -280,10 +280,12 @@ export async function fetchProductById(id: number): Promise<ApiProductDetail | n
   if (!data) return null;
 
   const raw = data as Record<string, unknown>;
+  const approvalStatus =
+    extractApprovalStatus(raw) ?? parseApprovalStatus(data.approval_status);
 
   return {
     ...data,
-    approval_status: parseApprovalStatus(raw.approval_status ?? data.approval_status),
+    approval_status: approvalStatus,
     review_version:
       typeof raw.review_version === "number"
         ? raw.review_version

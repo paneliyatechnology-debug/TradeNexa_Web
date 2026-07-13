@@ -25,7 +25,44 @@ export function isProductApprovalStatus(value: unknown): value is ProductApprova
 }
 
 export function parseApprovalStatus(value: unknown): ProductApprovalStatus | null {
-  return isProductApprovalStatus(value) ? value : null;
+  if (typeof value !== "string") return null;
+  const normalized = value.trim().toLowerCase().replace(/\s+/g, "_");
+  return isProductApprovalStatus(normalized) ? normalized : null;
+}
+
+/** Pull approval status from common API response shapes. */
+export function extractApprovalStatus(raw: Record<string, unknown> | null | undefined): ProductApprovalStatus | null {
+  if (!raw) return null;
+
+  const marketplace =
+    raw.marketplace && typeof raw.marketplace === "object"
+      ? (raw.marketplace as Record<string, unknown>)
+      : null;
+  const approval =
+    raw.approval && typeof raw.approval === "object"
+      ? (raw.approval as Record<string, unknown>)
+      : null;
+  const moderation =
+    raw.moderation && typeof raw.moderation === "object"
+      ? (raw.moderation as Record<string, unknown>)
+      : null;
+
+  const candidates = [
+    raw.approval_status,
+    raw.approvalStatus,
+    marketplace?.approval_status,
+    approval?.status,
+    approval?.approval_status,
+    moderation?.status,
+    moderation?.approval_status,
+    raw.status,
+  ];
+
+  for (const candidate of candidates) {
+    const parsed = parseApprovalStatus(candidate);
+    if (parsed) return parsed;
+  }
+  return null;
 }
 
 export function formatApprovalStatus(status?: string | null): string {
@@ -64,11 +101,11 @@ export function approvalStatusClass(status?: string | null): string {
 }
 
 export function canSellerEditProduct(status?: string | null): boolean {
-  return status !== "rejected";
+  return parseApprovalStatus(status) !== "rejected";
 }
 
 export function canSellerSubmitForReview(status?: string | null): boolean {
-  return status === "revision_required";
+  return parseApprovalStatus(status) === "revision_required";
 }
 
 export function approvalTabToApiStatus(
