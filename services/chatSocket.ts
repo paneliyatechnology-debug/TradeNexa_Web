@@ -17,10 +17,21 @@ let status: ChatSocketStatus = "disconnected";
 const statusListeners = new Set<StatusListener>();
 /** Conversation rooms this client should stay in across reconnects. */
 const joinedConversationIds = new Set<number>();
+/**
+ * Leaves that could not be emitted because the socket was down.
+ * Flushed on the next connect so peers are not left stuck "online".
+ */
+const pendingLeaveByConversation = new Map<number, Record<string, unknown>>();
+/** Deduped pending emits while disconnected (avoids stacking `once("connect")` listeners). */
+const pendingConnectEmits = new Map<string, unknown>();
+let pendingConnectFlushBound = false;
 /** App-level listeners that survive socket instance recreation. */
 const eventHub = new Map<string, Set<ChatEventHandler>>();
 let refreshInFlight: Promise<string> | null = null;
 let authFailureHandled = false;
+/** Prevent auth refresh → connect storms on repeated connect_error. */
+let lastAuthRefreshAt = 0;
+const AUTH_REFRESH_COOLDOWN_MS = 5_000;
 
 function setStatus(next: ChatSocketStatus) {
   if (status === next) return;
@@ -168,11 +179,47 @@ function handleAuthFailure() {
   window.location.replace("/");
 }
 
+function flushPendingLeaves(s: Socket) {
+  if (pendingLeaveByConversation.size === 0) return;
+  for (const [conversationId, payload] of pendingLeaveByConversation) {
+    // Skip if we rejoined this room before the leave could flush.
+    if (joinedConversationIds.has(conversationId)) continue;
+    s.emit("conversation:leave", payload);
+    s.emit("presence:unsubscribe", { conversation_id: conversationId });
+  }
+  pendingLeaveByConversation.clear();
+}
+
 function rejoinRooms(s: Socket) {
+  // Offline announcements first, then re-subscribe active rooms.
+  flushPendingLeaves(s);
   joinedConversationIds.forEach((conversationId) => {
-    s.emit("conversation:join", { conversation_id: conversationId });
+    s.emit("conversation:join", {
+      conversation_id: conversationId,
+      is_online: true,
+    });
     s.emit("presence:subscribe", { conversation_id: conversationId });
   });
+}
+
+function pendingEmitKey(event: string, payload: unknown): string {
+  if (payload && typeof payload === "object") {
+    const record = payload as Record<string, unknown>;
+    const conversationId = record.conversation_id ?? record.conversationId ?? "";
+    return `${event}::${String(conversationId)}`;
+  }
+  return `${event}::`;
+}
+
+function flushPendingConnectEmits(s: Socket) {
+  if (pendingConnectEmits.size === 0) return;
+  const entries = Array.from(pendingConnectEmits.entries());
+  pendingConnectEmits.clear();
+  for (const [key, payload] of entries) {
+    const event = key.split("::")[0];
+    if (!event) continue;
+    s.emit(event, payload);
+  }
 }
 
 function emitWhenConnected(s: Socket, event: string, payload: unknown) {
@@ -180,8 +227,13 @@ function emitWhenConnected(s: Socket, event: string, payload: unknown) {
     s.emit(event, payload);
     return;
   }
+  // Dedup by event+conversation so reconnect storms don't stack once() listeners.
+  pendingConnectEmits.set(pendingEmitKey(event, payload), payload);
+  if (pendingConnectFlushBound) return;
+  pendingConnectFlushBound = true;
   s.once("connect", () => {
-    s.emit(event, payload);
+    pendingConnectFlushBound = false;
+    flushPendingConnectEmits(s);
   });
 }
 
@@ -219,6 +271,7 @@ export function getChatSocket(): Socket {
   socket.on("connect", () => {
     authFailureHandled = false;
     setStatus("connected");
+    // `connect` also fires after Manager `reconnect` — rejoin once here only.
     rejoinRooms(socket!);
     if (process.env.NODE_ENV === "development") {
       console.info("[chat-socket] connected", socket!.id);
@@ -227,6 +280,9 @@ export function getChatSocket(): Socket {
 
   socket.on("disconnect", (reason) => {
     setStatus("disconnected");
+    // Drop queued connect emits — rejoinRooms + callers will re-issue after reconnect.
+    pendingConnectEmits.clear();
+    pendingConnectFlushBound = false;
     if (process.env.NODE_ENV === "development") {
       console.warn("[chat-socket] disconnected:", reason);
     }
@@ -237,10 +293,7 @@ export function getChatSocket(): Socket {
     const latest = getStoredAccessToken() ?? "";
     if (socket && latest) applySocketAuth(socket, latest);
   });
-  socket.io.on("reconnect", () => {
-    setStatus("connected");
-    if (socket) rejoinRooms(socket);
-  });
+  // Do not rejoin here — socket `connect` already runs after a successful reconnect.
 
   socket.on("connect_error", (err) => {
     const message = err?.message ?? "";
@@ -250,12 +303,15 @@ export function getChatSocket(): Socket {
     setStatus("reconnecting");
 
     if (!/invalid|expired|unauthorized|token|jwt|auth/i.test(message)) return;
+    if (Date.now() - lastAuthRefreshAt < AUTH_REFRESH_COOLDOWN_MS) return;
+    lastAuthRefreshAt = Date.now();
 
     void refreshAccessToken()
       .then((newToken) => {
         if (!socket) return;
+        // Update handshake auth only — Manager already owns reconnection.
+        // Calling socket.connect() here races auto-reconnect and causes churn.
         applySocketAuth(socket, newToken);
-        if (!socket.connected) socket.connect();
       })
       .catch(() => {
         handleAuthFailure();
@@ -281,6 +337,9 @@ export function connectChatSocket(): Socket {
 export function disconnectChatSocket() {
   // Announce offline for every joined room before dropping the socket.
   leaveAllConversations();
+  pendingLeaveByConversation.clear();
+  pendingConnectEmits.clear();
+  pendingConnectFlushBound = false;
   if (!socket) {
     setStatus("disconnected");
     return;
@@ -294,6 +353,7 @@ export function disconnectChatSocket() {
 export function joinConversation(conversationId: number, userId?: number | null) {
   if (!Number.isFinite(conversationId) || conversationId <= 0) return;
   joinedConversationIds.add(conversationId);
+  pendingLeaveByConversation.delete(conversationId);
   const s = connectChatSocket();
   const payload: Record<string, unknown> = {
     conversation_id: conversationId,
@@ -309,7 +369,6 @@ export function joinConversation(conversationId: number, userId?: number | null)
 
 export function leaveConversation(conversationId: number, userId?: number | null) {
   joinedConversationIds.delete(conversationId);
-  if (!socket?.connected) return;
   const payload: Record<string, unknown> = {
     conversation_id: conversationId,
     is_online: false,
@@ -317,6 +376,12 @@ export function leaveConversation(conversationId: number, userId?: number | null
   if (userId != null && Number.isFinite(userId) && userId > 0) {
     payload.user_id = userId;
   }
+  if (!socket?.connected) {
+    // Queue leave so reconnect flush can still notify peers.
+    pendingLeaveByConversation.set(conversationId, payload);
+    return;
+  }
+  pendingLeaveByConversation.delete(conversationId);
   // Leaving announces offline for this conversation (buyer + seller).
   socket.emit("conversation:leave", payload);
   socket.emit("presence:unsubscribe", { conversation_id: conversationId });
@@ -339,7 +404,11 @@ export function emitTypingIndicator(
 ) {
   if (!Number.isFinite(conversationId) || conversationId <= 0) return;
   const s = connectChatSocket();
-  joinedConversationIds.add(conversationId);
+  // Only track room membership when already joined via presence — typing must not
+  // silently re-add rooms after leave (that fights pending leave + stuck online).
+  if (joinedConversationIds.has(conversationId)) {
+    pendingLeaveByConversation.delete(conversationId);
+  }
 
   const payload: Record<string, unknown> = {
     conversation_id: conversationId,
@@ -349,21 +418,14 @@ export function emitTypingIndicator(
     payload.rfq_id = extras.rfqId;
   }
 
-  const send = () => {
-    // Do NOT re-join on every keystroke — that can drop in-flight typing events.
-    if (!s.connected) return;
+  if (s.connected) {
     s.emit("typing:indicator", payload);
     if (process.env.NODE_ENV === "development") {
       console.info("[chat-socket] emit typing:indicator", payload, { id: s.id });
     }
-  };
-
-  if (s.connected) {
-    send();
     return;
   }
-  // Ensure room membership, then send typing once connected.
-  emitWhenConnected(s, "conversation:join", { conversation_id: conversationId });
+  // Queue one typing emit; do not force a join from typing alone.
   emitWhenConnected(s, "typing:indicator", payload);
 }
 
@@ -441,14 +503,7 @@ export function parseTypingPayload(
 } | null {
   const record = readTypingRecord(payload);
   if (!record) {
-    if (fallbackConversationId && Number.isFinite(fallbackConversationId)) {
-      return {
-        conversationId: fallbackConversationId,
-        userId: null,
-        isTyping: true,
-        rfqId: null,
-      };
-    }
+    // Never invent isTyping:true — that sticks the indicator when clear is missed.
     return null;
   }
 
@@ -493,7 +548,8 @@ export function parseTypingPayload(
     else if (value === "stop" || value === "idle") isTyping = false;
     else return null;
   } else {
-    isTyping = true;
+    // Missing typing flag — ignore rather than assume true (stuck "typing…").
+    return null;
   }
 
   return { conversationId, userId, isTyping, rfqId };

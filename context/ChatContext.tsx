@@ -413,22 +413,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             }
           : args[0];
 
-      let parsed = parseTypingPayload(payload, activeIdRef.current);
-
-      if (!parsed && activeIdRef.current) {
-        parsed = {
-          conversationId: activeIdRef.current,
-          userId: null,
-          isTyping: true,
-          rfqId: null,
-        };
-      }
+      const parsed = parseTypingPayload(payload, activeIdRef.current);
+      // Do not invent isTyping:true for unparseable payloads — that sticks "typing…"
+      // forever when the clear event is missed during a disconnect.
       if (!parsed) return;
 
-      // Do not filter by user_id — some backends attach the wrong id and that
-      // was hiding legitimate peer typing events.
-
-      const { conversationId, isTyping, userId, rfqId } = parsed;
+      const { conversationId, isTyping } = parsed;
+      const rfqId =
+        parsed.rfqId ?? conversationsMetaRef.current[conversationId]?.rfq_id ?? null;
 
       setTypingByConversation((prev) => {
         if (prev[conversationId] === isTyping) return prev;
@@ -440,12 +432,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           if (prev[rfqId] === isTyping) return prev;
           return { ...prev, [rfqId]: isTyping };
         });
-      }
-
-      if (isTyping && userId != null) {
-        setPresenceByUserId((prev) =>
-          prev[userId] === true ? prev : { ...prev, [userId]: true }
-        );
       }
 
       if (remoteTypingTimers.current[conversationId]) {
@@ -463,8 +449,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           }
           delete remoteTypingTimers.current[conversationId];
         }, 5000);
-      } else if (rfqId != null) {
-        setTypingByRfq((prev) => (prev[rfqId] ? { ...prev, [rfqId]: false } : prev));
       }
     };
 
@@ -604,36 +588,38 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         const record = data as Record<string, unknown>;
         const conversation = normalizeChatConversation(record.conversation ?? record);
         if (conversation) {
+          // Seed only when party payloads explicitly include is_online.
           seedPresenceFromConversation(conversation);
           if (conversation.other_party?.is_online === true) {
             applyPeerOnlineForConversation(conversation.id, true);
+          } else if (conversation.other_party?.is_online === false) {
+            applyPeerOnlineForConversation(conversation.id, false);
           }
         }
       }
 
-      // conversation:join ⇒ peer is online (buyer + seller).
+      // Only mark peers online when the join payload identifies a *different* user.
+      // Never forceOnline on buyer/seller stubs — own join acks include other_party
+      // without is_online and were falsely flipping peers to "online".
       const updates = parseConversationPresencePayload(payload, {
-        forceOnline: true,
         excludeUserId: currentUserIdRef.current,
       });
-      if (updates.length > 0) {
-        for (const update of updates) {
-          applyPresence(update.userId, true, conversationId);
-        }
-      } else if (conversationId != null) {
-        // Only treat as peer-online when the join names a different user.
-        const record =
-          data && typeof data === "object" ? (data as Record<string, unknown>) : null;
-        const joinerId = Number(
-          record?.user_id ?? record?.sender_id ?? record?.participant_id
-        );
-        if (
-          Number.isFinite(joinerId) &&
-          joinerId > 0 &&
-          (currentUserIdRef.current == null || joinerId !== currentUserIdRef.current)
-        ) {
-          applyPresence(joinerId, true, conversationId);
-        }
+      for (const update of updates) {
+        applyPresence(update.userId, update.online, conversationId);
+      }
+
+      const record =
+        data && typeof data === "object" ? (data as Record<string, unknown>) : null;
+      const joinerId = Number(
+        record?.user_id ?? record?.sender_id ?? record?.participant_id
+      );
+      if (
+        conversationId != null &&
+        Number.isFinite(joinerId) &&
+        joinerId > 0 &&
+        (currentUserIdRef.current == null || joinerId !== currentUserIdRef.current)
+      ) {
+        applyPresence(joinerId, true, conversationId);
       }
     };
 
@@ -643,6 +629,25 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         console.info("[chat-socket] conversation:leave", payload);
       }
       const conversationId = pickConversationIdFromPayload(payload);
+      // Peer left ⇒ clear typing for that conversation.
+      if (conversationId != null) {
+        if (remoteTypingTimers.current[conversationId]) {
+          clearTimeout(remoteTypingTimers.current[conversationId]);
+          delete remoteTypingTimers.current[conversationId];
+        }
+        setTypingByConversation((prev) =>
+          prev[conversationId] ? { ...prev, [conversationId]: false } : prev
+        );
+        const leaveRfqId =
+          pickSocketRfqId(payload) ??
+          conversationsMetaRef.current[conversationId]?.rfq_id ??
+          null;
+        if (leaveRfqId != null) {
+          setTypingByRfq((prev) =>
+            prev[leaveRfqId] ? { ...prev, [leaveRfqId]: false } : prev
+          );
+        }
+      }
       const updates = parseConversationPresencePayload(payload, {
         forceOnline: false,
         excludeUserId: currentUserIdRef.current,
@@ -704,6 +709,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
 
     return () => {
+      // Clear local typing so a missed typing:false during unmount cannot stick.
+      if (remoteTypingTimers.current[conversationId]) {
+        clearTimeout(remoteTypingTimers.current[conversationId]);
+        delete remoteTypingTimers.current[conversationId];
+      }
+      setTypingByConversation((prev) =>
+        prev[conversationId] ? { ...prev, [conversationId]: false } : prev
+      );
       // Component cleanup / conversation switch — Offline immediately.
       goChatOffline({ reason: "unmount" });
     };
@@ -765,23 +778,37 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     const tick = async () => {
       const me = currentUserIdRef.current ?? 0;
       const state = await fetchTypingRelay(conversationId, me);
-      if (cancelled || !state?.is_typing) return;
+      if (cancelled || !state) return;
+
+      const knownRfqId =
+        state.rfq_id ?? conversationsMetaRef.current[conversationId]?.rfq_id ?? null;
+
+      // Safety net: explicitly clear when relay says not typing (TTL expiry / stop).
+      if (!state.is_typing) {
+        setTypingByConversation((prev) =>
+          prev[conversationId] ? { ...prev, [conversationId]: false } : prev
+        );
+        if (knownRfqId != null) {
+          setTypingByRfq((prev) =>
+            prev[knownRfqId] ? { ...prev, [knownRfqId]: false } : prev
+          );
+        }
+        if (remoteTypingTimers.current[conversationId]) {
+          clearTimeout(remoteTypingTimers.current[conversationId]);
+          delete remoteTypingTimers.current[conversationId];
+        }
+        return;
+      }
 
       setTypingByConversation((prev) => {
         if (prev[conversationId]) return prev;
         return { ...prev, [conversationId]: true };
       });
-      if (state.rfq_id != null) {
-        const rfqId = state.rfq_id;
+      if (knownRfqId != null) {
         setTypingByRfq((prev) => {
-          if (prev[rfqId]) return prev;
-          return { ...prev, [rfqId]: true };
+          if (prev[knownRfqId]) return prev;
+          return { ...prev, [knownRfqId]: true };
         });
-      }
-      if (state.user_id != null) {
-        setPresenceByUserId((prev) =>
-          prev[state.user_id!] === true ? prev : { ...prev, [state.user_id!]: true }
-        );
       }
 
       if (remoteTypingTimers.current[conversationId]) {
@@ -791,9 +818,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         setTypingByConversation((prev) =>
           prev[conversationId] ? { ...prev, [conversationId]: false } : prev
         );
-        if (state.rfq_id != null) {
-          const rfqId = state.rfq_id;
-          setTypingByRfq((prev) => (prev[rfqId] ? { ...prev, [rfqId]: false } : prev));
+        if (knownRfqId != null) {
+          setTypingByRfq((prev) =>
+            prev[knownRfqId] ? { ...prev, [knownRfqId]: false } : prev
+          );
         }
         delete remoteTypingTimers.current[conversationId];
       }, 3500);

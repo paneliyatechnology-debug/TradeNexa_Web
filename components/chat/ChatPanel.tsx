@@ -143,7 +143,7 @@ export default function ChatPanel({
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
   const isTyping = Boolean(
-    (conversationId != null && typingByConversation[conversationId]) || typingByRfq[rfqId]
+    conversationId != null ? typingByConversation[conversationId] : typingByRfq[rfqId]
   );
   const disconnected = socketStatus !== "connected";
   const conversationPresence =

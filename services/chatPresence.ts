@@ -118,6 +118,23 @@ function emitSocketOnline(conversationId: number, userId?: number) {
   s.emit("user:online", payload);
 }
 
+/** Lightweight heartbeat — refresh relay + optional presence ping without re-join spam. */
+function emitSocketPresenceHeartbeat(conversationId: number, userId?: number) {
+  const s = getExistingChatSocket();
+  if (!s?.connected) {
+    // Socket dropped — one re-join is appropriate.
+    joinConversation(conversationId, userId);
+    return;
+  }
+  const payload = {
+    conversation_id: conversationId,
+    user_id: userId,
+    is_online: true,
+  };
+  s.emit("user_online", payload);
+  s.emit("user:online", payload);
+}
+
 function emitSocketOffline(conversationId: number, userId?: number) {
   leaveConversation(conversationId, userId);
   const s = getExistingChatSocket();
@@ -164,7 +181,9 @@ function startHeartbeat() {
     if (!session || !online) return;
     if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
     touchLocalTab(session.conversationId);
-    emitSocketOnline(session.conversationId, session.userId);
+    // Do not re-emit conversation:join every 15s — that re-triggers peer
+    // join-ack handlers and falsely marks peers online.
+    emitSocketPresenceHeartbeat(session.conversationId, session.userId);
     void publishPresenceRelay({
       conversationId: session.conversationId,
       userId: session.userId,

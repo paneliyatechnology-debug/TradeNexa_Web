@@ -52,24 +52,29 @@ export async function fetchRfqConversations(
   params?: ChatListParams
 ): Promise<ChatConversationListResult> {
   const query = buildListParams({ ...params, limit: params?.limit ?? 10 });
+  const page = params?.page;
+  const limit = params?.limit ?? 10;
 
+  // Prefer the shared list + rfq_id filter. `/chats/rfqs/:id/conversations` returns
+  // 403 for sellers (and floods the console when quotations hydrate every RFQ).
   try {
-    const response = await apiClient.get(
-      `${API_ENDPOINTS.CHATS_RFQ_CONVERSATIONS}/${rfqId}/conversations`,
-      { params: query }
-    );
+    const response = await apiClient.get(API_ENDPOINTS.CHATS_CONVERSATIONS, {
+      params: { ...query, rfq_id: rfqId },
+    });
     const data = unwrapApiPayload<unknown>(response.data);
-    return unwrapChatPaginated(data, normalizeChatConversation, params?.page, params?.limit ?? 10);
-  } catch (primaryError) {
-    // Fallback: some backends filter via query on the main conversations list
+    const list = unwrapChatPaginated(data, normalizeChatConversation, page, limit);
+    const filtered = list.results.filter((c) => c.rfq_id == null || c.rfq_id === rfqId);
+    return { ...list, results: filtered };
+  } catch (listError) {
     try {
-      const response = await apiClient.get(API_ENDPOINTS.CHATS_CONVERSATIONS, {
-        params: { ...query, rfq_id: rfqId },
-      });
+      const response = await apiClient.get(
+        `${API_ENDPOINTS.CHATS_RFQ_CONVERSATIONS}/${rfqId}/conversations`,
+        { params: query }
+      );
       const data = unwrapApiPayload<unknown>(response.data);
-      return unwrapChatPaginated(data, normalizeChatConversation, params?.page, params?.limit ?? 10);
+      return unwrapChatPaginated(data, normalizeChatConversation, page, limit);
     } catch {
-      throw primaryError;
+      throw listError;
     }
   }
 }

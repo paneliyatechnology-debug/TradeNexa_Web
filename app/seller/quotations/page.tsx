@@ -33,7 +33,7 @@ export default function SellerQuotationsPage() {
   const [chatTarget, setChatTarget] = useState<ApiQuotation | null>(null);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
-  const { hydrateRfqConversations } = useChat();
+  const { syncConversationsUnread } = useChat();
 
   const fetchPage = useCallback(
     (page: number) =>
@@ -54,18 +54,11 @@ export default function SellerQuotationsPage() {
 
   const hasSearch = debouncedSearch.trim().length > 0;
 
+  // One list sync for unread badges — avoid per-RFQ `/chats/rfqs/:id/conversations` (403 for sellers).
   useEffect(() => {
-    const rfqIds = [
-      ...new Set(
-        items
-          .map((q) => q.rfq_id)
-          .filter((id): id is number => typeof id === "number" && id > 0)
-      ),
-    ];
-    for (const rfqId of rfqIds) {
-      void hydrateRfqConversations(rfqId);
-    }
-  }, [items, hydrateRfqConversations]);
+    if (items.length === 0) return;
+    void syncConversationsUnread();
+  }, [items, syncConversationsUnread]);
 
   async function handleWithdraw(quotationId: number) {
     setWithdrawingId(quotationId);
