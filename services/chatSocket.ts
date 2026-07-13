@@ -32,6 +32,11 @@ export function getChatSocketStatus(): ChatSocketStatus {
   return status;
 }
 
+/** Existing instance only — never creates a new connection (safe for unload/logout). */
+export function getExistingChatSocket(): Socket | null {
+  return socket;
+}
+
 export function subscribeChatSocketStatus(listener: StatusListener): () => void {
   statusListeners.add(listener);
   listener(status);
@@ -274,7 +279,8 @@ export function connectChatSocket(): Socket {
 }
 
 export function disconnectChatSocket() {
-  joinedConversationIds.clear();
+  // Announce offline for every joined room before dropping the socket.
+  leaveAllConversations();
   if (!socket) {
     setStatus("disconnected");
     return;
@@ -306,6 +312,15 @@ export function leaveConversation(conversationId: number) {
     is_online: false,
   });
   socket.emit("presence:unsubscribe", { conversation_id: conversationId });
+}
+
+/** Leave every joined room and announce offline (logout / hard disconnect). */
+export function leaveAllConversations() {
+  const ids = Array.from(joinedConversationIds);
+  for (const conversationId of ids) {
+    leaveConversation(conversationId);
+  }
+  joinedConversationIds.clear();
 }
 
 /** Emit `typing:indicator` — Buyer Chat + Seller Chat (Postman). */

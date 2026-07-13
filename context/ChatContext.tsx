@@ -18,7 +18,6 @@ import {
   emitMessageRead,
   emitTypingIndicator,
   joinConversation,
-  leaveConversation,
   parseConversationPresencePayload,
   parsePresencePayload,
   parseTypingPayload,
@@ -29,7 +28,8 @@ import {
 } from "@/services/chatSocket";
 import { CHAT_SOCKET_LISTEN_EVENTS } from "@/config/chatSocketEvents";
 import { fetchTypingRelay, publishTypingRelay } from "@/services/typingRelay";
-import { fetchPresenceRelay, publishPresenceRelay } from "@/services/presenceRelay";
+import { fetchPresenceRelay } from "@/services/presenceRelay";
+import { goChatOffline, goChatOnline, resetChatPresence } from "@/services/chatPresence";
 import {
   fetchConversation,
   fetchConversations,
@@ -283,9 +283,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isAuthenticated) {
+      resetChatPresence();
       disconnectChatSocket();
       setUnreadSummary({ total_unread: 0 });
       setConversationsMeta({});
+      setPresenceByUserId({});
       return;
     }
 
@@ -618,37 +620,32 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, [isAuthenticated, refreshUnread, scheduleConversationsUnreadSync, syncConversationsUnread]);
 
   useEffect(() => {
-    if (!activeConversationId) return;
-    const conversationId = activeConversationId;
-    joinConversation(conversationId);
-
-    const userId = currentUserIdRef.current;
-    if (userId) {
-      void publishPresenceRelay({ conversationId, userId, online: true });
+    if (!activeConversationId) {
+      // Sidebar closed / conversation cleared — go Offline immediately.
+      goChatOffline({ reason: "close" });
+      return;
     }
 
-    // Heartbeat while chat is open so the peer keeps seeing Online.
-    const heartbeat = window.setInterval(() => {
+    const conversationId = activeConversationId;
+    const userId = currentUserIdRef.current;
+    if (userId) {
+      goChatOnline(conversationId, userId);
+    } else {
+      // User id may resolve a tick later; still join the room.
       joinConversation(conversationId);
-      const me = currentUserIdRef.current;
-      if (me) {
-        void publishPresenceRelay({ conversationId, userId: me, online: true });
-      }
-    }, 20_000);
+    }
 
     return () => {
-      window.clearInterval(heartbeat);
-      const me = currentUserIdRef.current;
-      if (me) {
-        void publishPresenceRelay({ conversationId, userId: me, online: false });
-      }
-      window.setTimeout(() => {
-        if (activeIdRef.current !== conversationId) {
-          leaveConversation(conversationId);
-        }
-      }, 400);
+      // Component cleanup / conversation switch — Offline immediately.
+      goChatOffline({ reason: "unmount" });
     };
   }, [activeConversationId]);
+
+  // If auth user id arrives after chat opened, promote to Online.
+  useEffect(() => {
+    if (!activeConversationId || currentUserId == null) return;
+    goChatOnline(activeConversationId, currentUserId);
+  }, [activeConversationId, currentUserId]);
 
   // Poll presence relay — keeps Online/Offline in sync for buyer + seller on localhost.
   useEffect(() => {

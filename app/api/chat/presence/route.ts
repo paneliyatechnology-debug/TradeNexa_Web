@@ -27,7 +27,7 @@ function getStore(): PresenceStore {
 }
 
 /** Consider offline if no heartbeat/join refresh within this window. */
-const ONLINE_TTL_MS = 45_000;
+const ONLINE_TTL_MS = 20_000;
 
 function prune(store: PresenceStore) {
   const now = Date.now();
