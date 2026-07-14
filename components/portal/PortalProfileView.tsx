@@ -1,31 +1,23 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
-  BadgeCheck,
   Building2,
-  Heart,
   Mail,
   MapPin,
-  MessageSquare,
-  Package,
   Phone,
-  Eye,
-  ShieldCheck,
   LogOut,
   User as UserIcon,
 } from "lucide-react";
 import PortalSection from "@/components/portal/PortalSection";
-import PortalStatCard from "@/components/portal/PortalStatCard";
 import RoleSwitcher from "@/components/portal/RoleSwitcher";
 import DeleteAccountButton from "@/components/portal/DeleteAccountButton";
 import { useAuth } from "@/hooks/useAuth";
-import { useWishlist } from "@/hooks/useWishlist";
 import type { User } from "@/types/auth";
 
 export interface PortalProfileMenuItem {
@@ -37,17 +29,9 @@ export interface PortalProfileMenuItem {
 
 interface PortalProfileViewProps {
   variant: "buyer" | "seller";
-  menuItems: PortalProfileMenuItem[];
+  /** @deprecated Overview/quick actions removed — kept optional for call-site compatibility */
+  menuItems?: PortalProfileMenuItem[];
 }
-
-const quickActionColors = [
-  "text-primary",
-  "text-muted-fg",
-  "text-warning",
-  "text-success",
-  "text-accent",
-  "text-muted-fg",
-];
 
 const themes = {
   buyer: {
@@ -73,7 +57,9 @@ function buildAccountDetailRows(user: User | null) {
   if (user?.phone) rows.push({ icon: Phone, label: "Phone", value: user.phone });
 
   const hasCityState = Boolean(user?.city || user?.state);
-  const locationValue = [user?.address, user?.city, user?.state, user?.pincode].filter(Boolean).join(", ");
+  const locationValue = [user?.address, user?.city, user?.state, user?.pincode]
+    .filter(Boolean)
+    .join(", ");
 
   if (locationValue) {
     rows.push({
@@ -86,71 +72,24 @@ function buildAccountDetailRows(user: User | null) {
   return rows;
 }
 
-export default function PortalProfileView({ variant, menuItems }: PortalProfileViewProps) {
+export default function PortalProfileView({ variant }: PortalProfileViewProps) {
   const router = useRouter();
   const { user, logoutUser } = useAuth();
-  const { wishlistTotal, refreshWishlist } = useWishlist();
   const theme = themes[variant];
 
-  useEffect(() => {
-    if (variant === "buyer") {
-      void refreshWishlist();
-    }
-  }, [refreshWishlist, variant]);
-
-  const displayName = variant === "seller" ? user?.company || user?.name || "Seller" : user?.name || "Buyer";
+  const displayName =
+    variant === "seller" ? user?.company || user?.name || "Seller" : user?.name || "Buyer";
   const secondaryLine = variant === "seller" ? user?.name : user?.company;
   const initial = (displayName || "U").charAt(0).toUpperCase();
   const accountDetails = buildAccountDetailRows(user);
-
-  const buyerStats: {
-    title: string;
-    value: string;
-    icon: LucideIcon;
-    color: string;
-    bg: string;
-    href?: string;
-  }[] = [
-    {
-      title: "Wishlist",
-      value: String(wishlistTotal),
-      icon: Heart,
-      color: wishlistTotal > 0 ? "fill-error text-error" : "text-accent",
-      bg: wishlistTotal > 0 ? "bg-error-soft" : "bg-warning-soft",
-      href: "/buyer/wishlist",
-    },
-    { title: "Account Type", value: "Buyer", icon: ShieldCheck, color: "text-success", bg: "bg-success-soft" },
-    {
-      title: "Company",
-      value: user?.company ? (user.company.length > 12 ? `${user.company.slice(0, 12)}…` : user.company) : "—",
-      icon: Building2,
-      color: "text-primary",
-      bg: "bg-primary-soft",
-    },
-    { title: "Status", value: "Active", icon: BadgeCheck, color: "text-success", bg: "bg-success-soft" },
-  ] ;
-
-  const sellerStats: {
-    title: string;
-    value: string;
-    icon: LucideIcon;
-    color: string;
-    bg: string;
-    href?: string;
-  }[] = [
-    { title: "New Leads", value: "48", icon: MessageSquare, color: "text-accent", bg: "bg-warning-soft" },
-    { title: "Profile Views", value: "1.2k", icon: Eye, color: "text-success", bg: "bg-success-soft" },
-    { title: "Listings", value: "24", icon: Package, color: "text-primary", bg: "bg-primary-soft" },
-    { title: "Status", value: "Verified", icon: BadgeCheck, color: "text-warning", bg: "bg-warning-soft" },
-  ] ;
-
-  const stats = variant === "buyer" ? buyerStats : sellerStats;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
         <p className="text-sm text-muted-fg">Your account,</p>
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{displayName}</h2>
+        <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+          {displayName}
+        </h2>
       </motion.div>
 
       <motion.div
@@ -169,7 +108,9 @@ export default function PortalProfileView({ variant, menuItems }: PortalProfileV
                 {theme.roleLabel}
               </span>
               <h3 className="mt-2 truncate text-xl font-semibold sm:text-2xl">{displayName}</h3>
-              {secondaryLine ? <p className="mt-1 truncate text-sm text-white/80">{secondaryLine}</p> : null}
+              {secondaryLine ? (
+                <p className="mt-1 truncate text-sm text-white/80">{secondaryLine}</p>
+              ) : null}
               {user?.phone ? <p className="mt-1 text-xs text-white/70">{user.phone}</p> : null}
             </div>
           </div>
@@ -182,52 +123,6 @@ export default function PortalProfileView({ variant, menuItems }: PortalProfileV
           </Link>
         </div>
       </motion.div>
-
-      <PortalSection title="Account Overview">
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {stats.map((stat) => (
-            <PortalStatCard
-              key={stat.title}
-              title={stat.title}
-              value={stat.value}
-              icon={stat.icon}
-              color={stat.color}
-              bg={stat.bg}
-              href={stat.href}
-            />
-          ))}
-        </div>
-      </PortalSection>
-
-      <PortalSection title="Quick Actions" subtitle="Shortcuts to manage your account">
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
-          {menuItems.map((item, index) => {
-            const Icon = item.icon;
-            const color = quickActionColors[index % quickActionColors.length];
-            const isWishlistAction = variant === "buyer" && item.label === "Wishlist";
-            const iconClass =
-              isWishlistAction && wishlistTotal > 0 ? "fill-error text-error" : color;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="group surface-card-hover flex flex-col items-center gap-2 p-3 sm:p-4"
-              >
-                <div
-                  className={`flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-card transition group-hover:scale-105 sm:h-16 sm:w-16 ${
-                    isWishlistAction && wishlistTotal > 0 ? "bg-error-soft" : ""
-                  }`}
-                >
-                  <Icon className={`h-6 w-6 sm:h-7 sm:w-7 ${iconClass}`} strokeWidth={2} />
-                </div>
-                <span className="line-clamp-2 text-center text-[10px] font-bold text-muted-fg sm:text-[11px]">
-                  {item.label}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-      </PortalSection>
 
       <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
         <div className="lg:col-span-2">
@@ -276,7 +171,9 @@ export default function PortalProfileView({ variant, menuItems }: PortalProfileV
                 <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-soft text-primary">
                   <UserIcon className="h-5 w-5" />
                 </div>
-                <p className="text-sm font-semibold text-muted-fg">No account details available yet.</p>
+                <p className="text-sm font-semibold text-muted-fg">
+                  No account details available yet.
+                </p>
                 <Link
                   href={theme.editHref}
                   className="inline-flex items-center gap-1 text-sm font-semibold text-primary transition hover:text-primary-hover"
