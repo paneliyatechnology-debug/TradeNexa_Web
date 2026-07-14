@@ -93,7 +93,7 @@ export default function SellerMultiSelect({
           {selectedSellers.map((seller) => (
             <span
               key={seller.id}
-              className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary"
+              className="inline-flex max-w-full items-center gap-1.5 rounded-lg bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary"
             >
               <span className="truncate">{seller.company_name}</span>
               <button
@@ -111,8 +111,8 @@ export default function SellerMultiSelect({
       ) : null}
 
       <div
-        className={`overflow-hidden rounded-xl border bg-white ${
-          error ? "border-red-400" : "border-border"
+        className={`overflow-hidden rounded-xl border bg-card ${
+          error ? "border-error/40" : "border-border"
         }`}
       >
         <div className="flex items-center gap-2 border-b border-border px-3 py-2">
@@ -150,7 +150,7 @@ export default function SellerMultiSelect({
                       className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
                         checked
                           ? "border-primary bg-primary text-white"
-                          : "border-border bg-white"
+                          : "border-border bg-card"
                       }`}
                       aria-hidden
                     >
@@ -180,7 +180,7 @@ export default function SellerMultiSelect({
                 type="button"
                 disabled={loadingMore || disabled}
                 onClick={() => void loadPage(page + 1, true)}
-                className="w-full rounded-lg py-1.5 text-xs font-bold text-primary transition hover:bg-primary-soft disabled:opacity-50"
+                className="w-full rounded-lg py-1.5 text-xs font-semibold text-primary transition hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 disabled:opacity-50"
               >
                 {loadingMore ? "Loading..." : "Load more"}
               </button>

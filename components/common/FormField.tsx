@@ -27,7 +27,7 @@ export function FormField({
 }: FormFieldProps) {
   return (
     <div
-      className={`space-y-2 ${className}`}
+      className={`space-y-1.5 ${className}`}
       data-form-field={fieldKey ?? htmlFor}
     >
       <label
@@ -54,18 +54,26 @@ export function FormField({
   );
 }
 
+/** Shared focus ring — keep in sync with Button / Select. */
+export const controlFocusClass =
+  "focus:border-primary focus:ring-2 focus:ring-primary/25 focus:outline-none";
+
+export const controlFocusErrorClass =
+  "focus:border-error focus:ring-2 focus:ring-error/20 focus:outline-none";
+
+/** Default control height: h-10 (design system md). */
 export const inputClassName = (hasError?: boolean) =>
-  `h-11 w-full rounded-lg border bg-white px-4 text-sm text-foreground placeholder:text-muted-placeholder outline-none transition-all duration-200 ${
+  `h-10 w-full rounded-lg border bg-card px-3.5 text-sm text-foreground placeholder:text-muted-placeholder outline-none transition-colors duration-200 disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-55 ${
     hasError
-      ? "border-red-300 focus:border-error focus:ring-2 focus:ring-error/15"
-      : "border-border hover:border-border-hover focus:border-primary focus:ring-2 focus:ring-primary/15"
+      ? `border-error/40 bg-error-soft ${controlFocusErrorClass}`
+      : `border-border hover:border-border-hover ${controlFocusClass}`
   }`;
 
 export const textareaClassName = (hasError?: boolean) =>
-  `min-h-[7.5rem] w-full resize-y rounded-lg border bg-white px-4 py-3 text-sm leading-relaxed text-foreground placeholder:text-muted-placeholder outline-none transition-all duration-200 ${
+  `min-h-[7.5rem] w-full resize-y rounded-lg border bg-card px-3.5 py-2.5 text-sm leading-relaxed text-foreground placeholder:text-muted-placeholder outline-none transition-colors duration-200 disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-55 ${
     hasError
-      ? "border-red-300 focus:border-error focus:ring-2 focus:ring-error/15"
-      : "border-border hover:border-border-hover focus:border-primary focus:ring-2 focus:ring-primary/15"
+      ? `border-error/40 bg-error-soft ${controlFocusErrorClass}`
+      : `border-border hover:border-border-hover ${controlFocusClass}`
   }`;
 
 export const dateInputClassName = (hasError?: boolean, className = "") =>

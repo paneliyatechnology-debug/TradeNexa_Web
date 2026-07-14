@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
 import { Select } from "@/components/common/Select";
 import type { CreateQuotationPayload } from "@/types/rfq";
@@ -200,10 +200,11 @@ export function useQuotationFormState({
   }
 
   function inputClass(name: keyof FormState): string {
-    const base = "w-full rounded-xl border px-4 py-3 text-sm outline-none";
+    const base =
+      "w-full rounded-lg border bg-card px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors duration-200";
     return fieldError(name)
-      ? `${base} border-red-300 focus:border-red-500`
-      : `${base} border-border focus:border-primary`;
+      ? `${base} border-error/40 bg-error-soft focus:border-error focus:ring-2 focus:ring-error/20`
+      : `${base} border-border hover:border-border-hover focus:border-primary focus:ring-2 focus:ring-primary/25`;
   }
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -303,7 +304,7 @@ function FieldHint({
   message?: string;
 }) {
   if (!message) return null;
-  return <p className="mt-1 text-xs text-red-600">{message}</p>;
+  return <p className="mt-1 text-xs text-error">{message}</p>;
 }
 
 export function QuotationTotalSummary({
@@ -322,7 +323,7 @@ export function QuotationTotalSummary({
       <p className="text-[10px] font-bold uppercase tracking-wide text-muted-fg">Total amount</p>
       {liveTotal ? (
         <>
-          <p className={`mt-0.5 font-extrabold text-primary ${compact ? "text-xl" : "text-2xl"}`}>
+          <p className={`mt-0.5 font-semibold text-primary ${compact ? "text-xl" : "text-2xl"}`}>
             {formatPrice(liveTotal.total)}
           </p>
           <p className="mt-0.5 text-xs text-muted-fg">
@@ -354,24 +355,20 @@ export function QuotationFormActions({
   return (
     <div className="flex flex-col gap-2 sm:flex-row">
       {onCancel ? (
-        <button
+        <Button
           type="button"
+          variant="secondary"
+          size="lg"
           onClick={onCancel}
           disabled={submitting}
-          className="cursor-pointer rounded-2xl border border-border bg-white px-4 py-3.5 text-sm font-bold text-muted-fg disabled:cursor-not-allowed disabled:opacity-50 sm:flex-1"
+          className="sm:flex-1"
         >
           Cancel
-        </button>
+        </Button>
       ) : null}
-      <button
-        type="submit"
-        form={formId}
-        disabled={submitting}
-        className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+      <Button type="submit" form={formId} size="lg" loading={submitting} className="flex-1">
         {submitLabel}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -391,7 +388,7 @@ export function QuotationFormFields({
   function RequiredLabel({ children }: { children: React.ReactNode }) {
     return (
       <label className={labelClass}>
-        {children} <span className="text-red-500">*</span>
+        {children} <span className="text-error">*</span>
       </label>
     );
   }
@@ -400,14 +397,14 @@ export function QuotationFormFields({
     <>
       {!hideHeader ? (
         <div>
-          <p className="text-lg font-extrabold text-foreground">Submit your quotation</p>
+          <p className="text-lg font-semibold text-foreground">Submit your quotation</p>
           <p className="mt-1 text-xs text-muted-fg">
-            Fields marked with <span className="font-semibold text-red-500">*</span> are required.
+            Fields marked with <span className="font-semibold text-error">*</span> are required.
           </p>
         </div>
       ) : (
         <p className="text-xs text-muted-fg">
-          Fields marked with <span className="font-semibold text-red-500">*</span> are required.
+          Fields marked with <span className="font-semibold text-error">*</span> are required.
         </p>
       )}
 
@@ -560,7 +557,7 @@ export function SubmitQuotationFormModal({
       bodyClassName="px-5 py-5 sm:px-6"
       title={
         <div className="min-w-0">
-          <p className="text-lg font-extrabold text-foreground">Submit your quotation</p>
+          <p className="text-lg font-semibold text-foreground">Submit your quotation</p>
           <p className="mt-0.5 truncate text-sm font-medium text-muted-fg">{rfqTitle}</p>
         </div>
       }

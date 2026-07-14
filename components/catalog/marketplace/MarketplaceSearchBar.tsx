@@ -34,10 +34,8 @@ export default function MarketplaceSearchBar({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`w-full border-0 bg-white text-foreground shadow-[var(--shadow-card)] outline-none ring-1 ring-border placeholder:text-muted-placeholder focus:ring-2 focus:ring-primary/30 ${
-          isSmall
-            ? "rounded-xl py-2.5 pl-9 pr-9 text-sm"
-            : "rounded-xl py-3 pl-10 pr-10 text-sm"
+        className={`w-full rounded-lg border border-border bg-card text-sm text-foreground outline-none transition-colors duration-200 placeholder:text-muted-placeholder hover:border-border-hover focus:border-primary focus:ring-2 focus:ring-primary/25 ${
+          isSmall ? "h-9 pl-9 pr-9" : "h-10 pl-10 pr-10"
         }`}
       />
       {value.length > 0 && (
@@ -45,7 +43,7 @@ export default function MarketplaceSearchBar({
           type="button"
           onClick={() => onChange("")}
           aria-label="Clear search"
-          className={`absolute right-2 top-1/2 flex -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-muted-fg transition-colors duration-200 hover:bg-muted hover:text-foreground ${
+          className={`absolute right-2 top-1/2 flex -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-muted-fg transition-colors duration-200 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
             isSmall ? "h-6 w-6" : "h-7 w-7"
           }`}
         >

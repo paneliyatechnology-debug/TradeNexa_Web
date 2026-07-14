@@ -51,7 +51,7 @@ const quickLinks = [
     label: "Post RFQ",
     href: "/buyer/post-requirement",
     icon: FileText,
-    bg: "bg-emerald-50",
+    bg: "bg-success-soft",
     color: "text-success",
   },
 ];
@@ -111,7 +111,7 @@ export default function BuyerHomePage() {
 
       <Link
         href="/buyer/search"
-        className="mb-5 flex items-center gap-3 rounded-xl border border-border bg-white px-4 py-3.5 shadow-[var(--shadow-card)] transition-all duration-200 hover:border-primary/40 sm:mb-6 sm:py-4"
+        className="mb-5 flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5 transition-all duration-200 hover:border-primary/40 sm:mb-6 sm:py-4"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft">
           <Search className="h-5 w-5 text-primary" aria-hidden />
@@ -148,7 +148,7 @@ export default function BuyerHomePage() {
       ) : (
         <Link
           href="/buyer/post-requirement"
-          className="mb-5 block overflow-hidden rounded-xl bg-accent p-4 text-white shadow-sm transition-opacity duration-200 hover:opacity-95 sm:mb-6 sm:rounded-xl sm:p-5"
+          className="mb-5 block overflow-hidden rounded-xl bg-accent p-4 text-white transition-opacity duration-200 hover:opacity-95 sm:mb-6 sm:p-5"
         >
           <p className="text-[10px] font-semibold uppercase tracking-wider text-white/75">
             TradeNexa B2B
@@ -157,7 +157,7 @@ export default function BuyerHomePage() {
           <p className="mt-1 max-w-md text-xs text-white/85 sm:text-sm">
             Get quotes from multiple sellers in 24 hours
           </p>
-          <span className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-accent sm:text-sm">
+          <span className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-card px-3 py-1.5 text-xs font-semibold text-accent sm:text-sm">
             Post RFQ
             <ArrowRight className="h-3.5 w-3.5" aria-hidden />
           </span>
@@ -246,7 +246,7 @@ export default function BuyerHomePage() {
 
       <Link
         href="/buyer/post-requirement"
-        className="mb-2 flex items-center justify-between gap-4 overflow-hidden rounded-xl bg-accent p-4 text-white shadow-sm transition-opacity duration-200 hover:opacity-95 sm:mb-4 sm:p-5"
+        className="mb-2 flex items-center justify-between gap-4 overflow-hidden rounded-xl bg-accent p-4 text-white transition-opacity duration-200 hover:opacity-95 sm:mb-4 sm:p-5"
       >
         <div className="min-w-0">
           <p className="text-sm font-semibold sm:text-base">Post a Requirement</p>

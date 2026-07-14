@@ -61,7 +61,7 @@ function DetailMetaItem({
     <div className="flex items-start gap-2.5 rounded-xl bg-muted p-3 ring-1 ring-border/80">
       <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-fg" aria-hidden />
       <div className="min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-wide text-muted-fg">{label}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-fg">{label}</p>
         <p className="mt-0.5 text-sm font-semibold text-foreground">{value}</p>
       </div>
     </div>
@@ -187,7 +187,7 @@ export default function BuyerRfqDetailPage() {
     return (
       <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
         <PortalBackLink href="/buyer/inquiries" label="My RFQs" />
-        <p className="text-sm text-red-600">Invalid RFQ id</p>
+        <p className="text-sm text-error">Invalid RFQ id</p>
       </div>
     );
   }
@@ -245,7 +245,7 @@ export default function BuyerRfqDetailPage() {
         <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h1
-              className={`text-2xl font-extrabold tracking-tight sm:text-3xl ${
+              className={`text-2xl font-semibold tracking-tight sm:text-3xl ${
                 isInactive ? "text-muted-fg" : "text-foreground"
               }`}
             >
@@ -255,12 +255,12 @@ export default function BuyerRfqDetailPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:justify-end">
             <RfqStatusBadge status={rfq.status} />
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-fg">
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1 text-xs font-semibold text-muted-fg">
               <Calendar className="h-3.5 w-3.5" />
               Posted {formatRfqDate(rfq.created_at)}
             </span>
             {rfq.quotation_deadline ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-fg">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1 text-xs font-semibold text-muted-fg">
                 <Clock className="h-3.5 w-3.5" />
                 Deadline {formatRfqDate(rfq.quotation_deadline)}
               </span>
@@ -271,17 +271,17 @@ export default function BuyerRfqDetailPage() {
 
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] lg:items-start lg:gap-8">
         <section>
-          <p className="text-xs font-bold uppercase tracking-wide text-muted-fg">Requirement</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-fg">Requirement</p>
 
           <article
-            className={`mt-2 rounded-2xl border bg-card p-5 sm:p-6 ${
+            className={`surface-card mt-2 p-5 sm:p-6 ${
               isInactive
-                ? "border-red-200 border-l-4 border-l-red-400"
-                : "border-border"
+                ? "border-error/25 border-l-4 border-l-error"
+                : ""
             }`}
           >
             {isInactive ? (
-              <p className="mb-4 text-xs font-semibold text-red-600">
+              <p className="mb-4 text-xs font-semibold text-error">
                 This RFQ is {status.includes("CANCEL") ? "cancelled" : status.toLowerCase()} and is no longer
                 accepting new quotes.
               </p>
@@ -289,7 +289,7 @@ export default function BuyerRfqDetailPage() {
 
             {rfq.description ? (
               <div className="mb-5">
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-fg">Description</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-fg">Description</p>
                 <p className="mt-2 text-sm leading-relaxed text-muted-fg">{rfq.description}</p>
               </div>
             ) : null}
@@ -361,8 +361,8 @@ export default function BuyerRfqDetailPage() {
 
         <section className="mt-8 lg:mt-0">
           <div className="lg:sticky lg:top-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-muted-fg">Quotations</p>
-            <h2 className="mt-1 text-xl font-extrabold text-foreground">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-fg">Quotations</p>
+            <h2 className="mt-1 text-xl font-semibold text-foreground">
               {quotesLoading && totalQuotes === 0
                 ? "Loading quotes..."
                 : totalQuotes === 0
@@ -376,7 +376,7 @@ export default function BuyerRfqDetailPage() {
             ) : null}
 
             {quotesError ? (
-              <p className="mt-3 rounded-xl border border-red-100 bg-red-50 p-3 text-xs text-red-600">
+              <p className="mt-3 rounded-xl border border-error/20 bg-error-soft p-3 text-xs text-error">
                 {quotesError}
               </p>
             ) : null}
@@ -387,8 +387,8 @@ export default function BuyerRfqDetailPage() {
                 Loading quotations...
               </div>
             ) : quotesMismatch ? (
-              <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center">
-                <p className="text-sm font-bold text-foreground">Could not load quotations</p>
+              <div className="mt-4 rounded-xl border border-warning/30 bg-warning-soft p-6 text-center">
+                <p className="text-sm font-semibold text-foreground">Could not load quotations</p>
                 <p className="mt-1 text-xs text-muted-fg">
                   This RFQ shows {totalQuotes} quote{totalQuotes === 1 ? "" : "s"}, but the list did not load.
                   Try refreshing.
@@ -400,9 +400,9 @@ export default function BuyerRfqDetailPage() {
                 </div>
               </div>
             ) : totalQuotes === 0 ? (
-              <div className="mt-4 rounded-2xl border border-dashed border-border bg-muted p-6 text-center">
+              <div className="mt-4 rounded-xl border border-dashed border-border bg-muted p-6 text-center">
                 <FileText className="mx-auto h-8 w-8 text-muted-fg" />
-                <p className="mt-3 text-sm font-bold text-foreground">No quotations yet</p>
+                <p className="mt-3 text-sm font-semibold text-foreground">No quotations yet</p>
                 <p className="mt-1 text-xs text-muted-fg">
                   Sellers will submit quotes here once your RFQ is live.
                 </p>

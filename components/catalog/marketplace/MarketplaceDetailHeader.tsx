@@ -98,7 +98,7 @@ export default function MarketplaceDetailHeader({
             </div>
           ) : (
             <div className="flex flex-wrap items-center gap-6 xl:gap-8">
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-border bg-muted shadow-xl xl:h-28 xl:w-28">
+              <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-white/15 bg-muted xl:h-28 xl:w-28">
                 <CatalogImage
                   src={iconSrc}
                   alt={title}
@@ -109,7 +109,7 @@ export default function MarketplaceDetailHeader({
               </div>
 
               <div className="min-w-0 flex-1">
-                <h1 className="text-3xl font-extrabold tracking-tight text-white xl:text-4xl">
+                <h1 className="text-3xl font-semibold tracking-tight text-white xl:text-4xl">
                   {title}
                 </h1>
                 {subtitle && (

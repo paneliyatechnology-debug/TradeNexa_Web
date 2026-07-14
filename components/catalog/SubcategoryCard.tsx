@@ -28,9 +28,9 @@ export default function SubcategoryCard({
     >
       <Link
         href={href}
-        className="group flex items-center gap-4 rounded-xl border border-portal-border bg-white p-4 shadow-sm transition-all hover:border-portal-buyer/25 hover:shadow-[0_8px_24px_-8px_rgba(15,23,42,0.08)] sm:p-5"
+        className="group flex items-center gap-4 surface-card-hover p-4 sm:p-5"
       >
-        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-portal-buyer/10 to-portal-buyer/5 ring-1 ring-portal-buyer/10 transition group-hover:ring-portal-buyer/30">
+        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 ring-1 ring-primary/10 transition group-hover:ring-primary/30">
           <CatalogImage
             src={subcategory.icon || subcategory.image}
             alt={subcategory.name}
@@ -40,16 +40,16 @@ export default function SubcategoryCard({
         </div>
 
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-base font-bold text-portal-fg transition-colors group-hover:text-portal-buyer">
+          <h3 className="truncate text-base font-semibold text-foreground transition-colors group-hover:text-primary">
             {subcategory.name}
           </h3>
-          <p className="mt-0.5 flex items-center gap-1 text-xs text-portal-muted">
+          <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-fg">
             <Package className="h-3.5 w-3.5" />
             {count > 0 ? `${count.toLocaleString()} products` : "Browse listings"}
           </p>
         </div>
 
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-portal-bg text-portal-muted transition group-hover:bg-portal-buyer group-hover:text-white">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-muted-fg transition group-hover:bg-primary group-hover:text-white">
           <ChevronRight className="h-5 w-5" />
         </div>
       </Link>

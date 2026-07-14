@@ -74,9 +74,9 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="fixed inset-x-0 top-0 z-40 border-b border-border/80 bg-white/90 backdrop-blur-xl">
+      <nav className="fixed inset-x-0 top-0 z-40 border-b border-border bg-card/95 backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between gap-4">
+          <div className="flex h-14 items-center justify-between gap-4">
             <div className="flex shrink-0 items-center">
               <Logo size="nav" priority />
             </div>
@@ -117,7 +117,7 @@ export default function Navbar() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.96 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute left-0 top-full z-50 mt-1 w-56 rounded-xl border border-border bg-white p-1.5 shadow-[var(--shadow-elevated)]"
+                      className="absolute left-0 top-full z-50 mt-1 w-56 rounded-xl border border-border bg-card p-1.5 shadow-[var(--shadow-elevated)]"
                     >
                       {dropdownLinks.map((link) => (
                         <Link
@@ -161,7 +161,7 @@ export default function Navbar() {
                     <button
                       type="button"
                       onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                      className="flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-white px-3 py-1.5 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-muted"
+                      className="flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-muted"
                       aria-expanded={isUserMenuOpen}
                     >
                       <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-soft text-xs font-bold text-primary">
@@ -187,7 +187,7 @@ export default function Navbar() {
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 8, scale: 0.96 }}
                             transition={{ duration: 0.15 }}
-                            className="absolute right-0 z-20 mt-2 w-60 rounded-xl border border-border bg-white p-2 shadow-[var(--shadow-elevated)]"
+                            className="absolute right-0 z-20 mt-2 w-60 rounded-xl border border-border bg-card p-2 shadow-[var(--shadow-elevated)]"
                           >
                             <div className="mb-1 border-b border-border px-3 pb-3 pt-1">
                               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-fg">
@@ -215,7 +215,7 @@ export default function Navbar() {
                                 setIsUserMenuOpen(false);
                                 logoutUser();
                               }}
-                              className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-error transition-colors duration-200 hover:bg-red-50"
+                              className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-error transition-colors duration-200 hover:bg-error-soft"
                             >
                               <LogOut className="h-4 w-4" aria-hidden />
                               Sign Out
@@ -288,7 +288,7 @@ export default function Navbar() {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
-              className="border-t border-border bg-white lg:hidden"
+              className="border-t border-border bg-card lg:hidden"
             >
               <div className="scroll-area max-h-[calc(100dvh-4rem)] space-y-0.5 overflow-y-auto px-4 py-4">
                 {navLinks.map((link) => (

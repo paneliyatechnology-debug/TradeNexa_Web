@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Loader2, Send } from "lucide-react";
+import { Send } from "lucide-react";
+import { Button } from "@/components/common/Button";
 import { submitProductForReview } from "@/services/productService";
 import type { ProductApprovalStatus } from "@/types/product";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
@@ -40,18 +41,16 @@ export default function SubmitProductForReviewButton({
   }
 
   return (
-    <button
+    <Button
       type="button"
+      size="sm"
       onClick={() => void handleSubmit()}
-      disabled={submitting}
-      className={`inline-flex items-center justify-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
+      loading={submitting}
+      loadingText="Submitting..."
+      className={className}
     >
-      {submitting ? (
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-      ) : (
-        <Send className="h-3.5 w-3.5" />
-      )}
-      {submitting ? "Submitting..." : label}
-    </button>
+      <Send className="h-3.5 w-3.5" />
+      {label}
+    </Button>
   );
 }

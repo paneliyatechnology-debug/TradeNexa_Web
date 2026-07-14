@@ -67,7 +67,7 @@ export default function PortalProductCard({
 
   return (
     <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.2 }} className="h-full">
-      <div className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-shadow duration-200 hover:border-muted hover:shadow-sm">
+      <div className="group surface-card-hover relative flex h-full flex-col overflow-hidden">
         <Link href={link} className="flex flex-1 flex-col hover:cursor-pointer">
           <div className="relative aspect-[4/3] overflow-hidden">
             <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />
@@ -85,7 +85,7 @@ export default function PortalProductCard({
               </div>
             )}
             {badgeLabel ? (
-              <span className="pointer-events-none absolute left-2 top-2 max-w-[85%] truncate rounded-md bg-portal-buyer/90 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm">
+              <span className="pointer-events-none absolute left-2 top-2 max-w-[85%] truncate rounded-md bg-portal-buyer/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm">
                 {badgeLabel}
               </span>
             ) : null}
@@ -143,7 +143,7 @@ export default function PortalProductCard({
             {resolvedEditHref ? (
               <Link
                 href={resolvedEditHref}
-                className={`flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-muted-fg transition hover:bg-muted hover:text-primary ${
+                className={`flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-muted-fg transition hover:bg-muted hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
                   footerCols > 1 ? "border-r border-border" : ""
                 }`}
               >
@@ -156,7 +156,7 @@ export default function PortalProductCard({
                 productId={product.id}
                 label="Submit"
                 onSubmitted={onApprovalUpdated}
-                className={`flex w-full items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-primary transition hover:bg-primary/5 ${
+                className={`flex w-full items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-primary transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
                   showDelete ? "border-r border-border" : ""
                 }`}
               />
@@ -166,7 +166,7 @@ export default function PortalProductCard({
                 productId={product.id}
                 productName={product.name}
                 onDeleted={onDeleted}
-                className="flex w-full items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-error transition hover:bg-error/10"
+                className="flex w-full items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-error transition hover:bg-error/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
               />
             ) : null}
           </div>

@@ -1,5 +1,19 @@
 @import "tailwindcss";
 
+/*
+  TradeNexa design tokens (Tailwind v4 — tokens live here; no tailwind.config.js)
+
+  Usage rules
+  - Controls: rounded-lg (8px) · Surfaces: rounded-xl (12px) · Marketing heroes: rounded-2xl only
+  - Default control height: h-10 (2.5rem); sm=h-8 · lg=h-11
+  - Prefer bg-card over bg-white; text-muted-fg for meta; semantic error/success tokens
+  - Portal UI: border-first (surface-card); shadows only on hover / primary CTA / overlays
+  - Keep --portal-bg separate from --background (shell canvas vs marketing)
+
+  Tailwind radius aliases (@theme): rounded-lg→8px, rounded-xl→12px, rounded-2xl→16px
+  (CSS vars --radius-lg/--radius-xl keep the raw 12px/16px scale for .surface-card etc.)
+*/
+
 :root {
   /* Brand — TradeNexa */
   --background: #f8fafc;
@@ -20,19 +34,36 @@
   --border-hover: #b0bec5;
   --card: #ffffff;
   --success: #2e7d32;
+  --success-soft: #e8f5e9;
   --warning: #f57f17;
+  --warning-soft: #fff8e1;
   --error: #c62828;
   --error-hover: #b71c1c;
+  --error-soft: #ffebee;
+  --info: #0277bd;
+  --info-soft: #e1f5fe;
   --whatsapp: #25d366;
   --whatsapp-dark: #128c7e;
-  --radius: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+
+  /* Radius scale */
+  --radius-sm: 0.375rem; /* 6px — chips */
+  --radius: 0.5rem; /* 8px — inputs, buttons, selects */
+  --radius-lg: 0.75rem; /* 12px — cards, modals, panels */
+  --radius-xl: 1rem; /* 16px — marketing / heroes only */
+
+  /* Shadows — prefer border for dense portal UI */
   --shadow-soft: 0 4px 24px -4px rgb(13 27 42 / 0.08);
   --shadow-card: 0 1px 2px rgb(13 27 42 / 0.04), 0 4px 16px -4px rgb(13 27 42 / 0.06);
   --shadow-elevated: 0 8px 32px -8px rgb(13 27 42 / 0.12);
   --shadow-button: 0 1px 2px rgb(21 101 192 / 0.12), 0 4px 12px -2px rgb(21 101 192 / 0.2);
+
+  --focus-ring: 0 0 0 3px rgb(21 101 192 / 0.22);
+  --focus-ring-error: 0 0 0 3px rgb(198 40 40 / 0.18);
+
   --header-height: 4rem;
+  --control-h-sm: 2rem; /* h-8 */
+  --control-h-md: 2.5rem; /* h-10 — default */
+  --control-h-lg: 2.75rem; /* h-11 */
 
   /* Portal semantic tokens (aligned with brand) */
   --portal-bg: #f4f6f9;
@@ -66,9 +97,14 @@
   --color-border-hover: var(--border-hover);
   --color-card: var(--card);
   --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
   --color-error: var(--error);
   --color-error-hover: var(--error-hover);
+  --color-error-soft: var(--error-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
   --color-whatsapp: var(--whatsapp);
   --color-whatsapp-dark: var(--whatsapp-dark);
   --color-portal-bg: var(--portal-bg);
@@ -82,10 +118,15 @@
   --color-portal-seller: var(--portal-seller);
   --color-portal-seller-light: var(--portal-seller-light);
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius);
+  --radius-xl: var(--radius-lg);
+  --radius-2xl: var(--radius-xl);
   --radius-card: var(--radius-lg);
-  --shadow-card: 0 1px 2px rgb(13 27 42 / 0.04), 0 4px 16px -4px rgb(13 27 42 / 0.06);
-  --shadow-elevated: 0 8px 32px -8px rgb(13 27 42 / 0.12);
-  --shadow-soft: 0 4px 24px -4px rgb(13 27 42 / 0.08);
+  --shadow-card: var(--shadow-card);
+  --shadow-elevated: var(--shadow-elevated);
+  --shadow-soft: var(--shadow-soft);
 }
 
 html {
@@ -104,10 +145,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Prefer focus-visible rings from components; keep a safe default */
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible,
-button:focus-visible {
+button:focus-visible,
+[role="button"]:focus-visible {
   outline: none;
 }
 
@@ -120,30 +163,30 @@ main {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+  box-shadow: none;
 }
 
 .surface-card-hover {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  box-shadow: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .surface-card-hover:hover {
-  border-color: rgb(21 101 192 / 0.25);
-  box-shadow: var(--shadow-elevated);
+  border-color: rgb(21 101 192 / 0.28);
+  box-shadow: var(--shadow-card);
 }
 
-/* ── Form controls ── */
+/* ── Form controls (default md = 2.5rem) ── */
 .input-base {
-  height: 2.75rem;
+  height: var(--control-h-md);
   width: 100%;
   border-radius: var(--radius);
   border: 1px solid var(--border);
-  background: white;
-  padding: 0 1rem;
+  background: var(--card);
+  padding: 0 0.875rem;
   font-size: 0.875rem;
   color: var(--foreground);
   outline: none;
@@ -158,20 +201,30 @@ main {
   border-color: var(--border-hover);
 }
 
-.input-base:focus {
+.input-base:focus,
+.input-base:focus-visible {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgb(21 101 192 / 0.15);
+  box-shadow: var(--focus-ring);
 }
 
 .input-base[data-error="true"],
 .input-error {
-  border-color: #ef9a9a;
+  border-color: color-mix(in srgb, var(--error) 40%, white);
+  background: var(--error-soft);
 }
 
 .input-base[data-error="true"]:focus,
-.input-error:focus {
+.input-base[data-error="true"]:focus-visible,
+.input-error:focus,
+.input-error:focus-visible {
   border-color: var(--error);
-  box-shadow: 0 0 0 3px rgb(198 40 40 / 0.12);
+  box-shadow: var(--focus-ring-error);
+}
+
+.input-base:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  background: var(--muted);
 }
 
 /* ── Buttons (CSS fallback for non-React usage) ── */
@@ -193,9 +246,13 @@ main {
   opacity: 0.55;
 }
 
+.btn:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
 .btn-primary {
-  height: 2.75rem;
-  padding: 0 1.25rem;
+  height: var(--control-h-md);
+  padding: 0 1rem;
   background: var(--primary);
   color: white;
   box-shadow: var(--shadow-button);
@@ -210,12 +267,11 @@ main {
 }
 
 .btn-secondary {
-  height: 2.75rem;
-  padding: 0 1.25rem;
-  background: white;
+  height: var(--control-h-md);
+  padding: 0 1rem;
+  background: var(--card);
   color: var(--foreground);
   border: 1px solid var(--border);
-  box-shadow: 0 1px 2px rgb(13 27 42 / 0.04);
 }
 
 .btn-secondary:hover:not(:disabled) {
@@ -224,7 +280,7 @@ main {
 }
 
 .btn-ghost {
-  height: 2.25rem;
+  height: var(--control-h-sm);
   padding: 0 0.75rem;
   background: transparent;
   color: var(--muted-fg);
@@ -245,7 +301,7 @@ main {
   background: linear-gradient(90deg, var(--muted) 25%, var(--border) 50%, var(--muted) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
-  border-radius: 0.5rem;
+  border-radius: var(--radius);
 }
 
 /* ── Scroll ── */

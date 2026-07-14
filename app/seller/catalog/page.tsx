@@ -95,10 +95,10 @@ export default function SellerCatalogPage() {
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
-            className={`shrink-0 cursor-pointer rounded-full px-3 py-1.5 text-[11px] font-bold transition ${
+            className={`shrink-0 cursor-pointer rounded-lg px-3 py-1.5 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
               activeTab === tab
-                ? "bg-primary text-white shadow-sm"
-                : "bg-white text-muted-fg ring-1 ring-border hover:ring-primary/30"
+                ? "bg-primary text-white"
+                : "bg-card text-muted-fg ring-1 ring-border hover:ring-primary/30"
             }`}
           >
             {formatApprovalStatusTabLabel(tab)}
@@ -122,7 +122,7 @@ export default function SellerCatalogPage() {
       </div>
 
       {error ? (
-        <p className="mb-4 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-600">
+        <p className="mb-4 rounded-xl border border-error/20 bg-error-soft p-3 text-sm text-error">
           {error}
         </p>
       ) : null}

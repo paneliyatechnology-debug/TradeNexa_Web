@@ -140,10 +140,10 @@ export default function HowItWorks() {
       <section className="flex-1 py-12 lg:py-16">
         <div className={MARKETPLACE_CONTAINER}>
           <div className="mx-auto mb-12 max-w-2xl text-center">
-            <span className="mb-2 inline-block rounded bg-primary/15 px-2.5 py-0.5 text-xs font-bold uppercase text-primary">
+            <span className="mb-2 inline-block rounded bg-primary/15 px-2.5 py-0.5 text-xs font-semibold uppercase text-primary">
               {config.badge}
             </span>
-            <h2 className="text-2xl font-bold text-navy">{config.title}</h2>
+            <h2 className="text-2xl font-semibold text-foreground">{config.title}</h2>
             <p className="mt-1 text-sm text-muted-fg">{config.subtitle}</p>
           </div>
 
@@ -157,18 +157,18 @@ export default function HowItWorks() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: idx * 0.08 }}
-                  className="group relative flex flex-col justify-between rounded-2xl border border-border bg-card p-6 shadow-card transition hover:-translate-y-0.5 hover:border-border hover:shadow-elevated"
+                  className="group relative flex flex-col justify-between surface-card-hover p-6"
                 >
                   <div>
                     <div className="mb-4 flex items-center justify-between">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-white">
                         <Icon className="h-5 w-5" />
                       </div>
-                      <span className="text-2xl font-black text-border transition-colors group-hover:text-primary/20">
+                      <span className="text-2xl font-bold text-border transition-colors group-hover:text-primary/20">
                         0{idx + 1}
                       </span>
                     </div>
-                    <h3 className="mb-2 text-base font-bold text-navy">{step.title}</h3>
+                    <h3 className="mb-2 text-base font-semibold text-foreground">{step.title}</h3>
                     <p className="text-xs leading-relaxed text-muted-fg">{step.desc}</p>
                   </div>
                 </motion.div>

@@ -204,14 +204,14 @@ function ProductsPageContent() {
             {!loading && products.length > 0 ? (
               <p className="shrink-0 text-sm font-medium text-muted-fg sm:text-right">
                 Showing{" "}
-                <span className="font-semibold text-navy">{products.length}</span> of{" "}
-                <span className="font-semibold text-navy">{pagination.total}</span> products
+                <span className="font-semibold text-foreground">{products.length}</span> of{" "}
+                <span className="font-semibold text-foreground">{pagination.total}</span> products
               </p>
             ) : null}
           </div>
 
           {error && (
-            <div className="mb-6 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-700">
+            <div className="mb-6 rounded-xl border border-error/20 bg-error-soft p-4 text-sm text-error">
               {error}
             </div>
           )}

@@ -1,18 +1,20 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import { DateInput } from "@/components/common/DateInput";
 import { Select } from "@/components/common/Select";
 import { Button } from "@/components/common/Button";
+import { inputClassName, textareaClassName } from "@/components/common/FormField";
 import ProductSelect from "@/components/rfq/ProductSelect";
 import SellerMultiSelect from "@/components/rfq/SellerMultiSelect";
 import StateSelect from "@/components/location/StateSelect";
 import CitySelect from "@/components/location/CitySelect";
 import ProductWizardStepper from "@/components/seller/ProductWizardStepper";
 import { useAuth } from "@/hooks/useAuth";
+import { useOptionalGeoLocation } from "@/context/GeoLocationContext";
 import { fetchCategories, fetchSubcategories } from "@/services/catalogService";
 import { fetchCities, fetchStates } from "@/services/locationService";
 import { createRfq, fetchPublicRfqById, publishRfq, updateRfq } from "@/services/rfqService";
@@ -21,6 +23,7 @@ import type { ApiCategory, ApiSubcategory } from "@/types/catalog";
 import type { ApiRfqDetail, CreateRfqPayload } from "@/types/rfq";
 import type { ApiSupplier } from "@/types/supplier";
 import { formatApiValidationSummary, getApiFieldErrors } from "@/utils/apiErrors";
+import { isGeoCacheFresh, readGeoLastLocation } from "@/utils/geoLocationStorage";
 import { isRfqDraft, isoToDateInput } from "@/utils/rfqHelpers";
 import { scrollToFirstFormError } from "@/utils/scrollToFormError";
 import { getUnitOptions } from "@/utils/unitOptions";
@@ -237,8 +240,8 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="space-y-6 rounded-xl border border-border bg-white p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-foreground">
+    <section className="surface-card space-y-6 p-6">
+      <h2 className="text-base font-semibold text-foreground">
         {title}
         {optional ? (
           <span className="ml-3 text-sm font-normal text-muted-fg">(Optional)</span>
@@ -253,10 +256,12 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, openAuthModal } = useAuth();
+  const geo = useOptionalGeoLocation();
   const isEditMode = Boolean(rfqId);
   const [form, setForm] = useState<FormState>(initialForm);
   const [stateId, setStateId] = useState("");
   const [cityId, setCityId] = useState("");
+  const geoPrefillDone = useRef(false);
   const [sellerIds, setSellerIds] = useState<number[]>([]);
   const [selectedSellers, setSelectedSellers] = useState<ApiSupplier[]>([]);
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
@@ -277,6 +282,32 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
   const [maxReachedStepIndex, setMaxReachedStepIndex] = useState(0);
 
   const lastStepIndex = WIZARD_STEPS.length - 1;
+
+  // New RFQ: preselect geo state/city when available.
+  useEffect(() => {
+    if (isEditMode || geoPrefillDone.current || stateId) return;
+
+    const apply = (nextStateId: number, nextCityId: number, stateName: string, cityName: string) => {
+      geoPrefillDone.current = true;
+      setStateId(String(nextStateId));
+      setCityId(String(nextCityId));
+      setForm((prev) => ({
+        ...prev,
+        state: stateName || prev.state,
+        city: cityName || prev.city,
+      }));
+    };
+
+    const cached = readGeoLastLocation();
+    if (cached && isGeoCacheFresh(cached)) {
+      apply(cached.state_id, cached.city_id, cached.state_name?.trim() || "", cached.city_name?.trim() || "");
+      return;
+    }
+
+    if (geo?.stateId != null && geo.cityId != null) {
+      apply(geo.stateId, geo.cityId, geo.stateName?.trim() || "", geo.cityName?.trim() || "");
+    }
+  }, [isEditMode, stateId, geo?.stateId, geo?.cityId, geo?.stateName, geo?.cityName]);
 
   useEffect(() => {
     if (!rfqId) return;
@@ -529,12 +560,6 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
     return fieldErrors[name];
   }
 
-  function errorClass(name: keyof FormErrors): string {
-    return fieldError(name) 
-      ? "border-red-300 focus:border-error focus:ring-2 focus:ring-error/20" 
-      : "border-border focus:border-primary focus:ring-2 focus:ring-primary/20 hover:border-primary-hover";
-  }
-
   function scrollToErrors(errors: FormErrors) {
     scrollToFirstFormError(errors as Record<string, string>, {
       fieldOrder: FIELD_ERROR_ORDER,
@@ -691,11 +716,9 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
     await submitRfq();
   }
 
-  const inputClass = (name: keyof FormState) =>
-    `w-full h-11 rounded-lg border bg-white px-4 py-3 text-sm text-foreground placeholder:text-muted-fg outline-none transition-all duration-200 ${errorClass(name)}`;
-  const textareaClass = (name: keyof FormState) =>
-    `w-full min-h-[7.5rem] rounded-lg border bg-white px-4 py-3 text-sm leading-relaxed text-foreground placeholder:text-muted-fg outline-none transition-all duration-200 resize-y ${errorClass(name)}`;
-  const selectClass = "!h-11";
+  const inputClass = (name: keyof FormState) => inputClassName(!!fieldError(name));
+  const textareaClass = (name: keyof FormState) => textareaClassName(!!fieldError(name));
+  const selectClass = "!h-10";
   const labelClass = "mb-2 block text-sm font-medium text-foreground";
 
   function FieldHint({ name }: { name: keyof FormErrors }) {
@@ -723,8 +746,8 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
 
   if (editBlocked) {
     return (
-      <div className="rounded-xl border border-border bg-white p-8 text-center shadow-sm">
-        <p className="text-base text-muted-fg mb-4">{editBlocked}</p>
+      <div className="surface-card p-8 text-center">
+        <p className="mb-4 text-sm text-muted-fg">{editBlocked}</p>
         {rfqId ? (
           <Button
             type="button"
@@ -1052,10 +1075,10 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
             <button
               type="button"
               onClick={() => updateField("visibility", "PUBLIC")}
-              className={`group relative rounded-lg border-2 p-4 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 ${
+              className={`group relative rounded-lg border-2 p-4 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-2 ${
                 form.visibility === "PUBLIC"
                   ? "border-primary bg-primary-soft/50"
-                  : "border-border bg-white hover:border-primary/50 hover:shadow-sm"
+                  : "border-border bg-card hover:border-primary/50"
               }`}
             >
               <div className="flex items-center justify-between">
@@ -1071,7 +1094,7 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
                     : "border-border group-hover:border-primary/50"
                 }`}>
                   {form.visibility === "PUBLIC" && (
-                    <div className="h-full w-full rounded-full bg-white scale-50"></div>
+                    <div className="h-full w-full scale-50 rounded-full bg-card"></div>
                   )}
                 </div>
               </div>
@@ -1079,10 +1102,10 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
             <button
               type="button"
               onClick={() => updateField("visibility", "PRIVATE")}
-              className={`group relative rounded-lg border-2 p-4 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 ${
+              className={`group relative rounded-lg border-2 p-4 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-2 ${
                 form.visibility === "PRIVATE"
                   ? "border-primary bg-primary-soft/50"
-                  : "border-border bg-white hover:border-primary/50 hover:shadow-sm"
+                  : "border-border bg-card hover:border-primary/50"
               }`}
             >
               <div className="flex items-center justify-between">
@@ -1098,7 +1121,7 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
                     : "border-border group-hover:border-primary/50"
                 }`}>
                   {form.visibility === "PRIVATE" && (
-                    <div className="h-full w-full rounded-full bg-white scale-50"></div>
+                    <div className="h-full w-full scale-50 rounded-full bg-card"></div>
                   )}
                 </div>
               </div>
@@ -1148,7 +1171,7 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
               type="checkbox"
               checked={form.publishNow}
               onChange={(e) => updateField("publishNow", e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-primary/30"
+              className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-primary/25"
             />
             <div>
               <p className="text-sm font-medium text-foreground">
@@ -1165,7 +1188,7 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
         </motion.div>
       </AnimatePresence>
 
-      <div className="sticky bottom-0 z-10 -mx-4 mt-8 border-t border-border bg-white/95 px-4 py-4 backdrop-blur-sm sm:relative sm:z-auto sm:mx-0 sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
+      <div className="sticky bottom-0 z-10 -mx-4 mt-8 border-t border-border bg-card/95 px-4 py-4 backdrop-blur-sm sm:relative sm:z-auto sm:mx-0 sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-1 gap-3">
             {activeStepIndex > 0 ? (

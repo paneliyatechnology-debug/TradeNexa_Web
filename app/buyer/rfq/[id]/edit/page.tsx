@@ -16,8 +16,8 @@ export default function EditRfqPage() {
     <div className="min-h-screen bg-background">
         <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
           <PortalBackLink href="/buyer/inquiries" label="My RFQs" />
-          <div className="rounded-xl border border-red-200 bg-red-50 p-6">
-            <p className="text-sm text-red-700 font-medium">Invalid RFQ ID provided</p>
+          <div className="rounded-xl border border-error/20 bg-error-soft p-6">
+            <p className="text-sm font-medium text-error">Invalid RFQ ID provided</p>
           </div>
         </div>
       </div>
@@ -36,7 +36,7 @@ export default function EditRfqPage() {
           fallback={
             <div className="space-y-6">
               {/* Progress skeleton */}
-              <div className="animate-pulse rounded-xl border border-border bg-white p-6">
+              <div className="animate-pulse surface-card p-6">
                 <div className="mb-4 flex items-end justify-between">
                   <div className="space-y-2">
                     <div className="h-3 w-16 rounded bg-primary-soft"></div>
@@ -54,7 +54,7 @@ export default function EditRfqPage() {
               </div>
 
               {/* Form skeleton */}
-              <div className="animate-pulse rounded-xl border border-border bg-white p-6">
+              <div className="animate-pulse surface-card p-6">
                 <div className="mb-4 h-6 w-48 rounded bg-primary-soft"></div>
                 <div className="space-y-4">
                   <div className="space-y-2">

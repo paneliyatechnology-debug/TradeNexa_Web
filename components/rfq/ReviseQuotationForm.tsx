@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
 import type { ApiQuotation, ReviseQuotationPayload } from "@/types/rfq";
 import { reviseQuotation } from "@/services/rfqService";
@@ -114,10 +114,11 @@ function ReviseQuotationForm({
   }
 
   function inputClass(name: keyof FormState): string {
-    const base = "w-full rounded-xl border px-4 py-3 text-sm outline-none";
+    const base =
+      "w-full rounded-lg border bg-card px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors duration-200";
     return fieldError(name)
-      ? `${base} border-red-300 focus:border-red-500`
-      : `${base} border-border focus:border-primary`;
+      ? `${base} border-error/40 bg-error-soft focus:border-error focus:ring-2 focus:ring-error/20`
+      : `${base} border-border hover:border-border-hover focus:border-primary focus:ring-2 focus:ring-primary/25`;
   }
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -133,13 +134,13 @@ function ReviseQuotationForm({
   function FieldHint({ name }: { name: keyof FormState }) {
     const message = fieldError(name);
     if (!message) return null;
-    return <p className="mt-1 text-xs text-red-600">{message}</p>;
+    return <p className="mt-1 text-xs text-error">{message}</p>;
   }
 
   function RequiredLabel({ children }: { children: React.ReactNode }) {
     return (
       <label className={labelClass}>
-        {children} <span className="text-red-500">*</span>
+        {children} <span className="text-error">*</span>
       </label>
     );
   }
@@ -189,8 +190,8 @@ function ReviseQuotationForm({
   return (
     <form onSubmit={(e) => void handleSubmit(e)} noValidate className="space-y-4">
       {buyerRevisionRemarks ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-amber-800">
+        <div className="rounded-xl border border-warning/25 bg-warning-soft px-3 py-3">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-warning">
             Buyer&apos;s revision request
           </p>
           <p className="mt-1.5 text-sm leading-relaxed text-muted-fg">{buyerRevisionRemarks}</p>
@@ -242,23 +243,13 @@ function ReviseQuotationForm({
 
       <div className="flex flex-wrap gap-2">
         {onCancel ? (
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={submitting}
-            className="cursor-pointer rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-muted-fg disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          <Button type="button" variant="secondary" onClick={onCancel} disabled={submitting}>
             Cancel
-          </button>
+          </Button>
         ) : null}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+        <Button type="submit" loading={submitting} className="flex-1">
           Submit revision
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -278,7 +269,7 @@ export function ReviseQuotationFormModal({
       bodyClassName="px-5 py-5 sm:px-6"
       title={
         <div className="min-w-0">
-          <p className="text-lg font-extrabold text-foreground">Revise quotation</p>
+          <p className="text-lg font-semibold text-foreground">Revise quotation</p>
           <p className="mt-0.5 text-xs font-medium text-muted-fg">
             Quote #{quotation.id}
             {quotation.quantity != null

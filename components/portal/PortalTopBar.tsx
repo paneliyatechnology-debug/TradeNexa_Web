@@ -39,13 +39,13 @@ export default function PortalTopBar({
   }
 
   return (
-    <header className="sticky top-0 z-40 shrink-0 border-b border-portal-border bg-white/95 backdrop-blur-xl">
-      <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-6">
+    <header className="sticky top-0 z-40 shrink-0 border-b border-portal-border bg-card/95 backdrop-blur-xl">
+      <div className="flex h-14 items-center justify-between gap-3 px-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
             onClick={onMenuClick}
-            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-portal-border text-muted-fg transition-colors duration-200 hover:bg-portal-bg lg:hidden"
+            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-portal-border text-muted-fg transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 lg:hidden"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" aria-hidden />
@@ -53,7 +53,7 @@ export default function PortalTopBar({
           <Logo size="nav" href={activeRole === "seller" ? "/seller/dashboard" : "/buyer/home"} />
         </div>
 
-        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
           <PortalTooltip label="Back to Website">
             <Link
               href="/"
@@ -70,7 +70,7 @@ export default function PortalTopBar({
               <button
                 type="button"
                 onClick={switchRole}
-                className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-portal-border px-2.5 py-1.5 text-xs font-medium text-muted-fg transition-colors duration-200 sm:px-3 ${hoverAccent}`}
+                className={`inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-portal-border px-2.5 text-xs font-medium text-muted-fg transition-colors duration-200 sm:px-3 ${hoverAccent}`}
               >
                 <ArrowLeftRight className="h-3.5 w-3.5" aria-hidden />
                 <span className="hidden sm:inline">
@@ -84,7 +84,7 @@ export default function PortalTopBar({
             <PortalTooltip label={wishlistTotal > 0 ? `Wishlist (${wishlistTotal})` : "Wishlist"}>
               <Link
                 href="/buyer/wishlist"
-                className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-fg transition-colors duration-200 hover:bg-portal-bg"
+                className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-fg transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
                 aria-label={`Wishlist${wishlistTotal > 0 ? `, ${wishlistTotal} saved` : ""}`}
               >
                 <Heart className="h-5 w-5" strokeWidth={2} aria-hidden />
@@ -100,7 +100,7 @@ export default function PortalTopBar({
           <PortalTooltip label="Notifications">
             <Link
               href={activeRole === "seller" ? "/seller/leads" : "/buyer/notifications"}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-fg transition-colors duration-200 hover:bg-portal-bg"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-fg transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
               aria-label="Notifications"
             >
               <Bell className="h-5 w-5" aria-hidden />
@@ -113,7 +113,7 @@ export default function PortalTopBar({
               onClick={() => {
                 void logoutUser().then(() => router.replace("/"));
               }}
-              className="hidden h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-muted-fg transition-colors duration-200 hover:bg-red-50 hover:text-error sm:flex"
+              className="hidden h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-muted-fg transition-colors duration-200 hover:bg-error-soft hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 sm:flex"
               aria-label="Sign out"
             >
               <LogOut className="h-4 w-4" aria-hidden />

@@ -23,7 +23,7 @@ export default function RfqListToolbar({
   search,
 }: RfqListToolbarProps) {
   return (
-    <div className="mb-5 space-y-3 rounded-xl border border-border bg-muted/50 p-3 sm:p-4">
+    <div className="mb-5 space-y-3 rounded-xl border border-border bg-card p-3 sm:p-4">
       {search ? (
         <PortalSearchBar
           value={search.value}

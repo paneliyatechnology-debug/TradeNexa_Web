@@ -36,7 +36,9 @@ function BuyerCategoryContent({ categoryId }: { categoryId: number }) {
   const debouncedSearch = useDebouncedValue(search);
   const {
     stateId,
+    stateLabel,
     cityId,
+    cityLabel,
     setCityId,
     handleStateChange,
     clearLocationFilters,
@@ -200,7 +202,7 @@ function BuyerCategoryContent({ categoryId }: { categoryId: number }) {
               )}
             </div>
             <div className="min-w-0">
-              <h2 className="truncate text-xl font-extrabold text-foreground sm:text-2xl">
+              <h2 className="truncate text-xl font-semibold text-foreground sm:text-2xl">
                 {category?.name}
               </h2>
               <p className="mt-0.5 text-sm text-muted-fg">{productCountLabel}</p>
@@ -229,6 +231,8 @@ function BuyerCategoryContent({ categoryId }: { categoryId: number }) {
             idPrefix="buyer-category"
             stateId={stateId}
             cityId={cityId}
+            stateLabel={stateLabel}
+            cityLabel={cityLabel}
             onStateChange={handleStateChange}
             onCityChange={setCityId}
             onClear={clearFilters}
@@ -237,7 +241,7 @@ function BuyerCategoryContent({ categoryId }: { categoryId: number }) {
           />
 
           {productError ? (
-            <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+            <p className="mt-4 rounded-xl border border-warning/30 bg-warning-soft p-3 text-sm text-foreground">
               {productError}
             </p>
           ) : null}

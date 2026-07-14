@@ -85,7 +85,7 @@ export function Modal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
             transition={{ type: "spring", stiffness: 380, damping: 32 }}
-            className={`relative flex max-h-[92dvh] w-full sm:max-h-[88dvh] ${maxWidthClasses[maxWidth]} flex-col overflow-hidden rounded-t-2xl border border-border bg-white shadow-[var(--shadow-elevated)] sm:rounded-2xl`}
+            className={`relative flex max-h-[92dvh] w-full sm:max-h-[88dvh] ${maxWidthClasses[maxWidth]} flex-col overflow-hidden rounded-t-xl border border-border bg-card shadow-[var(--shadow-elevated)] sm:rounded-xl`}
             role="dialog"
             aria-modal="true"
           >
@@ -93,17 +93,19 @@ export function Modal({
 
             {!hideHeader && (
               <div
-                className={`flex shrink-0 items-center justify-between border-b px-6 py-4 transition-all duration-200 ${
+                className={`flex shrink-0 items-center justify-between border-b px-5 py-3 transition-colors duration-200 ${
                   isScrolled
-                    ? "z-10 border-border bg-white/95 shadow-sm backdrop-blur-md"
-                    : "border-transparent bg-white"
+                    ? "z-10 border-border bg-card/95 backdrop-blur-md"
+                    : "border-transparent bg-card"
                 }`}
               >
-                <div className="mr-4 min-w-0 flex-1">{title}</div>
+                <div className="mr-4 min-w-0 flex-1 text-base font-semibold text-foreground">
+                  {title}
+                </div>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-fg transition-colors duration-200 hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/30"
+                  className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-fg transition-colors duration-200 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
                   aria-label="Close modal"
                 >
                   <X className="h-4 w-4" aria-hidden />
@@ -120,7 +122,7 @@ export function Modal({
             </div>
 
             {footer && (
-              <div className="shrink-0 border-t border-border bg-muted/40 px-6 py-4">
+              <div className="shrink-0 border-t border-border bg-muted/50 px-5 py-3">
                 {footer}
               </div>
             )}

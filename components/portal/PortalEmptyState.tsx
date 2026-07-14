@@ -10,20 +10,25 @@ interface PortalEmptyStateProps {
   action?: React.ReactNode;
 }
 
-export default function PortalEmptyState({ icon: Icon, title, description, action }: PortalEmptyStateProps) {
+export default function PortalEmptyState({
+  icon: Icon,
+  title,
+  description,
+  action,
+}: PortalEmptyStateProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
-      className="flex flex-col items-center justify-center rounded-xl border border-dashed border-portal-border bg-white px-6 py-16 text-center shadow-[var(--shadow-card)]"
+      transition={{ duration: 0.28 }}
+      className="flex flex-col items-center justify-center rounded-xl border border-dashed border-portal-border bg-card px-6 py-14 text-center"
     >
-      <div className="mb-4 rounded-xl bg-portal-buyer-light p-4">
-        <Icon className="h-8 w-8 text-portal-buyer" aria-hidden />
+      <div className="mb-3 rounded-lg bg-muted p-3">
+        <Icon className="h-7 w-7 text-muted-fg" aria-hidden />
       </div>
-      <h3 className="text-lg font-semibold tracking-tight text-foreground">{title}</h3>
-      <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-fg">{description}</p>
-      {action ? <div className="mt-6">{action}</div> : null}
+      <h3 className="text-base font-semibold tracking-tight text-foreground">{title}</h3>
+      <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-muted-fg">{description}</p>
+      {action ? <div className="mt-5">{action}</div> : null}
     </motion.div>
   );
 }

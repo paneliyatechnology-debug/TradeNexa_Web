@@ -15,14 +15,14 @@ export default function BuyerSupplierPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-5 sm:px-6 lg:px-8">
       <PortalBackLink href="/buyer/home" />
-      <div className="rounded-3xl border border-border bg-white p-6 shadow-sm">
+      <div className="surface-card p-6">
         <div className="flex items-start gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-soft text-2xl font-extrabold text-primary">
+          <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-primary-soft text-2xl font-semibold text-primary">
             {supplier.name[0]}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-extrabold text-foreground">{supplier.name}</h1>
+              <h1 className="text-xl font-semibold text-foreground">{supplier.name}</h1>
               {supplier.verified ? <BadgeCheck className="h-5 w-5 text-primary" /> : null}
             </div>
             <p className="mt-1 text-sm text-muted-fg">{supplier.category}</p>
@@ -30,8 +30,8 @@ export default function BuyerSupplierPage() {
               <MapPin className="h-4 w-4" />
               {supplier.location}
             </p>
-            <p className="mt-1 flex items-center gap-1 text-sm font-semibold text-amber-600">
-              <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+            <p className="mt-1 flex items-center gap-1 text-sm font-semibold text-warning">
+              <Star className="h-4 w-4 fill-warning text-warning" />
               {supplier.rating} rating
             </p>
           </div>

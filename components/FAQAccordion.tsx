@@ -27,7 +27,7 @@ export default function FAQAccordion({ items }: FAQAccordionProps) {
         return (
           <div
             key={index}
-            className={`overflow-hidden rounded-xl border bg-white transition-all duration-200 ${
+            className={`overflow-hidden rounded-xl border bg-card transition-all duration-200 ${
               isOpen
                 ? "border-primary/25 shadow-[var(--shadow-card)]"
                 : "border-border hover:border-border-strong"

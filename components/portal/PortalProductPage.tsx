@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2, Package } from "lucide-react";
+import { Button } from "@/components/common/Button";
 import PortalProductDetailView from "@/components/portal/PortalProductDetailView";
 import PortalEmptyState from "@/components/portal/PortalEmptyState";
 import { fetchProductById, fetchRelatedProducts } from "@/services/catalogService";
@@ -101,8 +102,8 @@ export default function PortalProductPage({ links, browseHref }: PortalProductPa
           title="Invalid product"
           description="The product link is not valid."
           action={
-            <Link href={browseHref} className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white">
-              Browse Products
+            <Link href={browseHref}>
+              <Button>Browse Products</Button>
             </Link>
           }
         />
@@ -127,8 +128,8 @@ export default function PortalProductPage({ links, browseHref }: PortalProductPa
           title="Product not found"
           description={error || "This product may have been removed or is unavailable."}
           action={
-            <Link href={browseHref} className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white">
-              Browse Products
+            <Link href={browseHref}>
+              <Button>Browse Products</Button>
             </Link>
           }
         />

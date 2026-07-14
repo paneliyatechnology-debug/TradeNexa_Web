@@ -20,20 +20,20 @@ export default function CatalogEmptyState({
 }: CatalogEmptyStateProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
-      className="mx-auto max-w-md py-20 text-center"
+      transition={{ duration: 0.28 }}
+      className="mx-auto max-w-md py-14 text-center sm:py-16"
     >
-      <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted ring-1 ring-border">
-        <Package className="h-7 w-7 text-muted-fg" />
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-muted">
+        <Package className="h-6 w-6 text-muted-fg" />
       </div>
-      <h3 className="text-lg font-semibold tracking-tight text-foreground">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-muted-fg">{description}</p>
+      <h3 className="text-base font-semibold tracking-tight text-foreground">{title}</h3>
+      <p className="mt-1.5 text-sm leading-relaxed text-muted-fg">{description}</p>
       {onReset && (
-        <div className="mt-6">
-          <Button variant="outline" onClick={onReset}>
-            <RefreshCw className="h-4 w-4" />
+        <div className="mt-5">
+          <Button variant="outline" size="sm" onClick={onReset}>
+            <RefreshCw className="h-3.5 w-3.5" />
             {resetLabel}
           </Button>
         </div>

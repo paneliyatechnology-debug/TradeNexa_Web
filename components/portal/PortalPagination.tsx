@@ -22,7 +22,7 @@ export default function PortalPagination({
   const { page, totalPages, total } = pagination;
   if (totalPages <= 1) return null;
 
-  const btnClass = `inline-flex cursor-pointer items-center gap-1 border border-border bg-white font-semibold text-muted-fg transition-colors duration-200 hover:border-primary/40 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40 ${
+  const btnClass = `inline-flex cursor-pointer items-center gap-1 border border-border bg-card font-semibold text-muted-fg transition-colors duration-200 hover:border-primary/40 hover:text-primary disabled:cursor-not-allowed disabled:opacity-40 ${
     compact ? "rounded-lg px-3 py-1.5 text-xs" : "rounded-lg px-4 py-2 text-sm"
   }`;
 

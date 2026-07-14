@@ -221,7 +221,7 @@ export default function Home() {
       </section>
 
       {/* Trust strip — structure for logos / proof */}
-      <section className="border-b border-border bg-white py-8">
+      <section className="border-b border-border bg-card py-8">
         <div className={MARKETPLACE_CONTAINER}>
           <p className="mb-5 text-center text-xs font-semibold uppercase tracking-wider text-muted-fg">
             Built for Indian B2B trade
@@ -332,7 +332,7 @@ export default function Home() {
 
       {/* Choose Your Role */}
       {!isAuthenticated && (
-        <section className="border-y border-border bg-white py-16 lg:py-20">
+        <section className="border-y border-border bg-card py-16 lg:py-20">
           <div className={MARKETPLACE_CONTAINER}>
             <SectionHeading
               badge="Get Started"
@@ -409,7 +409,7 @@ export default function Home() {
       </section>
 
       {/* Why Choose Us */}
-      <section className="border-t border-border bg-white py-16 lg:py-20">
+      <section className="border-t border-border bg-card py-16 lg:py-20">
         <div className={MARKETPLACE_CONTAINER}>
           <SectionHeading
             badge="Benefits"

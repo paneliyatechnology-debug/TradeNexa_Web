@@ -25,12 +25,12 @@ export default function CatalogSearchInput({
   return (
     <div className={`relative ${className}`}>
       <div
-        className={`relative flex items-center rounded-2xl border bg-card shadow-sm transition-all focus-within:border-primary/30 focus-within:ring-2 focus-within:ring-primary/15 ${
-          hasValue ? "border-primary/20" : "border-border"
+        className={`relative flex h-10 items-center rounded-lg border bg-card transition-colors duration-200 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/25 ${
+          hasValue ? "border-border-hover" : "border-border"
         }`}
       >
-        <div className="pointer-events-none absolute left-4 flex items-center text-muted-fg">
-          <Search className="h-5 w-5" />
+        <div className="pointer-events-none absolute left-3.5 flex items-center text-muted-fg">
+          <Search className="h-4 w-4" />
         </div>
 
         <input
@@ -38,7 +38,7 @@ export default function CatalogSearchInput({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full rounded-2xl bg-transparent py-3.5 pl-12 pr-24 text-sm text-foreground placeholder:text-muted-fg outline-none"
+          className="w-full rounded-lg bg-transparent py-0 pl-10 pr-24 text-sm text-foreground placeholder:text-muted-placeholder outline-none"
         />
 
         <div className="absolute right-2 flex items-center gap-1.5">
@@ -47,14 +47,14 @@ export default function CatalogSearchInput({
               type="button"
               onClick={() => onChange("")}
               aria-label="Clear search"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-muted-fg transition-colors hover:bg-muted hover:text-foreground"
+              className="flex h-7 w-7 items-center justify-center rounded-full text-muted-fg transition-colors duration-200 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
             >
-              <X className="h-4 w-4" />
+              <X className="h-3.5 w-3.5" />
             </button>
           )}
           {resultCount !== undefined && (
-            <span className="rounded-lg bg-muted px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-muted-fg">
-              {loading ? "..." : `${resultCount} found`}
+            <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-semibold text-muted-fg">
+              {loading ? "…" : `${resultCount} found`}
             </span>
           )}
         </div>

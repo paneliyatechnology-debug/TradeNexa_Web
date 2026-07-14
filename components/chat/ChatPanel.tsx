@@ -96,10 +96,6 @@ export default function ChatPanel({
     socketStatus,
     setActiveConversationId,
     messagesByConversation,
-    typingByConversation,
-    typingByRfq,
-    presenceByUserId,
-    peerOnlineByConversation,
     loadMessages,
     loadOlderMessages,
     hasMoreOlder,
@@ -107,7 +103,6 @@ export default function ChatPanel({
     sendText,
     sendTypedMessage,
     sendMedia,
-    setTyping,
     markRead,
     upsertConversationMeta,
     conversationsMeta,
@@ -118,7 +113,6 @@ export default function ChatPanel({
   const [missingSellerId, setMissingSellerId] = useState(false);
   const [conversationId, setConversationId] = useState<number | null>(null);
   const [headerName, setHeaderName] = useState(otherPartyName || "Chat");
-  const [otherUserId, setOtherUserId] = useState<number | null>(null);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [attachOpen, setAttachOpen] = useState(false);
@@ -132,7 +126,6 @@ export default function ChatPanel({
   const docInputRef = useRef<HTMLInputElement>(null);
   const attachRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
-  const blurTypingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stickToBottom = useRef(true);
   const sendingRef = useRef(false);
   const lastMarkedReadIdRef = useRef<number | null>(null);
@@ -142,33 +135,7 @@ export default function ChatPanel({
   const messages = conversationId ? messagesByConversation[conversationId] ?? [] : [];
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
-  const isTyping = Boolean(
-    conversationId != null ? typingByConversation[conversationId] : typingByRfq[rfqId]
-  );
   const disconnected = socketStatus !== "connected";
-  const conversationPresence =
-    conversationId != null &&
-    Object.prototype.hasOwnProperty.call(peerOnlineByConversation, conversationId)
-      ? peerOnlineByConversation[conversationId]
-      : undefined;
-  const livePresence =
-    otherUserId != null && Object.prototype.hasOwnProperty.call(presenceByUserId, otherUserId)
-      ? presenceByUserId[otherUserId]
-      : undefined;
-  const metaParty =
-    conversationId != null ? conversationsMeta[conversationId]?.other_party : null;
-  const metaPresence =
-    typeof metaParty?.is_online === "boolean" ? metaParty.is_online : undefined;
-  // Prefer live conversation presence, then user-id map, then API seed.
-  const online =
-    typeof conversationPresence === "boolean"
-      ? conversationPresence
-      : typeof livePresence === "boolean"
-        ? livePresence
-        : typeof metaPresence === "boolean"
-          ? metaPresence
-          : false;
-  const presenceLabel = online ? "Online" : "Offline";
 
   function captureUnreadBanner(conversation: { unread_count?: number | null }) {
     const count = conversation.unread_count ?? 0;
@@ -211,6 +178,20 @@ export default function ChatPanel({
       return;
     }
 
+    // Prefer the latest *incoming* visible id for socket message:read — own sends
+    // don't need a self-read cursor (and their echo was painting false blue ticks).
+    let readThroughId = 0;
+    for (const msg of list) {
+      if (msg.id <= 0 || msg.id > maxVisibleId) continue;
+      if (msg.is_mine) continue;
+      if (msg.id > readThroughId) readThroughId = msg.id;
+    }
+    if (readThroughId <= 0) {
+      // No incoming messages in view — nothing to mark read for.
+      lastMarkedReadIdRef.current = maxVisibleId;
+      return;
+    }
+
     lastMarkedReadIdRef.current = maxVisibleId;
 
     let stillUnread = 0;
@@ -221,7 +202,7 @@ export default function ChatPanel({
       if (msg.id > maxVisibleId) stillUnread += 1;
     }
 
-    void markRead(conversationId, maxVisibleId, stillUnread);
+    void markRead(conversationId, readThroughId, stillUnread);
 
     setUnreadBannerCount((prev) => {
       if (prev <= 0 && stillUnread <= 0) return prev;
@@ -288,7 +269,6 @@ export default function ChatPanel({
           other?.name ||
           (role === "buyer" ? "Seller" : "Buyer")
       );
-      setOtherUserId(other?.user_id ?? other?.id ?? null);
       await loadMessages(conversation.id, 1, false);
     }
 
@@ -353,13 +333,8 @@ export default function ChatPanel({
 
   useEffect(() => {
     if (!conversationId) return;
-    // Make sure the socket room is joined as soon as chat is ready.
     joinConversation(conversationId);
-    return () => {
-      if (blurTypingTimerRef.current) clearTimeout(blurTypingTimerRef.current);
-      setTyping(conversationId, false, rfqId);
-    };
-  }, [conversationId, rfqId, setTyping]);
+  }, [conversationId]);
 
   useEffect(() => {
     lastMarkedReadIdRef.current = null;
@@ -397,18 +372,22 @@ export default function ChatPanel({
     const hasHumanUnread = messages.some(countsAsUnreadChatMessage);
     if (hasHumanUnread) return;
 
-    let latestId = 0;
+    let latestIncomingId = 0;
     for (const msg of messages) {
-      if (msg.id > latestId) latestId = msg.id;
+      if (msg.is_mine || msg.id <= 0) continue;
+      if (msg.id > latestIncomingId) latestIncomingId = msg.id;
     }
-    if (latestId <= 0) return;
-    if (lastMarkedReadIdRef.current != null && latestId <= lastMarkedReadIdRef.current) {
+    if (latestIncomingId <= 0) return;
+    if (
+      lastMarkedReadIdRef.current != null &&
+      latestIncomingId <= lastMarkedReadIdRef.current
+    ) {
       if (unreadBannerCount > 0) setUnreadBannerCount(0);
       return;
     }
 
-    lastMarkedReadIdRef.current = latestId;
-    void markRead(conversationId, latestId, 0);
+    lastMarkedReadIdRef.current = latestIncomingId;
+    void markRead(conversationId, latestIncomingId, 0);
     setUnreadBannerCount(0);
     setUnreadStartMessageId(null);
   }, [bootLoading, conversationId, messages, unreadBannerCount, markRead]);
@@ -463,7 +442,7 @@ export default function ChatPanel({
     if (!stickToBottom.current) return;
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     scheduleMarkVisibleRead();
-  }, [messages.length, isTyping, scheduleMarkVisibleRead]);
+  }, [messages.length, scheduleMarkVisibleRead]);
 
   useEffect(() => {
     return () => {
@@ -512,7 +491,6 @@ export default function ChatPanel({
     const content = draft.trim();
     sendingRef.current = true;
     setDraft("");
-    setTyping(conversationId, false, rfqId);
     setSending(true);
     stickToBottom.current = true;
     try {
@@ -564,13 +542,12 @@ export default function ChatPanel({
   }
 
   const shellClass = embedded
-    ? `flex h-[min(560px,70vh)] flex-col overflow-hidden bg-white ${className}`
-    : `flex h-[min(560px,70vh)] flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm ${className}`;
+    ? `flex h-[min(560px,70vh)] flex-col overflow-hidden bg-card ${className}`
+    : `flex h-[min(560px,70vh)] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm ${className}`;
 
   const chatUnavailable = Boolean(bootError);
   const canCompose =
     Boolean(conversationId) && !bootLoading && !chatUnavailable;
-  /** Keep composer usable while socket reconnects so typing:start/stop can still emit. */
   const composerDisabled = !canCompose;
   const errorCopy = humanizeChatBootError(bootError ?? "", missingSellerId);
 
@@ -582,34 +559,15 @@ export default function ChatPanel({
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft text-base font-bold text-primary">
               {getInitials(headerName)}
             </span>
-            <span
-              className={`absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full ring-[2.5px] ring-white ${
-                online ? "bg-success" : "bg-muted-fg"
-              }`}
-              title={presenceLabel}
-              aria-label={presenceLabel}
-            />
           </div>
           <div className="min-w-0 pt-0.5">
             <h3 className="truncate text-sm font-bold text-foreground">{headerName}</h3>
             <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-              <p
-                className={`text-xs font-semibold ${
-                  isTyping
-                    ? "text-primary"
-                    : online
-                      ? "text-success"
-                      : "text-muted-fg"
-                }`}
-              >
-                {isTyping ? "typing..." : presenceLabel}
-              </p>
-              <span className="text-muted-fg">·</span>
               <p className="truncate text-xs text-muted-fg">
                 {rfqTitle ? `RFQ · ${rfqTitle}` : `RFQ #${rfqId}`}
               </p>
               {disconnected && !chatUnavailable ? (
-                <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 ring-1 ring-amber-200">
+                <span className="inline-flex items-center rounded-full border border-warning/25 bg-warning-soft px-2 py-0.5 text-[10px] font-semibold text-warning">
                   Reconnecting...
                 </span>
               ) : null}
@@ -643,15 +601,15 @@ export default function ChatPanel({
         ) : chatUnavailable ? (
           <div className="flex flex-1 flex-col items-center justify-center px-6 py-10 text-center">
             <div className="relative">
-              <MessageSquare className="h-10 w-10 text-amber-500/80" strokeWidth={1.5} />
-              <AlertCircle className="absolute -right-1.5 -top-1.5 h-5 w-5 fill-amber-50 text-amber-500" />
+              <MessageSquare className="h-10 w-10 text-warning/80" strokeWidth={1.5} />
+              <AlertCircle className="absolute -right-1.5 -top-1.5 h-5 w-5 fill-warning-soft text-warning" />
             </div>
             <p className="mt-4 text-sm font-bold text-foreground">Chat unavailable</p>
             <p className="mt-2 max-w-xs text-xs leading-relaxed text-muted-fg">{errorCopy}</p>
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center px-6 py-10 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white ring-1 ring-border">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-card ring-1 ring-border">
               <MessageSquare className="h-7 w-7 text-muted-fg" strokeWidth={1.5} />
             </div>
             <p className="mt-3 text-sm font-bold text-foreground">No messages yet</p>
@@ -694,32 +652,16 @@ export default function ChatPanel({
                 </div>
               </React.Fragment>
             ))}
-            {isTyping ? (
-              <div
-                className="mt-2 flex items-end gap-2 pl-1"
-                aria-live="polite"
-                aria-label="Typing"
-              >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-muted-fg">
-                  {getInitials(headerName)}
-                </div>
-                <div className="inline-flex items-center gap-1 rounded-2xl rounded-bl-md bg-card px-3 py-2.5">
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-fg [animation-delay:-0.3s]" />
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-fg [animation-delay:-0.15s]" />
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-fg" />
-                </div>
-              </div>
-            ) : null}
             <div ref={bottomRef} />
           </>
         )}
       </div>
 
       {canCompose ? (
-        <div className="relative border-t border-border bg-white px-3 py-3">
+        <div className="relative border-t border-border bg-card px-3 py-3">
           <div ref={attachRef} className="flex items-end gap-2">
             {attachOpen ? (
-              <div className="absolute bottom-[calc(100%-4px)] left-0 z-20 w-[240px] overflow-hidden rounded-xl border border-border bg-white py-1 shadow-lg shadow-slate-900/10">
+              <div className="absolute bottom-[calc(100%-4px)] left-0 z-20 w-[240px] overflow-hidden rounded-xl border border-border bg-card py-1 shadow-[var(--shadow-elevated)]">
                 <button
                   type="button"
                   onClick={() => imageInputRef.current?.click()}
@@ -792,10 +734,10 @@ export default function ChatPanel({
             <button
               type="button"
               onClick={() => setAttachOpen((v) => !v)}
-              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border transition ${
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
                 attachOpen
                   ? "border-primary/40 bg-primary-soft text-primary"
-                  : "border-border text-muted-fg hover:bg-card"
+                  : "border-border text-muted-fg hover:bg-muted"
               }`}
               aria-label="Attach"
               aria-expanded={attachOpen}
@@ -807,25 +749,7 @@ export default function ChatPanel({
               value={draft}
               disabled={composerDisabled}
               onChange={(e) => {
-                const value = e.target.value;
-                setDraft(value);
-                if (!conversationId || composerDisabled) return;
-                if (blurTypingTimerRef.current) {
-                  clearTimeout(blurTypingTimerRef.current);
-                  blurTypingTimerRef.current = null;
-                }
-                // Guide: emit typing:start / typing:stop; listen for typing:indicator.
-                setTyping(conversationId, value.trim().length > 0, rfqId);
-              }}
-              onBlur={() => {
-                if (!conversationId) return;
-                // Delay stop so clicking Send / Attach doesn't kill the indicator early.
-                if (blurTypingTimerRef.current) clearTimeout(blurTypingTimerRef.current);
-                blurTypingTimerRef.current = setTimeout(() => {
-                  if (document.activeElement === composerRef.current) return;
-                  setTyping(conversationId, false, rfqId);
-                  blurTypingTimerRef.current = null;
-                }, 200);
+                setDraft(e.target.value);
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
@@ -835,13 +759,13 @@ export default function ChatPanel({
               }}
               rows={1}
               placeholder={disconnected ? "Reconnecting..." : "Type a message..."}
-              className="max-h-28 min-h-[48px] flex-1 resize-none rounded-xl border border-border bg-muted px-3.5 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:opacity-50"
+              className="max-h-28 min-h-[44px] flex-1 resize-none rounded-lg border border-border bg-muted px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors duration-200 focus:border-primary focus:ring-2 focus:ring-primary/25 disabled:opacity-50"
             />
             <button
               type="button"
               disabled={!draft.trim() || sending || composerDisabled}
               onClick={() => void handleSend()}
-              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition ${
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
                 draft.trim() && !sending && !composerDisabled
                   ? "bg-primary text-white hover:bg-primary-hover"
                   : "cursor-not-allowed bg-border text-muted-fg"

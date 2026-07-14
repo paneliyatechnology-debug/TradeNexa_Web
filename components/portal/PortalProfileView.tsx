@@ -52,14 +52,12 @@ const quickActionColors = [
 const themes = {
   buyer: {
     heroGradient: "bg-navy",
-    heroShadow: "shadow-xl shadow-primary/25",
     accent: "text-primary",
     editHref: "/buyer/edit-profile",
     roleLabel: "Buyer account",
   },
   seller: {
     heroGradient: "bg-navy",
-    heroShadow: "shadow-xl shadow-primary/25",
     accent: "text-primary",
     editHref: "/seller/edit-profile",
     roleLabel: "Seller account",
@@ -117,11 +115,11 @@ export default function PortalProfileView({ variant, menuItems }: PortalProfileV
       title: "Wishlist",
       value: String(wishlistTotal),
       icon: Heart,
-      color: wishlistTotal > 0 ? "fill-red-500 text-red-500" : "text-accent",
-      bg: wishlistTotal > 0 ? "bg-red-50" : "bg-orange-50",
+      color: wishlistTotal > 0 ? "fill-error text-error" : "text-accent",
+      bg: wishlistTotal > 0 ? "bg-error-soft" : "bg-warning-soft",
       href: "/buyer/wishlist",
     },
-    { title: "Account Type", value: "Buyer", icon: ShieldCheck, color: "text-success", bg: "bg-emerald-50" },
+    { title: "Account Type", value: "Buyer", icon: ShieldCheck, color: "text-success", bg: "bg-success-soft" },
     {
       title: "Company",
       value: user?.company ? (user.company.length > 12 ? `${user.company.slice(0, 12)}…` : user.company) : "—",
@@ -129,7 +127,7 @@ export default function PortalProfileView({ variant, menuItems }: PortalProfileV
       color: "text-primary",
       bg: "bg-primary-soft",
     },
-    { title: "Status", value: "Active", icon: BadgeCheck, color: "text-success", bg: "bg-emerald-50" },
+    { title: "Status", value: "Active", icon: BadgeCheck, color: "text-success", bg: "bg-success-soft" },
   ] ;
 
   const sellerStats: {
@@ -140,10 +138,10 @@ export default function PortalProfileView({ variant, menuItems }: PortalProfileV
     bg: string;
     href?: string;
   }[] = [
-    { title: "New Leads", value: "48", icon: MessageSquare, color: "text-accent", bg: "bg-orange-50" },
-    { title: "Profile Views", value: "1.2k", icon: Eye, color: "text-success", bg: "bg-emerald-50" },
+    { title: "New Leads", value: "48", icon: MessageSquare, color: "text-accent", bg: "bg-warning-soft" },
+    { title: "Profile Views", value: "1.2k", icon: Eye, color: "text-success", bg: "bg-success-soft" },
     { title: "Listings", value: "24", icon: Package, color: "text-primary", bg: "bg-primary-soft" },
-    { title: "Status", value: "Verified", icon: BadgeCheck, color: "text-warning", bg: "bg-amber-50" },
+    { title: "Status", value: "Verified", icon: BadgeCheck, color: "text-warning", bg: "bg-warning-soft" },
   ] ;
 
   const stats = variant === "buyer" ? buyerStats : sellerStats;
@@ -152,32 +150,32 @@ export default function PortalProfileView({ variant, menuItems }: PortalProfileV
     <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
         <p className="text-sm text-muted-fg">Your account,</p>
-        <h2 className="text-2xl font-extrabold text-foreground sm:text-3xl">{displayName}</h2>
+        <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{displayName}</h2>
       </motion.div>
 
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.08 }}
-        className={`mb-8 overflow-hidden rounded-3xl ${theme.heroGradient} p-6 text-white ${theme.heroShadow} sm:p-8`}
+        className={`mb-8 overflow-hidden rounded-xl border border-navy/20 ${theme.heroGradient} p-6 text-white sm:p-8`}
       >
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4 sm:gap-5">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-2xl font-extrabold text-white ring-4 ring-white/30 sm:h-20 sm:w-20 sm:text-3xl">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-white/20 text-2xl font-semibold text-white ring-2 ring-white/30 sm:h-20 sm:w-20 sm:text-3xl">
               {initial}
             </div>
             <div className="min-w-0">
-              <span className="inline-flex rounded-lg bg-white/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white/90">
+              <span className="inline-flex rounded-lg bg-white/20 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/90">
                 {theme.roleLabel}
               </span>
-              <h3 className="mt-2 truncate text-xl font-extrabold sm:text-2xl">{displayName}</h3>
+              <h3 className="mt-2 truncate text-xl font-semibold sm:text-2xl">{displayName}</h3>
               {secondaryLine ? <p className="mt-1 truncate text-sm text-white/80">{secondaryLine}</p> : null}
               {user?.phone ? <p className="mt-1 text-xs text-white/70">{user.phone}</p> : null}
             </div>
           </div>
           <Link
             href={theme.editHref}
-            className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-primary transition hover:bg-white/90"
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-card px-4 text-sm font-semibold text-primary transition hover:bg-card/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
           >
             Edit Profile
             <ArrowRight className="h-4 w-4" />
@@ -208,7 +206,7 @@ export default function PortalProfileView({ variant, menuItems }: PortalProfileV
             const color = quickActionColors[index % quickActionColors.length];
             const isWishlistAction = variant === "buyer" && item.label === "Wishlist";
             const iconClass =
-              isWishlistAction && wishlistTotal > 0 ? "fill-red-500 text-red-500" : color;
+              isWishlistAction && wishlistTotal > 0 ? "fill-error text-error" : color;
             return (
               <Link
                 key={item.href}
@@ -216,8 +214,8 @@ export default function PortalProfileView({ variant, menuItems }: PortalProfileV
                 className="group surface-card-hover flex flex-col items-center gap-2 p-3 sm:p-4"
               >
                 <div
-                  className={`flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-card transition group-hover:scale-105 sm:h-16 sm:w-16 ${
-                    isWishlistAction && wishlistTotal > 0 ? "bg-red-50" : ""
+                  className={`flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-card transition group-hover:scale-105 sm:h-16 sm:w-16 ${
+                    isWishlistAction && wishlistTotal > 0 ? "bg-error-soft" : ""
                   }`}
                 >
                   <Icon className={`h-6 w-6 sm:h-7 sm:w-7 ${iconClass}`} strokeWidth={2} />
@@ -249,21 +247,21 @@ export default function PortalProfileView({ variant, menuItems }: PortalProfileV
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-soft">
                           <Icon className="h-4 w-4 text-primary" />
                         </div>
-                        <span className="text-xs font-bold uppercase tracking-wide text-muted-fg">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-muted-fg">
                           {row.label}
                         </span>
                       </div>
-                      <p className="text-sm font-extrabold text-foreground sm:text-base">{row.value}</p>
+                      <p className="text-sm font-semibold text-foreground sm:text-base">{row.value}</p>
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <div className="rounded-2xl border border-dashed border-border bg-card px-5 py-8 text-center">
+              <div className="rounded-xl border border-dashed border-border bg-card px-5 py-8 text-center">
                 <p className="text-sm font-semibold text-muted-fg">No account details available yet.</p>
                 <Link
                   href={theme.editHref}
-                  className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-primary"
+                  className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary"
                 >
                   Complete your profile
                   <ArrowRight className="h-4 w-4" />
@@ -277,7 +275,7 @@ export default function PortalProfileView({ variant, menuItems }: PortalProfileV
           <RoleSwitcher />
 
           <div className="surface-card p-5">
-            <p className="text-sm font-extrabold text-foreground">Sign out</p>
+            <p className="text-sm font-semibold text-foreground">Sign out</p>
             <p className="mt-1 text-xs leading-relaxed text-muted-fg">
               Sign out from your account on this device.
             </p>
@@ -286,7 +284,7 @@ export default function PortalProfileView({ variant, menuItems }: PortalProfileV
               onClick={() => {
                 void logoutUser().then(() => router.replace("/"));
               }}
-              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-muted px-4 py-2.5 text-sm font-bold text-muted-fg transition hover:border-primary/40 hover:bg-card hover:text-primary"
+              className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-border bg-muted px-4 text-sm font-semibold text-muted-fg transition hover:border-primary/40 hover:bg-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
             >
               <LogOut className="h-4 w-4" />
               Sign Out
@@ -294,7 +292,7 @@ export default function PortalProfileView({ variant, menuItems }: PortalProfileV
           </div>
 
           <div className="surface-card p-5">
-            <p className="text-sm font-extrabold text-foreground">Account security</p>
+            <p className="text-sm font-semibold text-foreground">Account security</p>
             <p className="mt-1 text-xs leading-relaxed text-muted-fg">
               Permanently remove your profile and all associated data from TradeNexa.
             </p>

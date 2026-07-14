@@ -39,20 +39,18 @@ export default function SellerPlansPage() {
         {plans.map((plan) => (
           <div
             key={plan.name}
-            className={`rounded-3xl border p-6 ${
-              plan.highlight
-                ? "border-primary bg-gradient-to-b from-primary-soft to-card shadow-lg"
-                : "border-border bg-card"
+            className={`surface-card p-6 ${
+              plan.highlight ? "border-primary bg-gradient-to-b from-primary-soft to-card" : ""
             }`}
           >
             {plan.highlight ? (
-              <span className="rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase text-white">
+              <span className="rounded-lg bg-primary px-3 py-1 text-[10px] font-semibold uppercase text-white">
                 Popular
               </span>
             ) : null}
-            <h3 className="mt-3 text-lg font-extrabold text-foreground">{plan.name}</h3>
+            <h3 className="mt-3 text-base font-semibold text-foreground sm:text-lg">{plan.name}</h3>
             <p className="mt-2">
-              <span className="text-3xl font-extrabold text-foreground">{plan.price}</span>
+              <span className="text-3xl font-semibold text-foreground">{plan.price}</span>
               <span className="text-sm text-muted-fg">{plan.period}</span>
             </p>
             <ul className="mt-6 space-y-2">
@@ -66,7 +64,7 @@ export default function SellerPlansPage() {
             <Button
               variant={plan.highlight ? "primary" : "secondary"}
               fullWidth
-              className="mt-6 py-3 text-sm"
+              className="mt-6"
             >
               {plan.name === "Free" ? "Current Plan" : "Upgrade"}
             </Button>

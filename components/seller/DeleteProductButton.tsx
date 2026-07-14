@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
+import { Button } from "@/components/common/Button";
 import { deleteProduct } from "@/services/productService";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
 
@@ -56,7 +57,7 @@ export default function DeleteProductButton({
         onClick={() => setConfirmOpen(true)}
         className={
           className ||
-          "inline-flex h-9 items-center gap-1.5 rounded-lg border border-error/30 px-3 text-xs font-medium text-error transition hover:border-error/50 hover:bg-error/10"
+          "inline-flex h-10 items-center gap-1.5 rounded-lg border border-error/30 px-3 text-sm font-semibold text-error transition hover:border-error/50 hover:bg-error/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
         }
       >
         <Trash2 className="h-3.5 w-3.5" />
@@ -64,37 +65,31 @@ export default function DeleteProductButton({
       </button>
 
       {confirmOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-xl">
-            <h3 className="text-lg font-bold text-foreground">Delete product?</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/50 p-4 backdrop-blur-sm">
+          <div className="surface-card w-full max-w-sm p-6">
+            <h3 className="text-base font-semibold text-foreground">Delete product?</h3>
             <p className="mt-2 text-sm text-muted-fg">
               Are you sure you want to permanently delete &quot;{productName}&quot;? This cannot be
               undone.
             </p>
             <div className="mt-6 flex justify-end gap-3">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() => setConfirmOpen(false)}
                 disabled={loading}
-                className="rounded-xl px-4 py-2 text-sm font-semibold text-muted-fg hover:bg-muted disabled:opacity-50"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="danger"
+                loading={loading}
+                loadingText="Deleting..."
                 onClick={() => void handleDelete()}
-                disabled={loading}
-                className="inline-flex items-center gap-2 rounded-xl bg-error px-4 py-2 text-sm font-bold text-white hover:bg-error/90 disabled:opacity-50"
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  "Delete"
-                )}
-              </button>
+                Delete
+              </Button>
             </div>
           </div>
         </div>

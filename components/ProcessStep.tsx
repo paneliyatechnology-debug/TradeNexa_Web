@@ -28,7 +28,7 @@ export default function ProcessStep({ steps }: ProcessStepProps) {
               whileInView={{ scale: 1, opacity: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.1 }}
-              className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full border-2 border-border bg-muted text-foreground shadow-sm transition-all duration-200 group-hover:border-primary group-hover:bg-primary group-hover:text-white group-hover:shadow-md"
+              className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full border-2 border-border bg-muted text-foreground shadow-sm transition-all duration-200 group-hover:border-primary group-hover:bg-primary group-hover:text-white group-hover:shadow-sm"
             >
               <Icon className="h-8 w-8" />
               <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white text-xs font-bold shadow-sm group-hover:bg-white group-hover:text-primary transition-colors">
@@ -44,7 +44,7 @@ export default function ProcessStep({ steps }: ProcessStepProps) {
               transition={{ duration: 0.5, delay: index * 0.1 + 0.2 }}
               className="mt-6"
             >
-              <h3 className="mb-2 text-lg font-semibold text-foreground transition-colors duration-200 group-hover:text-primary">
+              <h3 className="mb-2 text-base font-semibold text-foreground transition-colors duration-200 group-hover:text-primary">
                 {step.title}
               </h3>
               <p className="mx-auto max-w-xs text-sm leading-relaxed text-muted-fg">

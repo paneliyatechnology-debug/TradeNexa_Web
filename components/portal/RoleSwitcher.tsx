@@ -23,10 +23,10 @@ export default function RoleSwitcher() {
         writeStoredActiveRole(switchTo);
         router.push(targetPath);
       }}
-      className="flex w-full items-center justify-between rounded-xl border border-border bg-card p-4 text-left shadow-sm transition hover:border-primary/30 hover:shadow-[0_4px_16px_-4px_rgba(15,23,42,0.08)] sm:p-5"
+      className="flex w-full items-center justify-between rounded-xl border border-border bg-card p-4 text-left transition hover:border-primary/30 hover:shadow-[var(--shadow-card)] sm:p-5"
     >
       <div>
-        <p className="text-sm font-extrabold text-foreground">Switch Account Role</p>
+        <p className="text-sm font-semibold text-foreground">Switch Account Role</p>
         <p className="mt-0.5 text-xs text-muted-fg">
           Currently in <span className="font-semibold capitalize">{activeRole}</span> mode
         </p>

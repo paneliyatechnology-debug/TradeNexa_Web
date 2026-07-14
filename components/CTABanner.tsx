@@ -15,7 +15,7 @@ export default function CTABanner() {
   if (isAuthenticated) return null;
 
   return (
-    <section className="relative mx-4 my-16 overflow-hidden rounded-2xl bg-navy py-14 sm:mx-8 sm:py-16 lg:mx-auto lg:max-w-7xl lg:px-0">
+    <section className="relative mx-4 my-12 overflow-hidden rounded-2xl bg-navy py-12 sm:mx-8 sm:py-16 lg:mx-auto lg:max-w-7xl lg:px-0">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgb(21_101_192/0.25),transparent_55%)]" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgb(255_109_0/0.08),transparent_50%)]" />
 

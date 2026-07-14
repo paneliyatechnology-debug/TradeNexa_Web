@@ -177,7 +177,7 @@ export default function MediaUploadSection({
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="rounded-[20px] border border-border bg-card p-7 shadow-[0_1px_3px_rgba(15,23,42,0.06),0_8px_24px_-4px_rgba(15,23,42,0.08)] sm:p-8"
+        className="surface-card p-5 sm:p-6"
         aria-labelledby="media-section-title"
       >
         <div className="mb-6 flex items-start gap-3 border-b border-border pb-5">

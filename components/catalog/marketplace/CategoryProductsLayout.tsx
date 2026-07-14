@@ -31,8 +31,10 @@ interface CategoryProductsLayoutProps {
   searchPlaceholder: string;
   stateId: string;
   cityId: string;
-  onStateChange: (stateId: string) => void;
-  onCityChange: (cityId: string) => void;
+  stateLabel?: string;
+  cityLabel?: string;
+  onStateChange: (stateId: string, label?: string) => void;
+  onCityChange: (cityId: string, label?: string) => void;
   onClearFilters: () => void;
   clearFiltersDisabled?: boolean;
   products: ApiProductListItem[];
@@ -62,6 +64,8 @@ export default function CategoryProductsLayout({
   searchPlaceholder,
   stateId,
   cityId,
+  stateLabel = "",
+  cityLabel = "",
   onStateChange,
   onCityChange,
   onClearFilters,
@@ -116,6 +120,8 @@ export default function CategoryProductsLayout({
               idPrefix="category-products"
               stateId={stateId}
               cityId={cityId}
+              stateLabel={stateLabel}
+              cityLabel={cityLabel}
               onStateChange={onStateChange}
               onCityChange={onCityChange}
               onClear={onClearFilters}
@@ -154,7 +160,7 @@ export default function CategoryProductsLayout({
               />
             </>
           ) : (
-            <div className="rounded-2xl bg-white shadow-sm">
+            <div className="surface-card">
               <CatalogEmptyState
                 title={emptyTitle}
                 description={emptyDescription}

@@ -82,7 +82,7 @@ function SellerProfileCard({
   const logoUrl = resolveImageUrl(seller.company?.logo);
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-sm lg:sticky lg:top-24">
+    <div className="rounded-xl border border-border bg-card p-6 shadow-sm lg:sticky lg:top-24">
       <div className="flex items-start gap-4">
         <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary text-lg font-bold text-white shadow-md">
           {logoUrl ? (
@@ -113,7 +113,7 @@ function SellerProfileCard({
 
       <div className="mt-6 grid grid-cols-3 gap-3 border-y border-border py-5">
         <div className="text-center">
-          <p className="text-lg font-extrabold text-primary">
+          <p className="text-lg font-semibold text-primary">
             {seller.company?.experience_years && seller.company.experience_years > 0
               ? `${seller.company.experience_years} Yrs`
               : seller.company?.year_established
@@ -123,14 +123,14 @@ function SellerProfileCard({
           <p className="mt-0.5 text-[11px] font-medium text-muted-fg">Active Since</p>
         </div>
         <div className="text-center">
-          <p className="text-lg font-extrabold text-primary">
+          <p className="text-lg font-semibold text-primary">
             {formatRating(seller.rating.average)}{" "}
             <Star className="inline h-3.5 w-3.5 fill-muted-fg text-muted-fg" />
           </p>
           <p className="mt-0.5 text-[11px] font-medium text-muted-fg">Rating</p>
         </div>
         <div className="text-center">
-          <p className="text-lg font-extrabold text-primary">
+          <p className="text-lg font-semibold text-primary">
             {seller.rating.total_reviews != null && seller.rating.total_reviews > 0
               ? seller.rating.total_reviews
               : "—"}
@@ -387,16 +387,16 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
               </div>
             </div>
 
-            <h1 className="text-2xl font-extrabold leading-tight text-foreground sm:text-3xl lg:text-4xl">
+            <h1 className="text-2xl font-semibold leading-tight text-foreground sm:text-3xl lg:text-4xl">
               {basic.name}
             </h1>
 
-            <p className="mt-4 text-3xl font-extrabold text-primary lg:text-4xl">
+            <p className="mt-4 text-3xl font-semibold text-primary lg:text-4xl">
               {formatPrice(pricing.price)}
               <span className="text-lg font-semibold text-muted-fg lg:text-xl"> / {pricing.unit}</span>
             </p>
 
-            <div className="mt-5 grid grid-cols-2 gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm sm:max-w-md">
+            <div className="mt-5 grid grid-cols-2 gap-4 rounded-xl border border-border bg-card p-4 shadow-sm sm:max-w-md">
               <div className="flex items-center gap-2.5">
                 <ShoppingBag className="h-5 w-5 shrink-0 text-muted-fg" />
                 <div>
@@ -489,8 +489,8 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
         <div className="mt-10 grid grid-cols-1 gap-8 lg:mt-14 lg:grid-cols-12 lg:gap-10">
           <div className="space-y-8 lg:col-span-8">
             {description && (
-              <section className="rounded-2xl border border-border bg-card p-6 shadow-sm lg:p-8">
-                <h2 className="text-lg font-bold text-foreground">About this Product</h2>
+              <section className="rounded-xl border border-border bg-card p-6 shadow-sm lg:p-8">
+                <h2 className="text-lg font-semibold text-foreground">About this Product</h2>
                 <p className="mt-4 text-sm leading-relaxed text-muted-fg lg:text-base">
                   {displayDesc}
                   {!descExpanded && showReadMore && "…"}
@@ -510,8 +510,8 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
               </section>
             )}
 
-            <section className="rounded-2xl border border-border bg-card p-6 shadow-sm lg:p-8">
-              <h2 className="text-lg font-bold text-foreground">Product Specifications</h2>
+            <section className="rounded-xl border border-border bg-card p-6 shadow-sm lg:p-8">
+              <h2 className="text-lg font-semibold text-foreground">Product Specifications</h2>
               <dl className="mt-5 divide-y divide-border">
                 {fullSpecs.map((spec) => (
                   <div

@@ -17,14 +17,14 @@ export default function SectionHeading({
   centered = true,
 }: SectionHeadingProps) {
   return (
-    <div className={`mb-12 max-w-3xl sm:mb-14 ${centered ? "mx-auto text-center" : "text-left"}`}>
+    <div className={`mb-10 max-w-3xl sm:mb-12 ${centered ? "mx-auto text-center" : "text-left"}`}>
       {badge && (
         <motion.span
           initial={{ opacity: 0, y: 8 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.35 }}
-          className="mb-3 inline-flex items-center rounded-full border border-primary/15 bg-primary-soft px-3 py-1 text-xs font-semibold uppercase tracking-wider text-primary"
+          className="mb-3 inline-flex items-center rounded-full border border-primary/15 bg-primary-soft px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-primary"
         >
           {badge}
         </motion.span>
@@ -34,7 +34,7 @@ export default function SectionHeading({
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.4, delay: 0.05 }}
-        className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl"
+        className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl"
       >
         {title}
       </motion.h2>
@@ -44,7 +44,7 @@ export default function SectionHeading({
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="mt-4 text-base leading-relaxed text-muted-fg sm:text-lg"
+          className="mt-3 text-sm leading-relaxed text-muted-fg sm:text-base"
         >
           {subtitle}
         </motion.p>

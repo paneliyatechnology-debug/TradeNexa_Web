@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { Modal } from "@/components/common/Modal";
+import { Button } from "@/components/common/Button";
+import { textareaClassName } from "@/components/common/FormField";
 import { requestQuotationRevision } from "@/services/rfqService";
 import { formatApiValidationSummary, getApiFieldErrors } from "@/utils/apiErrors";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
@@ -75,7 +76,7 @@ export default function RequestRevisionModal({
       bodyClassName="px-5 py-5 sm:px-6"
       title={
         <div>
-          <p className="text-lg font-extrabold text-foreground">Request revision</p>
+          <p className="text-base font-semibold text-foreground">Request revision</p>
           <p className="mt-0.5 text-xs font-medium text-muted-fg">
             Tell the seller what to change in their quotation.
           </p>
@@ -83,29 +84,23 @@ export default function RequestRevisionModal({
       }
       footer={
         <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={submitting}
-            className="cursor-pointer rounded-xl px-4 py-2 text-sm font-semibold text-muted-fg disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          <Button type="button" variant="secondary" onClick={onClose} disabled={submitting}>
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
             form="request-revision-form"
-            disabled={submitting}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+            loading={submitting}
+            loadingText="Sending..."
           >
-            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Send request
-          </button>
+          </Button>
         </div>
       }
     >
       <form id="request-revision-form" onSubmit={(e) => void handleSubmit(e)} noValidate>
-        <label className="mb-1.5 block text-xs font-bold text-muted-fg">
-          Revision remarks <span className="text-red-500">*</span>
+        <label className="mb-1.5 block text-xs font-semibold text-muted-fg">
+          Revision remarks <span className="text-error">*</span>
         </label>
         <textarea
           value={remarks}
@@ -114,14 +109,14 @@ export default function RequestRevisionModal({
             if (remarksError) setRemarksError(undefined);
           }}
           rows={5}
-          className={`w-full rounded-xl border px-4 py-3 text-sm outline-none ${
-            remarksError
-              ? "border-red-300 focus:border-red-500"
-              : "border-border focus:border-primary"
-          }`}
+          className={textareaClassName(!!remarksError)}
           placeholder="Please revise your quotation by reducing the unit price by 5% and confirm whether delivery can be completed within 5 working days."
         />
-        {remarksError ? <p className="mt-1 text-xs text-red-600">{remarksError}</p> : null}
+        {remarksError ? (
+          <p className="mt-1 rounded-lg border border-error/20 bg-error-soft px-2 py-1 text-xs text-error">
+            {remarksError}
+          </p>
+        ) : null}
       </form>
     </Modal>
   );

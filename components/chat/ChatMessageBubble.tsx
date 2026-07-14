@@ -72,7 +72,7 @@ function ReadTicks({ message }: { message: ApiChatMessage }) {
     return <Clock className="h-3.5 w-3.5 text-muted-fg" aria-label="Sending" />;
   }
   if (message.send_status === "failed") {
-    return <RotateCcw className="h-3.5 w-3.5 text-red-500" aria-label="Failed" />;
+    return <RotateCcw className="h-3.5 w-3.5 text-error" aria-label="Failed" />;
   }
   if (message.read_at) {
     return <CheckCheck className="h-3.5 w-3.5 text-primary" aria-label="Read" />;
@@ -263,7 +263,7 @@ export default function ChatMessageBubble({
       ? "bg-primary text-white"
       : isImage
         ? "bg-transparent p-0 shadow-none ring-0"
-        : "bg-white text-foreground ring-1 ring-border"
+        : "bg-card text-foreground ring-1 ring-border"
     : isImage
       ? "bg-transparent p-0 shadow-none ring-0"
       : "bg-card text-foreground ring-1 ring-border";
@@ -385,7 +385,7 @@ export default function ChatMessageBubble({
           ) : null}
 
           {message.message_type === "IMAGE" ? (
-            <div className="w-[min(240px,75vw)] rounded-2xl bg-white shadow-sm ring-1 ring-border">
+            <div className="w-[min(240px,75vw)] rounded-2xl bg-card shadow-sm ring-1 ring-border">
               <div className="relative overflow-hidden rounded-t-2xl bg-muted">
                 {canShowImage ? (
                   <button
@@ -422,7 +422,7 @@ export default function ChatMessageBubble({
                         e.stopPropagation();
                         setImageMenuOpen((open) => !open);
                       }}
-                      className="flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-foreground shadow-md ring-1 ring-border transition hover:bg-white"
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-card/95 text-foreground shadow-md ring-1 ring-border transition hover:bg-card"
                       aria-label="Image options"
                       aria-expanded={imageMenuOpen}
                       aria-haspopup="menu"
@@ -454,7 +454,7 @@ export default function ChatMessageBubble({
                     >
                       <div
                         role="menu"
-                        className="absolute w-40 overflow-hidden rounded-xl border border-border bg-white py-1 shadow-xl shadow-slate-900/15"
+                        className="absolute w-40 overflow-hidden rounded-xl border border-border bg-card py-1 shadow-[var(--shadow-elevated)]"
                         style={imageMenuStyle}
                         onClick={(e) => e.stopPropagation()}
                       >
@@ -533,7 +533,7 @@ export default function ChatMessageBubble({
             <button
               type="button"
               onClick={onRetry}
-              className="text-[10px] font-semibold text-red-600 hover:underline"
+              className="text-[10px] font-semibold text-error hover:underline"
             >
               Retry
             </button>
@@ -557,14 +557,14 @@ export default function ChatMessageBubble({
                 <button
                   type="button"
                   onClick={() => void downloadImage()}
-                  className="flex h-9 items-center gap-1.5 rounded-xl bg-white px-3 text-xs font-semibold text-foreground shadow-sm"
+                  className="flex h-9 items-center gap-1.5 rounded-lg bg-card px-3 text-xs font-semibold text-foreground shadow-sm"
                 >
                   <Download className="h-4 w-4" />
                   Download
                 </button>
                 <button
                   type="button"
-                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-foreground shadow-sm"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-card text-foreground shadow-sm"
                   aria-label="Close preview"
                   onClick={() => setLightboxOpen(false)}
                 >

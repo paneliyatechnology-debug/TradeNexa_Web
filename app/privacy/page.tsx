@@ -53,9 +53,9 @@ export default function PrivacyPage() {
             {SECTIONS.map((section) => (
               <article
                 key={section.title}
-                className="rounded-xl border border-border bg-card p-5 shadow-card sm:p-6"
+                className="surface-card p-5 sm:p-6"
               >
-                <h2 className="text-base font-bold text-navy">{section.title}</h2>
+                <h2 className="text-base font-semibold text-foreground">{section.title}</h2>
                 <p className="mt-2 text-sm leading-relaxed text-muted-fg">{section.body}</p>
               </article>
             ))}

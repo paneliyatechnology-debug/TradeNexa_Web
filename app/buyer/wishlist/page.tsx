@@ -7,6 +7,7 @@ import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalEmptyState from "@/components/portal/PortalEmptyState";
 import PortalProductCard from "@/components/portal/PortalProductCard";
 import PortalInfiniteScroll from "@/components/portal/PortalInfiniteScroll";
+import { Button } from "@/components/common/Button";
 import { useWishlist } from "@/hooks/useWishlist";
 import { fetchWishlist } from "@/services/wishlistService";
 import type { ApiProductListItem } from "@/types/catalog";
@@ -75,8 +76,8 @@ export default function BuyerWishlistPage() {
           title="No saved products yet"
           description="Browse products and tap the heart icon to save them here."
           action={
-            <Link href="/buyer/search" className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white">
-              Browse Products
+            <Link href="/buyer/search">
+              <Button>Browse Products</Button>
             </Link>
           }
         />
@@ -110,26 +111,18 @@ export default function BuyerWishlistPage() {
 
       {confirmRemove ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-bold text-foreground">Remove from Wishlist?</h3>
+          <div className="surface-card w-full max-w-sm p-6">
+            <h3 className="text-base font-semibold text-foreground">Remove from Wishlist?</h3>
             <p className="mt-2 text-sm text-muted-fg">
               Are you sure you want to remove &quot;{confirmRemove.name}&quot; from your wishlist?
             </p>
             <div className="mt-6 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setConfirmRemove(null)}
-                className="rounded-xl px-4 py-2 text-sm font-semibold text-muted-fg hover:bg-muted"
-              >
+              <Button variant="ghost" onClick={() => setConfirmRemove(null)}>
                 Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleRemove(confirmRemove)}
-                className="rounded-xl bg-red-500 px-4 py-2 text-sm font-bold text-white hover:bg-red-600"
-              >
+              </Button>
+              <Button variant="danger" onClick={() => void handleRemove(confirmRemove)}>
                 Remove
-              </button>
+              </Button>
             </div>
           </div>
         </div>

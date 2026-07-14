@@ -953,12 +953,12 @@ export default function AddProductForm({ productId }: { productId?: number } = {
 
   if (isEditMode && approvalStatus && !canSellerEditProduct(approvalStatus)) {
     return (
-      <div className="space-y-4 rounded-2xl border border-red-200 bg-red-50 p-6">
+      <div className="space-y-4 rounded-xl border border-error/20 bg-error-soft p-6">
         <div className="flex flex-wrap items-center gap-2">
           <ProductApprovalBadge status={approvalStatus} />
-          <h2 className="text-lg font-bold text-foreground">Editing blocked</h2>
+          <h2 className="text-base font-semibold text-foreground">Editing blocked</h2>
         </div>
-        <p className="text-sm text-foreground/80">
+        <p className="text-sm text-muted-fg">
           {approvalStatusHint(approvalStatus) ??
             "This product was rejected and cannot be edited or resubmitted."}
         </p>
@@ -968,11 +968,8 @@ export default function AddProductForm({ productId }: { productId?: number } = {
             {latestReviewRemarks}
           </p>
         ) : null}
-        <Link
-          href={productId ? `/seller/product/${productId}` : "/seller/catalog"}
-          className="inline-flex rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white"
-        >
-          Back to product
+        <Link href={productId ? `/seller/product/${productId}` : "/seller/catalog"}>
+          <Button>Back to product</Button>
         </Link>
       </div>
     );
@@ -984,15 +981,15 @@ export default function AddProductForm({ productId }: { productId?: number } = {
         <div
           className={`rounded-xl border px-4 py-3 ${
             approvalStatus === "revision_required"
-              ? "border-orange-200 bg-orange-50"
+              ? "border-warning/30 bg-warning-soft"
               : approvalStatus === "in_review"
-                ? "border-amber-200 bg-amber-50"
-                : "border-emerald-200 bg-emerald-50"
+                ? "border-warning/30 bg-warning-soft"
+                : "border-success/20 bg-success-soft"
           }`}
         >
           <div className="flex flex-wrap items-center gap-2">
             <ProductApprovalBadge status={approvalStatus} />
-            <p className="text-sm text-foreground/80">
+            <p className="text-sm text-muted-fg">
               {approvalStatus === "revision_required"
                 ? "Save your changes to automatically resubmit for review."
                 : approvalStatusHint(approvalStatus)}
@@ -1009,13 +1006,13 @@ export default function AddProductForm({ productId }: { productId?: number } = {
 
       {!sellerId ? (
         <div
-          className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3"
+          className="rounded-xl border border-warning/30 bg-warning-soft px-4 py-3"
           data-form-field="seller"
         >
-          <p className="text-sm font-medium text-amber-900">
+          <p className="text-sm font-medium text-foreground">
             Your account does not have a seller ID yet.
           </p>
-          <p className="mt-1 text-sm text-amber-800/90">
+          <p className="mt-1 text-sm text-muted-fg">
             Product creation needs a seller profile from the server. This usually happens if you
             skipped profile setup after signup, or have not submitted seller details (company name,
             GST, PAN, logo).
@@ -1401,7 +1398,7 @@ export default function AddProductForm({ productId }: { productId?: number } = {
                 <button
                   type="button"
                   onClick={() => removeSpecRow(index)}
-                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-border text-muted-fg hover:text-error"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border text-muted-fg transition hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
                   aria-label="Remove specification"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -1420,9 +1417,9 @@ export default function AddProductForm({ productId }: { productId?: number } = {
       </AnimatePresence>
 
       {isEditMode && productId ? (
-        <div className="rounded-2xl border border-red-100 bg-red-50/50 p-4">
+        <div className="rounded-xl border border-error/20 bg-error-soft p-4">
           <p className="text-sm font-semibold text-error">Danger zone</p>
-          <p className="mt-1 text-xs text-error/80">
+          <p className="mt-1 text-xs text-muted-fg">
             Permanently remove this listing from your catalog.
           </p>
           <div className="mt-3">
@@ -1430,7 +1427,6 @@ export default function AddProductForm({ productId }: { productId?: number } = {
               productId={productId}
               productName={form.name || "this product"}
               label="Delete Product"
-              className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2.5 text-sm font-bold text-error transition hover:bg-red-50"
             />
           </div>
         </div>

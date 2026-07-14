@@ -3,10 +3,12 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Calendar, Clock, Loader2, MapPin, MessageSquare, Package, Wallet } from "lucide-react";
+import { Calendar, Clock, Inbox, Loader2, MapPin, MessageSquare, Package, Wallet } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import PortalBackLink from "@/components/portal/PortalBackLink";
+import PortalEmptyState from "@/components/portal/PortalEmptyState";
+import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import QuotationCard from "@/components/rfq/QuotationCard";
 import RfqStatusBadge from "@/components/rfq/RfqStatusBadge";
 import { SubmitQuotationFormModal } from "@/components/rfq/SubmitQuotationForm";
@@ -39,7 +41,7 @@ function MetaPill({
   value: string;
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-fg">
+    <span className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1 text-xs font-semibold text-muted-fg">
       <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
       <span className="text-muted-fg">{label}</span>
       <span className="text-foreground">{value}</span>
@@ -49,9 +51,7 @@ function MetaPill({
 
 function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-full bg-background">
-      <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 lg:px-8">{children}</div>
-    </div>
+    <div className="mx-auto max-w-2xl px-4 py-5 sm:px-6 lg:px-8">{children}</div>
   );
 }
 
@@ -116,7 +116,9 @@ export default function SellerLeadDetailPage() {
     return (
       <PageShell>
         <PortalBackLink href="/seller/leads" label="RFQ Feed" />
-        <p className="mt-4 text-sm text-red-600">Invalid RFQ id</p>
+        <p className="mt-4 rounded-xl border border-error/20 bg-error-soft p-3 text-sm text-error">
+          Invalid RFQ id
+        </p>
       </PageShell>
     );
   }
@@ -124,9 +126,7 @@ export default function SellerLeadDetailPage() {
   if (loading) {
     return (
       <PageShell>
-        <div className="border-b border-border pb-4">
-          <PortalBackLink href="/seller/leads" label="RFQ Feed" />
-        </div>
+        <PortalBackLink href="/seller/leads" label="RFQ Feed" />
         <div className="flex items-center justify-center gap-2 py-20 text-sm text-muted-fg">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
           Loading RFQ...
@@ -138,13 +138,17 @@ export default function SellerLeadDetailPage() {
   if (!rfq) {
     return (
       <PageShell>
-        <div className="border-b border-border pb-4">
-          <PortalBackLink href="/seller/leads" label="RFQ Feed" />
-        </div>
-        <p className="mt-6 text-sm text-muted-fg">RFQ not found or no longer available.</p>
-        <Link href="/seller/leads" className="mt-4 inline-block cursor-pointer text-sm font-semibold text-primary">
-          Back to feed
-        </Link>
+        <PortalBackLink href="/seller/leads" label="RFQ Feed" />
+        <PortalEmptyState
+          icon={Inbox}
+          title="RFQ not found"
+          description="This requirement is no longer available or you do not have access."
+          action={
+            <Link href="/seller/leads">
+              <Button variant="secondary">Back to feed</Button>
+            </Link>
+          }
+        />
       </PageShell>
     );
   }
@@ -159,15 +163,21 @@ export default function SellerLeadDetailPage() {
 
   return (
     <PageShell>
-      <div className="mb-5 border-b border-border pb-4">
-        <PortalBackLink href="/seller/leads" label="RFQ Feed" />
-      </div>
+      <PortalBackLink href="/seller/leads" label="RFQ Feed" />
+      <PortalPageHeader
+        title={rfq.title}
+        subtitle={
+          [buyerLine, locationLine].filter(Boolean).join(" · ") ||
+          [rfq.category_name, rfq.subcategory_name].filter(Boolean).join(" · ") ||
+          undefined
+        }
+      />
 
       <article className="surface-card p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <RfqStatusBadge status={rfq.status} />
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-fg">
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1 text-xs font-semibold text-muted-fg">
               <Calendar className="h-3.5 w-3.5" />
               Posted {formatRfqDate(rfq.created_at)}
             </span>
@@ -196,7 +206,7 @@ export default function SellerLeadDetailPage() {
               </span>
               Chat with buyer
               {chatUnread > 0 ? (
-                <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold tabular-nums text-success">
+                <span className="rounded-lg bg-success/10 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-success">
                   {chatUnread > 99 ? "99+" : chatUnread} unread
                 </span>
               ) : null}
@@ -204,23 +214,14 @@ export default function SellerLeadDetailPage() {
           ) : null}
         </div>
 
-        <div className="mt-4">
-          <h1 className="text-xl font-extrabold text-foreground sm:text-2xl">{rfq.title}</h1>
-          {buyerLine ? (
-            <p className="mt-1 text-sm font-semibold text-muted-fg">
-              {buyerLine}
-              {locationLine ? ` · ${locationLine}` : ""}
-            </p>
-          ) : null}
-          {rfq.category_name || rfq.subcategory_name ? (
-            <p className="mt-0.5 text-xs font-medium text-muted-fg">
-              {[rfq.category_name, rfq.subcategory_name].filter(Boolean).join(" · ")}
-            </p>
-          ) : null}
-        </div>
+        {buyerLine && (rfq.category_name || rfq.subcategory_name) ? (
+          <p className="mt-3 text-xs font-medium text-muted-fg">
+            {[rfq.category_name, rfq.subcategory_name].filter(Boolean).join(" · ")}
+          </p>
+        ) : null}
 
         <div className="mt-5 border-t border-border pt-5">
-          <p className="text-xs font-bold uppercase tracking-wide text-muted-fg">Requirement</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-fg">Requirement</p>
           <p className="mt-2 text-sm leading-relaxed text-muted-fg">
             {rfq.description || "No description provided."}
           </p>
@@ -247,7 +248,7 @@ export default function SellerLeadDetailPage() {
           <Button
             type="button"
             onClick={() => setShowQuoteForm(true)}
-            className="mt-6 w-full py-3.5 text-sm"
+            className="mt-6"
             fullWidth
           >
             Send Quote

@@ -22,11 +22,11 @@ export default function BuyerSettingsPage() {
         ].map((item) => (
           <div key={item.label} className="flex items-center justify-between surface-card p-4">
             <div>
-              <p className="text-sm font-extrabold text-foreground">{item.label}</p>
+              <p className="text-sm font-semibold text-foreground">{item.label}</p>
               <p className="text-xs text-muted-fg">{item.desc}</p>
             </div>
             <div className={`h-6 w-11 rounded-full p-0.5 ${item.defaultOn ? "bg-primary" : "bg-border"}`}>
-              <div className={`h-5 w-5 rounded-full bg-white shadow transition ${item.defaultOn ? "translate-x-5" : ""}`} />
+              <div className={`h-5 w-5 rounded-full bg-card shadow-sm transition ${item.defaultOn ? "translate-x-5" : ""}`} />
             </div>
           </div>
         ))}

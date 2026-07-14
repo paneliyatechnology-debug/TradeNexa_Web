@@ -4,7 +4,6 @@ import React, { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import ChatPanel, { type ChatPanelProps } from "@/components/chat/ChatPanel";
-import { goChatOffline } from "@/services/chatPresence";
 
 interface ChatSidePanelProps extends Omit<ChatPanelProps, "className" | "embedded"> {
   open: boolean;
@@ -24,12 +23,6 @@ export default function ChatSidePanel({
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  // Closing the sidebar must force Offline immediately (socket leave + relay).
-  useEffect(() => {
-    if (open) return;
-    goChatOffline({ reason: "close", force: true });
-  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -80,7 +73,7 @@ export default function ChatSidePanel({
         onClick={onClose}
       />
       <aside
-        className="relative flex h-full w-full max-w-[min(100vw,32rem)] flex-col bg-white shadow-[var(--shadow-elevated)] sm:max-w-[36rem]"
+        className="relative flex h-full w-full max-w-[min(100vw,32rem)] flex-col bg-card shadow-[var(--shadow-elevated)] sm:max-w-[36rem]"
         role="dialog"
         aria-modal="true"
         aria-label={title}
@@ -90,7 +83,7 @@ export default function ChatSidePanel({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border text-muted-fg transition-colors duration-200 hover:bg-muted"
+            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border text-muted-fg transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
             aria-label="Close"
           >
             <X className="h-4 w-4" aria-hidden />

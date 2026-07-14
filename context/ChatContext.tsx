@@ -16,27 +16,20 @@ import {
   connectChatSocket,
   disconnectChatSocket,
   emitMessageRead,
-  emitTypingIndicator,
   joinConversation,
-  parseConversationPresencePayload,
-  parsePresencePayload,
-  parseTypingPayload,
+  leaveConversation,
   subscribeChatEvent,
   subscribeChatSocketStatus,
   unwrapSocketPayload,
   type ChatSocketStatus,
 } from "@/services/chatSocket";
-import { CHAT_SOCKET_EXTRA_LISTEN_EVENTS, CHAT_SOCKET_LISTEN_EVENTS } from "@/config/chatSocketEvents";
-import { fetchTypingRelay, publishTypingRelay } from "@/services/typingRelay";
-import { fetchPresenceRelay } from "@/services/presenceRelay";
-import { goChatOffline, goChatOnline, resetChatPresence } from "@/services/chatPresence";
+import { CHAT_SOCKET_LISTEN_EVENTS } from "@/config/chatSocketEvents";
 import {
   fetchConversation,
   fetchConversations,
   fetchMessages,
   fetchRfqConversations,
   fetchUnreadSummary,
-  markConversationRead,
   sendMediaMessage,
   sendMessage,
 } from "@/services/chatService";
@@ -92,11 +85,6 @@ interface ChatContextValue {
   activeConversationId: number | null;
   setActiveConversationId: (id: number | null) => void;
   messagesByConversation: Record<number, ApiChatMessage[]>;
-  typingByConversation: Record<number, boolean>;
-  typingByRfq: Record<number, boolean>;
-  presenceByUserId: Record<number, boolean>;
-  /** Peer online for a conversation (avoids user_id vs profile id mismatches). */
-  peerOnlineByConversation: Record<number, boolean>;
   loadMessages: (conversationId: number, page?: number, appendOlder?: boolean) => Promise<void>;
   /** Load the next older page for a conversation (handles API asc/desc quirks). */
   loadOlderMessages: (conversationId: number) => Promise<void>;
@@ -110,7 +98,6 @@ interface ChatContextValue {
     file: File,
     content?: string
   ) => Promise<void>;
-  setTyping: (conversationId: number, isTyping: boolean, rfqId?: number | null) => void;
   markRead: (
     conversationId: number,
     lastMessageId: number,
@@ -167,12 +154,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [messagesByConversation, setMessagesByConversation] = useState<
     Record<number, ApiChatMessage[]>
   >({});
-  const [typingByConversation, setTypingByConversation] = useState<Record<number, boolean>>({});
-  const [typingByRfq, setTypingByRfq] = useState<Record<number, boolean>>({});
-  const [presenceByUserId, setPresenceByUserId] = useState<Record<number, boolean>>({});
-  const [peerOnlineByConversation, setPeerOnlineByConversation] = useState<
-    Record<number, boolean>
-  >({});
   const [hasMoreOlder, setHasMoreOlder] = useState<Record<number, boolean>>({});
   const [pageByConversation, setPageByConversation] = useState<Record<number, number>>({});
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -180,10 +161,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     {}
   );
   const activeIdRef = useRef<number | null>(null);
-  const typingTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
-  const typingActiveRef = useRef<Record<number, boolean>>({});
-  const typingLastEmitRef = useRef<Record<number, number>>({});
-  const remoteTypingTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
   const conversationsMetaRef = useRef<Record<number, ApiChatConversation>>({});
   const unreadSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** How message pages are numbered for each conversation after the initial fetch. */
@@ -261,8 +238,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
             ...existing,
             ...conversation,
             rfq_id: conversation.rfq_id ?? existing?.rfq_id ?? null,
-            // Persist UI-facing unread so cards don't relight from SYSTEM events.
-            unread_count: effectiveUnread,
+            // Keep API unread_count raw — effectiveConversationUnread at badge time
+            // strips SYSTEM tip without double-counting.
+            unread_count: rawUnread,
           };
         }
         return next;
@@ -292,12 +270,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      resetChatPresence();
       disconnectChatSocket();
       setUnreadSummary({ total_unread: 0 });
       setConversationsMeta({});
-      setPresenceByUserId({});
-      setPeerOnlineByConversation({});
       return;
     }
 
@@ -325,29 +300,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       setMessagesByConversation((prev) => ({
         ...prev,
         [owned.conversation_id]: mergeMessages(prev[owned.conversation_id] ?? [], [
-          { ...owned, send_status: "sent" },
+          {
+            ...owned,
+            send_status: "sent",
+            // Own send echo must not inherit a false read_at from the payload.
+            read_at: owned.is_mine ? null : owned.read_at,
+          },
         ]),
       }));
-
-      // New message means the other party stopped typing.
-      if (!owned.is_mine) {
-        if (remoteTypingTimers.current[owned.conversation_id]) {
-          clearTimeout(remoteTypingTimers.current[owned.conversation_id]);
-          delete remoteTypingTimers.current[owned.conversation_id];
-        }
-        setTypingByConversation((prev) =>
-          prev[owned.conversation_id] ? { ...prev, [owned.conversation_id]: false } : prev
-        );
-        const messageRfqId =
-          pickSocketRfqId(payload) ??
-          conversationsMetaRef.current[owned.conversation_id]?.rfq_id ??
-          null;
-        if (messageRfqId != null) {
-          setTypingByRfq((prev) =>
-            prev[messageRfqId] ? { ...prev, [messageRfqId]: false } : prev
-          );
-        }
-      }
 
       // Only person messages bump unread — system/status events do not.
       const isIncomingUnread =
@@ -377,10 +337,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           ...prev,
           total_unread: (prev.total_unread ?? 0) + 1,
         }));
-        void refreshUnread();
-        scheduleConversationsUnreadSync();
 
         // Resolve rfq_id if we still don't have one (needed for quotation card badges).
+        // Socket-first: only one light GET for the missing RFQ link — no inbox/list refresh.
         if (socketRfqId == null && knownRfqId == null) {
           void fetchConversation(owned.conversation_id)
             .then((conversation) => {
@@ -407,55 +366,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    const onTyping = (...args: unknown[]) => {
-      const payload =
-        args.length >= 2 && (typeof args[0] === "number" || typeof args[0] === "string")
-          ? {
-              conversation_id: args[0],
-              is_typing: args[1],
-              ...(args[2] && typeof args[2] === "object" ? (args[2] as object) : {}),
-            }
-          : args[0];
-
-      const parsed = parseTypingPayload(payload, activeIdRef.current);
-      // Do not invent isTyping:true for unparseable payloads — that sticks "typing…"
-      // forever when the clear event is missed during a disconnect.
-      if (!parsed) return;
-
-      const { conversationId, isTyping } = parsed;
-      const rfqId =
-        parsed.rfqId ?? conversationsMetaRef.current[conversationId]?.rfq_id ?? null;
-
-      setTypingByConversation((prev) => {
-        if (prev[conversationId] === isTyping) return prev;
-        return { ...prev, [conversationId]: isTyping };
-      });
-
-      if (rfqId != null) {
-        setTypingByRfq((prev) => {
-          if (prev[rfqId] === isTyping) return prev;
-          return { ...prev, [rfqId]: isTyping };
-        });
-      }
-
-      if (remoteTypingTimers.current[conversationId]) {
-        clearTimeout(remoteTypingTimers.current[conversationId]);
-        delete remoteTypingTimers.current[conversationId];
-      }
-
-      if (isTyping) {
-        remoteTypingTimers.current[conversationId] = setTimeout(() => {
-          setTypingByConversation((prev) =>
-            prev[conversationId] ? { ...prev, [conversationId]: false } : prev
-          );
-          if (rfqId != null) {
-            setTypingByRfq((prev) => (prev[rfqId] ? { ...prev, [rfqId]: false } : prev));
-          }
-          delete remoteTypingTimers.current[conversationId];
-        }, 5000);
-      }
-    };
-
     const onMessageRead = (payload: unknown) => {
       const data = unwrapSocketPayload(payload);
       if (!data || typeof data !== "object") return;
@@ -463,6 +373,30 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       const conversationId = Number(record.conversation_id);
       const lastReadId = Number(record.last_read_message_id ?? record.message_id);
       if (!Number.isFinite(conversationId) || !Number.isFinite(lastReadId)) return;
+
+      // Guide: message:read is from the *reader*. Ignore our own mark-read echo —
+      // otherwise sending/opening chat paints blue double-ticks on *our* messages
+      // without the peer actually reading them.
+      const readerRaw =
+        record.reader_id ??
+        record.user_id ??
+        record.readerId ??
+        (record.reader && typeof record.reader === "object"
+          ? (record.reader as Record<string, unknown>).id
+          : null);
+      const readerId = Number(readerRaw);
+      const me = currentUserIdRef.current;
+      if (me != null && Number.isFinite(readerId) && readerId > 0 && readerId === me) {
+        return;
+      }
+      // Ambiguous echo (no reader_id): do not assume peer read — skip.
+      if (!Number.isFinite(readerId) || readerId <= 0) {
+        const readerRole = String(record.role ?? record.reader_role ?? "")
+          .trim()
+          .toLowerCase();
+        if (readerRole && readerRole === activeRoleRef.current) return;
+        if (!readerRole) return;
+      }
 
       setMessagesByConversation((prev) => {
         const list = prev[conversationId];
@@ -480,91 +414,43 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       });
     };
 
-    const applyPresence = (userId: number, online: boolean, conversationId?: number | null) => {
-      setPresenceByUserId((prev) => {
-        if (prev[userId] === online) return prev;
-        return { ...prev, [userId]: online };
-      });
-      if (conversationId != null && Number.isFinite(conversationId) && conversationId > 0) {
-        setPeerOnlineByConversation((prev) => {
-          if (prev[conversationId] === online) return prev;
-          return { ...prev, [conversationId]: online };
-        });
-      }
-    };
+    const onConversationUpdated = (payload: unknown) => {
+      // Guide: conversation:updated → refresh inbox row from socket payload (no REST).
+      const conversation = normalizeChatConversation(unwrapSocketPayload(payload));
+      if (!conversation) return;
 
-    const applyPeerOnlineForConversation = (conversationId: number, online: boolean) => {
-      if (!Number.isFinite(conversationId) || conversationId <= 0) return;
-      setPeerOnlineByConversation((prev) => {
-        if (prev[conversationId] === online) return prev;
-        return { ...prev, [conversationId]: online };
-      });
-    };
+      setConversationsMeta((prev) => {
+        const existing = prev[conversation.id];
+        const nextUnread =
+          conversation.unread_count != null
+            ? effectiveConversationUnread(conversation)
+            : (existing?.unread_count ?? 0);
+        const next = {
+          ...prev,
+          [conversation.id]: {
+            ...existing,
+            ...conversation,
+            rfq_id: conversation.rfq_id ?? existing?.rfq_id ?? null,
+            unread_count: nextUnread,
+            last_message: conversation.last_message ?? existing?.last_message ?? null,
+            last_message_at:
+              conversation.last_message_at ?? existing?.last_message_at ?? null,
+          },
+        };
 
-    const pickConversationIdFromPayload = (payload: unknown): number | null => {
-      const data = unwrapSocketPayload(payload);
-      if (!data || typeof data !== "object") return activeIdRef.current;
-      const record = data as Record<string, unknown>;
-      const raw =
-        record.conversation_id ??
-        record.conversationId ??
-        (record.conversation && typeof record.conversation === "object"
-          ? (record.conversation as Record<string, unknown>).id
-          : null);
-      const id = Number(raw);
-      if (Number.isFinite(id) && id > 0) return id;
-      return activeIdRef.current;
-    };
-
-    const onPresence = (payload: unknown) => {
-      const parsed = parsePresencePayload(payload);
-      if (!parsed) return;
-      if (
-        currentUserIdRef.current != null &&
-        parsed.userId === currentUserIdRef.current
-      ) {
-        return;
-      }
-      applyPresence(parsed.userId, parsed.online, pickConversationIdFromPayload(payload));
-    };
-
-    const seedPresenceFromConversation = (conversation: {
-      other_party?: { user_id?: number; id?: number; is_online?: boolean | null } | null;
-      buyer?: { user_id?: number; id?: number; is_online?: boolean | null } | null;
-      seller?: { user_id?: number; id?: number; is_online?: boolean | null } | null;
-    }) => {
-      const parties = [conversation.other_party, conversation.buyer, conversation.seller];
-      setPresenceByUserId((prev) => {
-        let next = prev;
-        for (const party of parties) {
-          if (!party || typeof party.is_online !== "boolean") continue;
-          const userId = Number(party.user_id ?? party.id);
-          if (!Number.isFinite(userId) || userId <= 0) continue;
-          if (next === prev) next = { ...prev };
-          next[userId] = party.is_online;
+        if (conversation.unread_count != null) {
+          const total = Object.values(next).reduce(
+            (sum, c) => sum + effectiveConversationUnread(c),
+            0
+          );
+          queueMicrotask(() => {
+            setUnreadSummary((summary) =>
+              summary.total_unread === total ? summary : { ...summary, total_unread: total }
+            );
+          });
         }
         return next;
       });
-    };
-
-    const onConversationUpdated = (payload: unknown) => {
-      const conversation = normalizeChatConversation(unwrapSocketPayload(payload));
-      if (conversation) {
-        seedPresenceFromConversation(conversation);
-        setConversationsMeta((prev) => {
-          const existing = prev[conversation.id];
-          return {
-            ...prev,
-            [conversation.id]: {
-              ...existing,
-              ...conversation,
-              rfq_id: conversation.rfq_id ?? existing?.rfq_id ?? null,
-            },
-          };
-        });
-      }
-      void refreshUnread();
-      scheduleConversationsUnreadSync();
     };
 
     const onChatError = (payload: unknown) => {
@@ -579,270 +465,35 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       showErrorToast(message);
     };
 
-    const onJoinAck = (...args: unknown[]) => {
-      const payload = args[0];
-      if (process.env.NODE_ENV === "development") {
-        console.info("[chat-socket] conversation:join", payload);
+    const unsubscribers = CHAT_SOCKET_LISTEN_EVENTS.map((event) => {
+      switch (event) {
+        case "message:new":
+          return subscribeChatEvent(event, onMessageNew);
+        case "message:read":
+          return subscribeChatEvent(event, onMessageRead);
+        case "conversation:updated":
+          return subscribeChatEvent(event, onConversationUpdated);
+        case "chat:error":
+          return subscribeChatEvent(event, onChatError);
+        default:
+          return () => undefined;
       }
-
-      const conversationId = pickConversationIdFromPayload(payload);
-
-      const data = unwrapSocketPayload(payload);
-      if (data && typeof data === "object") {
-        const record = data as Record<string, unknown>;
-        const conversation = normalizeChatConversation(record.conversation ?? record);
-        if (conversation) {
-          // Seed only when party payloads explicitly include is_online.
-          seedPresenceFromConversation(conversation);
-          if (conversation.other_party?.is_online === true) {
-            applyPeerOnlineForConversation(conversation.id, true);
-          } else if (conversation.other_party?.is_online === false) {
-            applyPeerOnlineForConversation(conversation.id, false);
-          }
-        }
-      }
-
-      // Only mark peers online when the join payload identifies a *different* user.
-      // Never forceOnline on buyer/seller stubs — own join acks include other_party
-      // without is_online and were falsely flipping peers to "online".
-      const updates = parseConversationPresencePayload(payload, {
-        excludeUserId: currentUserIdRef.current,
-      });
-      for (const update of updates) {
-        applyPresence(update.userId, update.online, conversationId);
-      }
-
-      const record =
-        data && typeof data === "object" ? (data as Record<string, unknown>) : null;
-      const joinerId = Number(
-        record?.user_id ?? record?.sender_id ?? record?.participant_id
-      );
-      if (
-        conversationId != null &&
-        Number.isFinite(joinerId) &&
-        joinerId > 0 &&
-        (currentUserIdRef.current == null || joinerId !== currentUserIdRef.current)
-      ) {
-        applyPresence(joinerId, true, conversationId);
-      }
-    };
-
-    const onLeave = (...args: unknown[]) => {
-      const payload = args[0];
-      if (process.env.NODE_ENV === "development") {
-        console.info("[chat-socket] conversation:leave", payload);
-      }
-      const conversationId = pickConversationIdFromPayload(payload);
-      // Peer left ⇒ clear typing for that conversation.
-      if (conversationId != null) {
-        if (remoteTypingTimers.current[conversationId]) {
-          clearTimeout(remoteTypingTimers.current[conversationId]);
-          delete remoteTypingTimers.current[conversationId];
-        }
-        setTypingByConversation((prev) =>
-          prev[conversationId] ? { ...prev, [conversationId]: false } : prev
-        );
-        const leaveRfqId =
-          pickSocketRfqId(payload) ??
-          conversationsMetaRef.current[conversationId]?.rfq_id ??
-          null;
-        if (leaveRfqId != null) {
-          setTypingByRfq((prev) =>
-            prev[leaveRfqId] ? { ...prev, [leaveRfqId]: false } : prev
-          );
-        }
-      }
-      const updates = parseConversationPresencePayload(payload, {
-        forceOnline: false,
-        excludeUserId: currentUserIdRef.current,
-      });
-      if (updates.length > 0) {
-        for (const update of updates) {
-          applyPresence(update.userId, false, conversationId);
-        }
-      } else if (conversationId != null) {
-        applyPeerOnlineForConversation(conversationId, false);
-      }
-    };
-
-    // Guide listen events + optional join/leave echoes for presence UI.
-    const unsubscribers = [
-      ...CHAT_SOCKET_LISTEN_EVENTS.map((event) => {
-        switch (event) {
-          case "message:new":
-            return subscribeChatEvent(event, onMessageNew);
-          case "typing:indicator":
-            return subscribeChatEvent(event, onTyping);
-          case "message:read":
-            return subscribeChatEvent(event, onMessageRead);
-          case "presence:update":
-            return subscribeChatEvent(event, onPresence);
-          case "conversation:updated":
-            return subscribeChatEvent(event, onConversationUpdated);
-          case "chat:error":
-            return subscribeChatEvent(event, onChatError);
-          default:
-            return () => undefined;
-        }
-      }),
-      ...CHAT_SOCKET_EXTRA_LISTEN_EVENTS.map((event) => {
-        if (event === "conversation:join") return subscribeChatEvent(event, onJoinAck);
-        if (event === "conversation:leave") return subscribeChatEvent(event, onLeave);
-        return () => undefined;
-      }),
-    ];
+    });
 
     return () => {
       if (unreadSyncTimer.current) clearTimeout(unreadSyncTimer.current);
       unsubscribers.forEach((unsub) => unsub());
     };
-  }, [isAuthenticated, refreshUnread, scheduleConversationsUnreadSync, syncConversationsUnread]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    if (!activeConversationId) {
-      // Sidebar closed / conversation cleared — go Offline immediately.
-      goChatOffline({ reason: "close" });
-      return;
-    }
-
+    if (!activeConversationId) return;
     const conversationId = activeConversationId;
-    const userId = currentUserIdRef.current;
-    if (userId) {
-      goChatOnline(conversationId, userId);
-    } else {
-      // User id may resolve a tick later; still join the room.
-      joinConversation(conversationId);
-    }
-
+    joinConversation(conversationId);
     return () => {
-      // Clear local typing so a missed typing:false during unmount cannot stick.
-      if (remoteTypingTimers.current[conversationId]) {
-        clearTimeout(remoteTypingTimers.current[conversationId]);
-        delete remoteTypingTimers.current[conversationId];
-      }
-      setTypingByConversation((prev) =>
-        prev[conversationId] ? { ...prev, [conversationId]: false } : prev
-      );
-      // Component cleanup / conversation switch — Offline immediately.
-      goChatOffline({ reason: "unmount" });
+      leaveConversation(conversationId);
     };
   }, [activeConversationId]);
-
-  // If auth user id arrives after chat opened, promote to Online.
-  useEffect(() => {
-    if (!activeConversationId || currentUserId == null) return;
-    goChatOnline(activeConversationId, currentUserId);
-  }, [activeConversationId, currentUserId]);
-
-  // Poll presence relay — keeps Online/Offline in sync for buyer + seller on localhost.
-  useEffect(() => {
-    if (!isAuthenticated || !activeConversationId) return;
-
-    let cancelled = false;
-    const conversationId = activeConversationId;
-
-    const tick = async () => {
-      const me = currentUserIdRef.current ?? 0;
-      const state = await fetchPresenceRelay(conversationId, me);
-      if (cancelled || !state) return;
-
-      let peerOnline = false;
-      for (const user of state.users) {
-        if (!Number.isFinite(user.user_id) || user.user_id <= 0) continue;
-        if (user.is_online) peerOnline = true;
-        setPresenceByUserId((prev) => {
-          if (prev[user.user_id] === user.is_online) return prev;
-          return { ...prev, [user.user_id]: user.is_online };
-        });
-      }
-
-      // Conversation-scoped peer status (UI source of truth).
-      setPeerOnlineByConversation((prev) => {
-        if (prev[conversationId] === peerOnline) return prev;
-        return { ...prev, [conversationId]: peerOnline };
-      });
-    };
-
-    void tick();
-    const interval = window.setInterval(() => {
-      void tick();
-    }, 1000);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(interval);
-    };
-  }, [isAuthenticated, activeConversationId]);
-
-  // Poll local typing relay so buyer/seller still see typing if socket broadcast fails.
-  useEffect(() => {
-    if (!isAuthenticated || !activeConversationId) return;
-
-    let cancelled = false;
-    const conversationId = activeConversationId;
-
-    const tick = async () => {
-      const me = currentUserIdRef.current ?? 0;
-      const state = await fetchTypingRelay(conversationId, me);
-      if (cancelled || !state) return;
-
-      const knownRfqId =
-        state.rfq_id ?? conversationsMetaRef.current[conversationId]?.rfq_id ?? null;
-
-      // Safety net: explicitly clear when relay says not typing (TTL expiry / stop).
-      if (!state.is_typing) {
-        setTypingByConversation((prev) =>
-          prev[conversationId] ? { ...prev, [conversationId]: false } : prev
-        );
-        if (knownRfqId != null) {
-          setTypingByRfq((prev) =>
-            prev[knownRfqId] ? { ...prev, [knownRfqId]: false } : prev
-          );
-        }
-        if (remoteTypingTimers.current[conversationId]) {
-          clearTimeout(remoteTypingTimers.current[conversationId]);
-          delete remoteTypingTimers.current[conversationId];
-        }
-        return;
-      }
-
-      setTypingByConversation((prev) => {
-        if (prev[conversationId]) return prev;
-        return { ...prev, [conversationId]: true };
-      });
-      if (knownRfqId != null) {
-        setTypingByRfq((prev) => {
-          if (prev[knownRfqId]) return prev;
-          return { ...prev, [knownRfqId]: true };
-        });
-      }
-
-      if (remoteTypingTimers.current[conversationId]) {
-        clearTimeout(remoteTypingTimers.current[conversationId]);
-      }
-      remoteTypingTimers.current[conversationId] = setTimeout(() => {
-        setTypingByConversation((prev) =>
-          prev[conversationId] ? { ...prev, [conversationId]: false } : prev
-        );
-        if (knownRfqId != null) {
-          setTypingByRfq((prev) =>
-            prev[knownRfqId] ? { ...prev, [knownRfqId]: false } : prev
-          );
-        }
-        delete remoteTypingTimers.current[conversationId];
-      }, 3500);
-    };
-
-    void tick();
-    const interval = window.setInterval(() => {
-      void tick();
-    }, 800);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(interval);
-    };
-  }, [isAuthenticated, activeConversationId]);
 
   const loadMessages = useCallback(
     async (conversationId: number, page = 1, appendOlder = false) => {
@@ -945,18 +596,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       };
     });
 
-    const parties = [conversation.other_party, conversation.buyer, conversation.seller];
-    setPresenceByUserId((prev) => {
-      let next = prev;
-      for (const party of parties) {
-        if (!party || typeof party.is_online !== "boolean") continue;
-        const userId = Number(party.user_id ?? party.id);
-        if (!Number.isFinite(userId) || userId <= 0) continue;
-        if (next === prev) next = { ...prev };
-        next[userId] = party.is_online;
-      }
-      return next;
-    });
   }, []);
 
   const hydrateRfqConversations = useCallback(
@@ -973,7 +612,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
               ...conversation,
               // Always stamp the RFQ we asked for so card badges can match.
               rfq_id: conversation.rfq_id ?? existing?.rfq_id ?? rfqId,
-              unread_count: effectiveConversationUnread(conversation),
+              unread_count: conversation.unread_count ?? existing?.unread_count ?? 0,
             };
           }
           return next;
@@ -1019,7 +658,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           return {
             ...prev,
             [conversationId]: mergeMessages(list, [
-              { ...owned, is_mine: true, send_status: "sent" },
+              // Sent ≠ read — only peer `message:read` may set read_at.
+              { ...owned, is_mine: true, send_status: "sent", read_at: null },
             ]),
           };
         });
@@ -1115,7 +755,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           return {
             ...prev,
             [conversationId]: mergeMessages(list, [
-              { ...owned, is_mine: true, send_status: "sent" },
+              { ...owned, is_mine: true, send_status: "sent", read_at: null },
             ]),
           };
         });
@@ -1132,114 +772,41 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const setTyping = useCallback(
-    (conversationId: number, isTyping: boolean, rfqId?: number | null) => {
-      if (!Number.isFinite(conversationId) || conversationId <= 0) return;
-      const userId = currentUserIdRef.current;
-
-      if (typingTimers.current[conversationId]) {
-        clearTimeout(typingTimers.current[conversationId]);
-        delete typingTimers.current[conversationId];
-      }
-
-      if (!isTyping) {
-        if (typingActiveRef.current[conversationId]) {
-          emitTypingIndicator(conversationId, false, { rfqId });
-          if (userId) {
-            void publishTypingRelay({
-              conversationId,
-              userId,
-              isTyping: false,
-              rfqId,
-            });
-          }
-          typingActiveRef.current[conversationId] = false;
-          delete typingLastEmitRef.current[conversationId];
-        }
-        return;
-      }
-
-      const now = Date.now();
-      const lastEmit = typingLastEmitRef.current[conversationId] ?? 0;
-      const alreadyActive = Boolean(typingActiveRef.current[conversationId]);
-
-      // Emit immediately, then refresh while typing continues.
-      if (!alreadyActive || now - lastEmit >= 700) {
-        emitTypingIndicator(conversationId, true, { rfqId });
-        if (userId) {
-          void publishTypingRelay({
-            conversationId,
-            userId,
-            isTyping: true,
-            rfqId,
-          });
-        }
-        typingActiveRef.current[conversationId] = true;
-        typingLastEmitRef.current[conversationId] = now;
-      }
-
-      typingTimers.current[conversationId] = setTimeout(() => {
-        emitTypingIndicator(conversationId, false, { rfqId });
-        if (userId) {
-          void publishTypingRelay({
-            conversationId,
-            userId,
-            isTyping: false,
-            rfqId,
-          });
-        }
-        typingActiveRef.current[conversationId] = false;
-        delete typingLastEmitRef.current[conversationId];
-        delete typingTimers.current[conversationId];
-        // Guide example: stop after ~1.5s of idle input.
-      }, 1500);
-    },
-    []
-  );
-
   const markRead = useCallback(
     async (
       conversationId: number,
       lastMessageId: number,
       remainingUnread?: number
     ) => {
-      try {
-        // Guide: REST POST .../read and/or socket message:read.
-        emitMessageRead(conversationId, lastMessageId);
-        await markConversationRead(conversationId, { last_read_message_id: lastMessageId });
-        const nextUnread = Math.max(0, remainingUnread ?? 0);
-        let cleared = 0;
-        setConversationsMeta((prev) => {
-          const existing = prev[conversationId];
-          const prevUnread = existing?.unread_count ?? 0;
-          cleared = Math.max(0, prevUnread - nextUnread);
-          if (!existing) {
-            return {
-              ...prev,
-              [conversationId]: { id: conversationId, unread_count: nextUnread },
-            };
-          }
-          if (prevUnread === nextUnread) return prev;
+      // Guide: mark read via socket message:read (no REST /read).
+      emitMessageRead(conversationId, lastMessageId);
+
+      const nextUnread = Math.max(0, remainingUnread ?? 0);
+      let cleared = 0;
+      setConversationsMeta((prev) => {
+        const existing = prev[conversationId];
+        const prevUnread = existing?.unread_count ?? 0;
+        cleared = Math.max(0, prevUnread - nextUnread);
+        if (!existing) {
           return {
             ...prev,
-            [conversationId]: { ...existing, unread_count: nextUnread },
+            [conversationId]: { id: conversationId, unread_count: nextUnread },
           };
-        });
-        if (cleared > 0) {
-          setUnreadSummary((prev) => ({
-            ...prev,
-            total_unread: Math.max(0, (prev.total_unread ?? 0) - cleared),
-          }));
         }
-        // Re-sync after a beat, but SYSTEM inflation is stripped in syncConversationsUnread.
-        void refreshUnread().then(() => {
-          scheduleConversationsUnreadSync();
-        });
-      } catch {
-        /* ignore */
+        if (prevUnread === nextUnread) return prev;
+        return {
+          ...prev,
+          [conversationId]: { ...existing, unread_count: nextUnread },
+        };
+      });
+      if (cleared > 0) {
+        setUnreadSummary((prev) => ({
+          ...prev,
+          total_unread: Math.max(0, (prev.total_unread ?? 0) - cleared),
+        }));
       }
     },
-    [refreshUnread, scheduleConversationsUnreadSync]
+    []
   );
 
   const value = useMemo<ChatContextValue>(
@@ -1252,10 +819,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       activeConversationId,
       setActiveConversationId,
       messagesByConversation,
-      typingByConversation,
-      typingByRfq,
-      presenceByUserId,
-      peerOnlineByConversation,
       loadMessages,
       loadOlderMessages,
       hasMoreOlder,
@@ -1263,7 +826,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       sendText,
       sendTypedMessage,
       sendMedia,
-      setTyping,
       markRead,
       upsertConversationMeta,
       conversationsMeta,
@@ -1276,10 +838,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       hydrateRfqConversations,
       activeConversationId,
       messagesByConversation,
-      typingByConversation,
-      typingByRfq,
-      presenceByUserId,
-      peerOnlineByConversation,
       loadMessages,
       loadOlderMessages,
       hasMoreOlder,
@@ -1287,7 +845,6 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       sendText,
       sendTypedMessage,
       sendMedia,
-      setTyping,
       markRead,
       upsertConversationMeta,
       conversationsMeta,

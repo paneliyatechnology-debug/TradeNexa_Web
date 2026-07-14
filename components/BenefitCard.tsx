@@ -30,9 +30,9 @@ export default function BenefitCard({
       viewport={{ once: true }}
       transition={{ duration: 0.35, delay }}
       whileHover={{ y: -2 }}
-      className={`relative p-6 transition-all duration-200 ${
+      className={`relative rounded-xl p-6 transition-all duration-200 ${
         highlighted
-          ? "rounded-xl border-2 border-primary bg-white shadow-[var(--shadow-card)]"
+          ? "border-2 border-primary bg-card shadow-sm"
           : "surface-card-hover"
       }`}
     >

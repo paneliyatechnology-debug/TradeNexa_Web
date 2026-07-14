@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import PortalAuthGuard from "@/components/portal/PortalAuthGuard";
 import PortalBottomNav, { type PortalNavItem } from "@/components/portal/PortalBottomNav";
 import PortalSidebar from "@/components/portal/PortalSidebar";
@@ -14,8 +14,8 @@ interface PortalShellProps {
 }
 
 export default function PortalShell({ children, navItems, brand, topBar }: PortalShellProps) {
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
 
   return (
     <PortalAuthGuard>
@@ -31,7 +31,7 @@ export default function PortalShell({ children, navItems, brand, topBar }: Porta
         />
         <div className="flex min-w-0 flex-1 flex-col">
           <PortalTopBar {...topBar} onMenuClick={() => setMobileNavOpen(true)} />
-          <main className="flex-1 pb-24 lg:pb-8">{children}</main>
+          <main className="flex-1 pb-24 lg:pb-6">{children}</main>
           <PortalBottomNav items={navItems} accent={topBar.accent} />
         </div>
       </div>

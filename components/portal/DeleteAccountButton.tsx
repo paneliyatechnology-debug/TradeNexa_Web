@@ -40,8 +40,8 @@ export default function DeleteAccountButton({ compact = false }: DeleteAccountBu
       <button
         type="button"
         onClick={() => setConfirmOpen(true)}
-        className={`inline-flex items-center justify-center gap-2 rounded-xl border border-error/30 bg-error/10 px-4 py-2.5 text-sm font-bold text-error transition hover:bg-error/20 ${
-          compact ? "shrink-0" : "w-full py-3.5"
+        className={`inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-error/30 bg-error/10 px-4 text-sm font-semibold text-error transition-colors duration-200 hover:bg-error/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/25 ${
+          compact ? "shrink-0" : "w-full"
         }`}
       >
         <Trash2 className="h-4 w-4" />
@@ -51,8 +51,8 @@ export default function DeleteAccountButton({ compact = false }: DeleteAccountBu
   }
 
   return (
-    <div className={`rounded-2xl border border-error/30 bg-error/10 p-4 ${compact ? "w-full max-w-md" : ""}`}>
-      <p className="text-sm font-extrabold text-error">Delete your account?</p>
+    <div className={`rounded-xl border border-error/20 bg-error-soft p-4 ${compact ? "w-full max-w-md" : ""}`}>
+      <p className="text-sm font-semibold text-error">Delete your account?</p>
       <p className="mt-1 text-xs text-error/80">
         This permanently removes your profile and cannot be undone.
       </p>
@@ -61,7 +61,7 @@ export default function DeleteAccountButton({ compact = false }: DeleteAccountBu
           type="button"
           onClick={() => setConfirmOpen(false)}
           disabled={loading}
-          className="flex-1 rounded-xl border border-border bg-card py-2.5 text-sm font-semibold text-muted-fg"
+          className="h-10 flex-1 rounded-lg border border-border bg-card text-sm font-semibold text-muted-fg transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
         >
           Cancel
         </button>
@@ -69,7 +69,7 @@ export default function DeleteAccountButton({ compact = false }: DeleteAccountBu
           type="button"
           onClick={() => void handleDelete()}
           disabled={loading}
-          className="flex-1 rounded-xl bg-error py-2.5 text-sm font-bold text-white disabled:opacity-50"
+          className="h-10 flex-1 rounded-lg bg-error text-sm font-semibold text-white transition-colors duration-200 hover:bg-error-hover disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error/25"
         >
           {loading ? "Deleting..." : "Confirm Delete"}
         </button>

@@ -17,12 +17,10 @@ export function useChatUnreadBadge(): number {
   return useMemo(() => {
     const metaValues = Object.values(conversationsMeta);
     if (metaValues.length > 0) {
-      const fromMeta = metaValues.reduce(
+      return metaValues.reduce(
         (sum, conversation) => sum + effectiveConversationUnread(conversation),
         0
       );
-      // Prefer conversation list when hydrated — strips SYSTEM inflation the API total includes.
-      return fromMeta;
     }
     return unreadSummary.total_unread > 0 ? unreadSummary.total_unread : 0;
   }, [conversationsMeta, unreadSummary.total_unread]);

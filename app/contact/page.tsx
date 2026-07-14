@@ -33,13 +33,13 @@ export default function Contact() {
 
             <div className="space-y-6 lg:col-span-5">
               <div className="space-y-4">
-                <h3 className="text-xl font-bold text-navy">Our Office</h3>
+                <h3 className="text-xl font-semibold text-foreground">Our Office</h3>
                 {offices.map((office, idx) => (
                   <div
                     key={idx}
-                    className="space-y-3 rounded-2xl border border-border bg-card p-5 shadow-card"
+                    className="surface-card space-y-3 p-5"
                   >
-                    <h4 className="flex items-center gap-2 text-sm font-bold text-navy">
+                    <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground">
                       <MapPin className="h-4 w-4 text-primary" />
                       {office.city}
                     </h4>
@@ -59,8 +59,8 @@ export default function Contact() {
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                <div className="space-y-2 rounded-2xl border border-border bg-card p-5 shadow-card">
-                  <h4 className="flex items-center gap-2 text-sm font-bold text-navy">
+                <div className="surface-card space-y-2 p-5">
+                  <h4 className="flex items-center gap-2 text-sm font-semibold text-foreground">
                     <Clock className="h-4 w-4 text-primary" />
                     Business Hours
                   </h4>
@@ -71,8 +71,8 @@ export default function Contact() {
                   </div>
                 </div>
 
-                <div className="space-y-3 rounded-2xl border border-border bg-card p-5 shadow-card">
-                  <h4 className="text-sm font-bold text-navy">Connect Socially</h4>
+                <div className="surface-card space-y-3 p-5">
+                  <h4 className="text-sm font-semibold text-foreground">Connect Socially</h4>
                   <div className="flex gap-3">
                     {["facebook", "twitter", "linkedin", "instagram"].map((social) => (
                       <span

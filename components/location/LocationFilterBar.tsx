@@ -42,8 +42,8 @@ export default function LocationFilterBar({
   const compactSelectClass =
     selectClassName ??
     (variant === "toolbar" || variant === "hero"
-      ? "!h-11 !w-full !max-w-[220px] !rounded-xl !border-border !bg-card !text-sm !text-foreground sm:!w-[200px]"
-      : "!h-[3.25rem] !rounded-2xl");
+      ? "!h-10 !w-full !max-w-[220px] !rounded-lg !border-border !bg-card !text-sm !text-foreground sm:!w-[200px]"
+      : "!h-10 !rounded-lg");
 
   if (variant === "hero") {
     return (
@@ -83,7 +83,7 @@ export default function LocationFilterBar({
   if (variant === "toolbar") {
     return (
       <div
-        className={`rounded-2xl border border-border bg-muted px-3 py-3 sm:px-4 ${className}`}
+        className={`rounded-xl border border-border bg-muted/60 px-3 py-2.5 sm:px-3.5 ${className}`}
       >
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
@@ -124,8 +124,8 @@ export default function LocationFilterBar({
 
   const clearButtonClass =
     variant === "onDark"
-      ? "inline-flex h-[3.25rem] shrink-0 items-center justify-center gap-1.5 rounded-2xl border border-white/20 bg-white/10 px-4 text-sm font-medium text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
-      : "inline-flex h-[3.25rem] shrink-0 items-center justify-center gap-1.5 rounded-2xl border border-border bg-card px-4 text-sm font-medium text-muted-fg transition hover:border-primary/40 hover:bg-primary/5 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border disabled:hover:bg-card disabled:hover:text-muted-fg";
+      ? "inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-white/20 bg-white/10 px-3.5 text-sm font-medium text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+      : "inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3.5 text-sm font-medium text-muted-fg transition hover:border-primary/40 hover:bg-primary/5 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border disabled:hover:bg-card disabled:hover:text-muted-fg";
 
   return (
     <div className={`flex flex-col gap-3 sm:flex-row sm:items-center ${className}`}>

@@ -79,8 +79,8 @@ export default function Footer() {
   };
 
   return (
-    <footer className="mt-auto shrink-0 border-t border-border bg-white">
-      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-16">
+    <footer className="mt-auto shrink-0 border-t border-border bg-card">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-14">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-12 lg:gap-8">
           <div className="lg:col-span-4">
             <Logo size="lg" className="mb-4" />
@@ -241,7 +241,7 @@ export default function Footer() {
                 key={social.label}
                 role="img"
                 aria-label={social.label}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-white text-muted-fg transition-colors duration-200 hover:border-primary/30 hover:text-primary"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-fg transition-colors duration-200 hover:border-primary/30 hover:text-primary"
               >
                 <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 24 24" aria-hidden>
                   <path d={social.path} />

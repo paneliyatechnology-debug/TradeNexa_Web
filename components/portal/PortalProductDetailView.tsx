@@ -94,8 +94,8 @@ function IconAction({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className={`flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-fg shadow-sm transition hover:border-primary/30 hover:text-primary ${
-        danger && active ? "border-red-200 bg-red-50 text-red-500 hover:text-red-500" : ""
+      className={`flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-fg transition hover:border-primary/30 hover:text-primary ${
+        danger && active ? "border-error/20 bg-error-soft text-error hover:text-error" : ""
       }`}
     >
       {children}
@@ -252,7 +252,7 @@ function SupplierCard({
     <div className={`${cardClass} ${compact ? "p-4" : "p-5 lg:p-6"}`}>
       <div className="flex items-start justify-between gap-3">
           <div
-            className={`flex shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary-soft font-extrabold text-primary ${
+            className={`flex shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary-soft font-semibold text-primary ${
               compact ? "h-10 w-10 text-sm" : "h-12 w-12 text-base"
             }`}
           >
@@ -272,7 +272,7 @@ function SupplierCard({
         <BadgeCheck className="h-5 w-5 shrink-0 text-primary" />
       </div>
 
-      <p className={`mt-3 font-extrabold text-foreground ${compact ? "text-sm" : "mt-4 text-base lg:text-lg"}`}>
+      <p className={`mt-3 font-semibold text-foreground ${compact ? "text-sm" : "mt-4 text-base lg:text-lg"}`}>
         {companyName}
       </p>
       {locationLine ? (
@@ -284,20 +284,20 @@ function SupplierCard({
 
       <div className={`grid grid-cols-3 gap-2 ${compact ? "mt-3" : "mt-5"}`}>
         <div className={`rounded-xl bg-muted text-center ${compact ? "p-2" : "p-3"}`}>
-          <p className={`font-extrabold text-foreground ${compact ? "text-xs" : "text-sm"}`}>
+          <p className={`font-semibold text-foreground ${compact ? "text-xs" : "text-sm"}`}>
             {experienceLabel}
           </p>
           <p className="mt-0.5 text-[10px] font-semibold text-muted-fg">Experience</p>
         </div>
         <div className={`rounded-xl bg-muted text-center ${compact ? "p-2" : "p-3"}`}>
-          <p className={`font-extrabold text-foreground ${compact ? "text-xs" : "text-sm"}`}>
+          <p className={`font-semibold text-foreground ${compact ? "text-xs" : "text-sm"}`}>
             {formatRating(seller.rating.average)}{" "}
             <Star className="inline h-3 w-3 fill-amber-400 text-amber-400" />
           </p>
           <p className="mt-0.5 text-[10px] font-semibold text-muted-fg">Seller Rating</p>
         </div>
         <div className={`rounded-xl bg-muted text-center ${compact ? "p-2" : "p-3"}`}>
-          <p className={`font-extrabold text-foreground ${compact ? "text-xs" : "text-sm"}`}>
+          <p className={`font-semibold text-foreground ${compact ? "text-xs" : "text-sm"}`}>
             {seller.rating.total_reviews != null && seller.rating.total_reviews > 0
               ? seller.rating.total_reviews
               : "—"}
@@ -322,7 +322,7 @@ function SupplierCard({
             href={whatsAppHref(contactPhone, inquiryMessage)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-emerald-50 text-emerald-600 transition hover:border-emerald-300"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-success/20 bg-success-soft text-success transition hover:border-success/40"
             aria-label="Contact on WhatsApp"
           >
             <MessageCircle className="h-5 w-5" />
@@ -340,7 +340,7 @@ function SupplierCard({
         {contactEmail ? (
           <a
             href={`mailto:${contactEmail}`}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-orange-50 text-accent transition hover:border-orange-200"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-warning/20 bg-warning-soft text-accent transition hover:border-warning/40"
             aria-label="Email seller"
           >
             <Mail className="h-5 w-5" />
@@ -479,7 +479,7 @@ export default function PortalProductDetailView({
             </button>
           )}
           <h2
-            className={`font-extrabold text-foreground ${
+            className={`font-semibold text-foreground ${
               compact ? "text-lg sm:text-xl" : "text-xl sm:text-2xl lg:text-3xl"
             }`}
           >
@@ -517,7 +517,7 @@ export default function PortalProductDetailView({
               </span>
             ) : null}
             {marketplace.is_trending ? (
-              <span className="inline-flex items-center gap-1 rounded-lg bg-orange-50 px-2 py-0.5 text-xs font-bold text-accent">
+              <span className="inline-flex items-center gap-1 rounded-lg bg-warning-soft px-2 py-0.5 text-xs font-bold text-accent">
                 <TrendingUp className="h-3 w-3" />
                 Trending
               </span>
@@ -558,7 +558,7 @@ export default function PortalProductDetailView({
               active={wishlisted}
               danger
             >
-              <Heart className={`h-4 w-4 ${wishlisted ? "fill-red-500 text-red-500" : ""}`} />
+              <Heart className={`h-4 w-4 ${wishlisted ? "fill-error text-error" : ""}`} />
             </IconAction>
           ) : null}
         </div>
@@ -568,12 +568,12 @@ export default function PortalProductDetailView({
         <div
           className={`mb-4 rounded-xl border px-4 py-3 ${
             displayApprovalStatus === "rejected"
-              ? "border-red-200 bg-red-50"
+              ? "border-error/20 bg-error-soft"
               : displayApprovalStatus === "revision_required"
-                ? "border-orange-200 bg-orange-50"
+                ? "border-warning/25 bg-warning-soft"
                 : displayApprovalStatus === "approved"
-                  ? "border-emerald-200 bg-emerald-50"
-                  : "border-amber-200 bg-amber-50"
+                  ? "border-success/20 bg-success-soft"
+                  : "border-warning/20 bg-warning-soft"
           }`}
         >
           <div className="flex flex-wrap items-center gap-2">
@@ -608,12 +608,12 @@ export default function PortalProductDetailView({
 
         <div className={`lg:col-span-7 ${compact ? "space-y-4" : "space-y-6"}`}>
           <div
-            className={`overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary-hover text-white shadow-lg shadow-primary/20 ${
+            className={`overflow-hidden rounded-xl bg-gradient-to-br from-primary to-primary-hover text-white ${
               compact ? "p-4" : "p-6"
             }`}
           >
             <p className={`text-white/80 ${compact ? "text-xs" : "text-sm"}`}>Wholesale B2B Price</p>
-            <p className={`mt-1 font-extrabold ${compact ? "text-2xl sm:text-3xl" : "text-3xl sm:text-4xl"}`}>
+            <p className={`mt-1 font-semibold ${compact ? "text-2xl sm:text-3xl" : "text-3xl sm:text-4xl"}`}>
               {formatPrice(pricing.price)}
               <span
                 className={`ml-2 font-semibold text-white/80 ${compact ? "text-sm" : "text-base"}`}
@@ -646,7 +646,7 @@ export default function PortalProductDetailView({
               value={listedDaysLabel(product.created_at)}
               icon={Clock}
               color="text-success"
-              bg="bg-emerald-50"
+              bg="bg-success-soft"
               compact={compact}
             />
             <PortalStatCard
@@ -654,7 +654,7 @@ export default function PortalProductDetailView({
               value={thirdStatValue}
               icon={BadgeCheck}
               color="text-accent"
-              bg="bg-orange-50"
+              bg="bg-warning-soft"
               compact={compact}
             />
           </div>
@@ -665,7 +665,7 @@ export default function PortalProductDetailView({
                 href={whatsAppHref(contactPhone, inquiryMessage)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-6 py-3 text-sm font-bold text-emerald-600 transition hover:border-emerald-300 hover:bg-emerald-50"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-success/20 bg-card px-6 py-3 text-sm font-semibold text-success transition hover:border-success/40 hover:bg-success-soft"
               >
                 <MessageCircle className="h-4 w-4" />
                 WhatsApp Seller
@@ -675,7 +675,7 @@ export default function PortalProductDetailView({
 
           {keySpecs.length > 0 ? (
             <div className={`${cardClass} hidden lg:block ${compact ? "p-4" : "p-5"}`}>
-              <h3 className={`mb-3 font-extrabold text-foreground ${compact ? "text-sm" : "mb-4 text-base"}`}>
+              <h3 className={`mb-3 font-semibold text-foreground ${compact ? "text-sm" : "mb-4 text-base"}`}>
                 Key Specifications
               </h3>
               <div className={`grid grid-cols-2 gap-2 xl:grid-cols-3 ${compact ? "gap-2" : "gap-3"}`}>
@@ -684,7 +684,7 @@ export default function PortalProductDetailView({
                     <p className={`font-semibold text-muted-fg ${compact ? "text-[10px]" : "text-xs"}`}>
                       {spec.label}
                     </p>
-                    <p className={`mt-0.5 font-extrabold text-foreground ${compact ? "text-xs" : "text-sm"}`}>
+                    <p className={`mt-0.5 font-semibold text-foreground ${compact ? "text-xs" : "text-sm"}`}>
                       {spec.value}
                     </p>
                   </div>
@@ -703,7 +703,7 @@ export default function PortalProductDetailView({
                 {keySpecs.map((spec) => (
                   <div key={spec.label} className={`${cardClass} shrink-0 px-4 py-3`}>
                     <p className="text-xs font-semibold text-muted-fg">{spec.label}</p>
-                    <p className="mt-0.5 text-sm font-extrabold text-foreground">{spec.value}</p>
+                    <p className="mt-0.5 text-sm font-semibold text-foreground">{spec.value}</p>
                   </div>
                 ))}
               </div>
@@ -830,7 +830,7 @@ export default function PortalProductDetailView({
               active={wishlisted}
               danger
             >
-              <Heart className={`h-4 w-4 ${wishlisted ? "fill-red-500 text-red-500" : ""}`} />
+              <Heart className={`h-4 w-4 ${wishlisted ? "fill-error text-error" : ""}`} />
             </IconAction>
           ) : null}
           {contactPhone ? (
@@ -838,7 +838,7 @@ export default function PortalProductDetailView({
               href={whatsAppHref(contactPhone, inquiryMessage)}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 py-3.5 text-sm font-bold text-emerald-600 transition hover:border-emerald-300"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-success/20 bg-success-soft py-3.5 text-sm font-semibold text-success transition hover:border-success/40"
             >
               <MessageCircle className="h-4 w-4" />
               WhatsApp Seller

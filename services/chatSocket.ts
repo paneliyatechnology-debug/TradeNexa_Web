@@ -3,7 +3,7 @@
 import { io, type Socket } from "socket.io-client";
 import axios from "axios";
 import { API_BASE_URL, BACKEND_ORIGIN } from "@/config/api";
-import { CHAT_SOCKET_EXTRA_LISTEN_EVENTS, CHAT_SOCKET_LISTEN_EVENTS } from "@/config/chatSocketEvents";
+import { CHAT_SOCKET_LISTEN_EVENTS } from "@/config/chatSocketEvents";
 import { API_ENDPOINTS } from "@/config/endpoints";
 import { getAccessToken, getRefreshToken, unwrapApiPayload } from "@/utils/authHelpers";
 
@@ -19,7 +19,7 @@ const statusListeners = new Set<StatusListener>();
 const joinedConversationIds = new Set<number>();
 /**
  * Leaves that could not be emitted because the socket was down.
- * Flushed on the next connect so peers are not left stuck "online".
+ * Flushed on the next connect.
  */
 const pendingLeaveByConversation = new Map<number, Record<string, unknown>>();
 /** Deduped pending emits while disconnected (avoids stacking `once("connect")` listeners). */
@@ -82,10 +82,9 @@ function dispatchChatEvent(event: string, args: unknown[]) {
   });
 }
 
-/** Bridge every Postman Buyer + Seller listen event onto the live socket. */
+/** Bridge guide listen events onto the live socket. */
 function bindSocketEventBridges(s: Socket) {
-  const events = [...CHAT_SOCKET_LISTEN_EVENTS, ...CHAT_SOCKET_EXTRA_LISTEN_EVENTS];
-  for (const event of events) {
+  for (const event of CHAT_SOCKET_LISTEN_EVENTS) {
     s.on(event, (...args: unknown[]) => {
       if (process.env.NODE_ENV === "development") {
         console.info(`[chat-socket] recv ${event}`, ...args);
@@ -93,17 +92,6 @@ function bindSocketEventBridges(s: Socket) {
       dispatchChatEvent(event, args);
     });
   }
-
-  // Catch mistyped / alternate typing event names from the backend.
-  s.onAny((event, ...args) => {
-    const name = String(event);
-    if (!name.toLowerCase().includes("typing")) return;
-    if (name === "typing:indicator") return; // already bridged
-    if (process.env.NODE_ENV === "development") {
-      console.info("[chat-socket] onAny typing-related", name, args);
-    }
-    dispatchChatEvent("typing:indicator", args);
-  });
 }
 
 function getStoredAccessToken(): string | null {
@@ -339,7 +327,7 @@ export function joinConversation(conversationId: number, _userId?: number | null
   joinedConversationIds.add(conversationId);
   pendingLeaveByConversation.delete(conversationId);
   const s = connectChatSocket();
-  // Guide: emit conversation:join before expecting live typing / messages.
+  // Guide: emit conversation:join before expecting live messages.
   emitWhenConnected(s, "conversation:join", { conversation_id: conversationId });
 }
 
@@ -356,7 +344,7 @@ export function leaveConversation(conversationId: number, _userId?: number | nul
   socket.emit("conversation:leave", payload);
 }
 
-/** Leave every joined room and announce offline (logout / hard disconnect). */
+/** Leave every joined room (logout / hard disconnect). */
 export function leaveAllConversations() {
   const ids = Array.from(joinedConversationIds);
   for (const conversationId of ids) {
@@ -366,53 +354,25 @@ export function leaveAllConversations() {
 }
 
 /**
- * Guide client → server typing:
- *   typing:start / typing:stop  { conversation_id }
- * Server → client: typing:indicator { conversation_id, user_id, is_typing }
+ * Guide client → server: message:read { conversation_id, last_read_message_id? }
+ * Server persists + notifies peer with message:read (S→C).
  */
-export function emitTypingIndicator(
-  conversationId: number,
-  isTyping: boolean,
-  _extras?: { rfqId?: number | null }
-) {
-  if (!Number.isFinite(conversationId) || conversationId <= 0) return;
-  const s = connectChatSocket();
-  if (joinedConversationIds.has(conversationId)) {
-    pendingLeaveByConversation.delete(conversationId);
-  }
+const lastEmittedReadByConversation = new Map<number, number>();
 
-  const event = isTyping ? "typing:start" : "typing:stop";
-  const payload = { conversation_id: conversationId };
-
-  if (s.connected) {
-    s.emit(event, payload);
-    if (process.env.NODE_ENV === "development") {
-      console.info(`[chat-socket] emit ${event}`, payload, { id: s.id });
-    }
-    return;
-  }
-  // Queue one typing emit; do not force a join from typing alone.
-  emitWhenConnected(s, event, payload);
-}
-
-/**
- * Guide: presence:ping — heartbeat so server can emit presence:update.
- */
-export function emitPresencePing() {
-  const s = connectChatSocket();
-  if (s.connected) {
-    s.emit("presence:ping");
-    return;
-  }
-  emitWhenConnected(s, "presence:ping", undefined);
-}
-
-/**
- * Emit `message:read` over the socket (in addition to REST POST .../read).
- * Guide: { conversation_id, last_read_message_id? }
- */
 export function emitMessageRead(conversationId: number, lastReadMessageId?: number) {
   if (!Number.isFinite(conversationId) || conversationId <= 0) return;
+
+  if (
+    lastReadMessageId != null &&
+    Number.isFinite(lastReadMessageId) &&
+    lastReadMessageId > 0
+  ) {
+    const prev = lastEmittedReadByConversation.get(conversationId) ?? 0;
+    // Monotonic — skip duplicate / older cursor for the same room.
+    if (lastReadMessageId <= prev) return;
+    lastEmittedReadByConversation.set(conversationId, lastReadMessageId);
+  }
+
   const s = connectChatSocket();
   const payload: Record<string, unknown> = {
     conversation_id: conversationId,
@@ -430,114 +390,6 @@ export function emitMessageRead(conversationId: number, lastReadMessageId?: numb
   }
 }
 
-function coerceBooleanFlag(value: unknown): boolean | null {
-  if (typeof value === "boolean") return value;
-  if (typeof value === "number") {
-    if (value === 1) return true;
-    if (value === 0) return false;
-  }
-  if (typeof value === "string") {
-    const normalized = value.trim().toLowerCase();
-    if (["true", "1", "yes", "typing", "start"].includes(normalized)) return true;
-    if (["false", "0", "no", "stop", "idle"].includes(normalized)) return false;
-  }
-  return null;
-}
-
-function readTypingRecord(payload: unknown): Record<string, unknown> | null {
-  if (payload == null) return null;
-  if (typeof payload !== "object") return null;
-
-  const root = payload as Record<string, unknown>;
-  const nestedCandidates: Record<string, unknown>[] = [root];
-
-  for (const key of ["data", "payload", "result", "body"] as const) {
-    const nested = root[key];
-    if (nested && typeof nested === "object" && !Array.isArray(nested)) {
-      nestedCandidates.push(nested as Record<string, unknown>);
-    }
-  }
-
-  for (let i = nestedCandidates.length - 1; i >= 0; i -= 1) {
-    const record = nestedCandidates[i];
-    if (
-      "conversation_id" in record ||
-      "conversationId" in record ||
-      "is_typing" in record ||
-      "typing" in record ||
-      "isTyping" in record
-    ) {
-      return { ...root, ...record };
-    }
-  }
-
-  return root;
-}
-
-/** Parse inbound `typing:indicator` payloads. */
-export function parseTypingPayload(
-  payload: unknown,
-  fallbackConversationId?: number | null
-): {
-  conversationId: number;
-  userId: number | null;
-  isTyping: boolean;
-  rfqId: number | null;
-} | null {
-  const record = readTypingRecord(payload);
-  if (!record) {
-    // Never invent isTyping:true — that sticks the indicator when clear is missed.
-    return null;
-  }
-
-  const conversationRaw =
-    record.conversation_id ??
-    record.conversationId ??
-    record.room_id ??
-    (record.conversation && typeof record.conversation === "object"
-      ? (record.conversation as Record<string, unknown>).id
-      : null) ??
-    fallbackConversationId;
-
-  const conversationId = Number(conversationRaw);
-  if (!Number.isFinite(conversationId) || conversationId <= 0) return null;
-
-  const rawUser =
-    record.user_id ??
-    record.sender_id ??
-    record.typer_id ??
-    record.participant_id ??
-    (record.user && typeof record.user === "object"
-      ? (record.user as Record<string, unknown>).id
-      : null);
-  const userIdNum = Number(rawUser);
-  const userId = Number.isFinite(userIdNum) && userIdNum > 0 ? userIdNum : null;
-
-  const rfqRaw = record.rfq_id ?? record.rfqId;
-  const rfqNum = Number(rfqRaw);
-  const rfqId = Number.isFinite(rfqNum) && rfqNum > 0 ? rfqNum : null;
-
-  const flagged =
-    coerceBooleanFlag(record.is_typing) ??
-    coerceBooleanFlag(record.typing) ??
-    coerceBooleanFlag(record.isTyping);
-
-  let isTyping: boolean;
-  if (flagged != null) {
-    isTyping = flagged;
-  } else if (typeof record.status === "string") {
-    const value = record.status.toLowerCase();
-    if (value === "typing" || value === "start") isTyping = true;
-    else if (value === "stop" || value === "idle") isTyping = false;
-    else return null;
-  } else {
-    // Missing typing flag — ignore rather than assume true (stuck "typing…").
-    return null;
-  }
-
-  return { conversationId, userId, isTyping, rfqId };
-}
-
 /** Best-effort unwrap of common socket event envelopes. */
 export function unwrapSocketPayload(payload: unknown): unknown {
   if (payload == null) return payload;
@@ -553,8 +405,7 @@ export function unwrapSocketPayload(payload: unknown): unknown {
       "id" in data ||
       "conversation_id" in data ||
       "message" in data ||
-      "user_id" in data ||
-      "is_online" in data
+      "user_id" in data
     ) {
       return unwrapSocketPayload(record.data);
     }
@@ -563,116 +414,4 @@ export function unwrapSocketPayload(payload: unknown): unknown {
     return unwrapSocketPayload(record.payload);
   }
   return payload;
-}
-
-/** Parse presence from socket realtime events (`presence:update`, `user:online`, etc.). */
-export function parsePresencePayload(
-  payload: unknown,
-  forcedOnline?: boolean
-): { userId: number; online: boolean } | null {
-  const data = unwrapSocketPayload(payload);
-  if (!data || typeof data !== "object") return null;
-  const record = data as Record<string, unknown>;
-  const userId = Number(
-    record.user_id ?? record.id ?? record.other_user_id ?? record.participant_id ?? record.sender_id
-  );
-  if (!Number.isFinite(userId) || userId <= 0) return null;
-
-  if (typeof forcedOnline === "boolean") {
-    return { userId, online: forcedOnline };
-  }
-
-  let online: boolean | null = null;
-  if (typeof record.is_online === "boolean") online = record.is_online;
-  else if (typeof record.online === "boolean") online = record.online;
-  else if (typeof record.presence === "string") {
-    const value = record.presence.toLowerCase();
-    if (value === "online" || value === "active") online = true;
-    if (value === "offline" || value === "away" || value === "inactive") online = false;
-  } else if (typeof record.status === "string") {
-    const value = record.status.toLowerCase();
-    if (value === "online" || value === "active") online = true;
-    if (value === "offline" || value === "away" || value === "inactive") online = false;
-  }
-
-  if (online == null) return null;
-  return { userId, online };
-}
-
-/**
- * Extract online/offline users from `conversation:join` / `conversation:leave`
- * payloads (buyer + seller). Join ⇒ online; leave ⇒ offline when unspecified.
- */
-export function parseConversationPresencePayload(
-  payload: unknown,
-  options?: { forceOnline?: boolean; excludeUserId?: number | null }
-): { userId: number; online: boolean }[] {
-  const data = unwrapSocketPayload(payload);
-  if (!data || typeof data !== "object") return [];
-  const record = data as Record<string, unknown>;
-  const exclude =
-    options?.excludeUserId != null && Number.isFinite(options.excludeUserId)
-      ? options.excludeUserId
-      : null;
-  const results: { userId: number; online: boolean }[] = [];
-  const seen = new Set<number>();
-
-  const push = (userId: number, online: boolean) => {
-    if (!Number.isFinite(userId) || userId <= 0) return;
-    if (exclude != null && userId === exclude) return;
-    if (seen.has(userId)) return;
-    seen.add(userId);
-    results.push({ userId, online });
-  };
-
-  const readParty = (
-    party: unknown,
-    fallbackOnline?: boolean
-  ): void => {
-    if (!party || typeof party !== "object") return;
-    const p = party as Record<string, unknown>;
-    const userId = Number(p.user_id ?? p.id);
-    if (!Number.isFinite(userId) || userId <= 0) return;
-    if (typeof p.is_online === "boolean") push(userId, p.is_online);
-    else if (typeof p.online === "boolean") push(userId, p.online);
-    else if (typeof fallbackOnline === "boolean") push(userId, fallbackOnline);
-  };
-
-  // Direct user on the event (who joined / left).
-  const direct = parsePresencePayload(
-    record,
-    typeof options?.forceOnline === "boolean" ? options.forceOnline : undefined
-  );
-  if (direct) {
-    push(direct.userId, direct.online);
-  } else if (typeof options?.forceOnline === "boolean") {
-    const userId = Number(
-      record.user_id ?? record.sender_id ?? record.participant_id ?? record.joiner_id
-    );
-    if (Number.isFinite(userId) && userId > 0) push(userId, options.forceOnline);
-  }
-
-  readParty(record.other_party, options?.forceOnline);
-  readParty(record.buyer, options?.forceOnline);
-  readParty(record.seller, options?.forceOnline);
-  readParty(record.user, options?.forceOnline);
-
-  const conversation =
-    record.conversation && typeof record.conversation === "object"
-      ? (record.conversation as Record<string, unknown>)
-      : null;
-  if (conversation) {
-    readParty(conversation.other_party);
-    readParty(conversation.buyer);
-    readParty(conversation.seller);
-  }
-
-  const participants = record.participants ?? conversation?.participants;
-  if (Array.isArray(participants)) {
-    for (const party of participants) {
-      readParty(party, options?.forceOnline);
-    }
-  }
-
-  return results;
 }

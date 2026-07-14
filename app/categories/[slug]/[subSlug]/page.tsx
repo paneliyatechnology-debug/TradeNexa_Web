@@ -32,7 +32,9 @@ export default function SubcategoryProductsPage() {
   const debouncedSearch = useDebouncedValue(search);
   const {
     stateId,
+    stateLabel,
     cityId,
+    cityLabel,
     setCityId,
     handleStateChange,
     clearLocationFilters,
@@ -222,7 +224,7 @@ export default function SubcategoryProductsPage() {
 
       {displayError && !metaError && (
         <div className={`${MARKETPLACE_CONTAINER} pt-4`}>
-          <div className="rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-600">
+          <div className="rounded-xl border border-error/20 bg-error-soft p-4 text-sm text-error">
             {displayError}
           </div>
         </div>
@@ -243,6 +245,8 @@ export default function SubcategoryProductsPage() {
           searchPlaceholder={`Search within ${activeSub?.name ?? category.name}...`}
           stateId={stateId}
           cityId={cityId}
+          stateLabel={stateLabel}
+          cityLabel={cityLabel}
           onStateChange={handleStateChange}
           onCityChange={setCityId}
           onClearFilters={clearFilters}

@@ -12,8 +12,8 @@ export default function SellerAnalyticsPage() {
       <PortalPageHeader title="Analytics" subtitle="Track your business performance" />
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <PortalStatCard title="Views" value="3.4k" icon={Eye} color="text-primary" bg="bg-primary-soft" />
-        <PortalStatCard title="Leads" value="48" icon={MessageSquare} color="text-accent" bg="bg-accent/10" />
-        <PortalStatCard title="Conversion" value="18%" icon={TrendingUp} color="text-success" bg="bg-success/10" />
+        <PortalStatCard title="Leads" value="48" icon={MessageSquare} color="text-accent" bg="bg-warning-soft" />
+        <PortalStatCard title="Conversion" value="18%" icon={TrendingUp} color="text-success" bg="bg-success-soft" />
         <PortalStatCard title="Revenue" value="₹12.4L" icon={BarChart3} color="text-primary" bg="bg-primary-soft" />
       </div>
       <div className="surface-card p-6">

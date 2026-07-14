@@ -44,7 +44,7 @@ export default function Counter({ value, suffix = "+", title, duration = 2 }: Co
         initial={{ opacity: 0, scale: 0.5 }}
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true }}
-        className="text-4xl font-extrabold tracking-tight text-primary sm:text-5xl"
+        className="text-4xl font-bold tracking-tight text-primary sm:text-5xl"
       >
         {count.toLocaleString()}
         {suffix}

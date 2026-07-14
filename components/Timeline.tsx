@@ -61,12 +61,12 @@ export default function Timeline() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="rounded-2xl border border-border bg-card p-6 shadow-sm hover:shadow-md transition-shadow"
+                  className="surface-card-hover p-6"
                 >
-                  <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary mb-2">
+                  <span className="inline-block rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary mb-2">
                     {item.year}
                   </span>
-                  <h4 className="text-lg font-bold text-foreground mb-1">{item.title}</h4>
+                  <h4 className="text-lg font-semibold text-foreground mb-1">{item.title}</h4>
                   <p className="text-sm text-muted-fg leading-relaxed">{item.description}</p>
                 </motion.div>
               </div>

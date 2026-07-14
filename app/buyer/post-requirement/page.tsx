@@ -9,7 +9,7 @@ function FormLoadingSkeleton() {
   return (
     <div className="space-y-6">
       {/* Progress skeleton */}
-      <div className="animate-pulse rounded-xl border border-border bg-white p-6">
+      <div className="animate-pulse surface-card p-6">
         <div className="mb-4 flex items-end justify-between">
           <div className="space-y-2">
             <div className="h-3 w-16 rounded bg-primary-soft"></div>
@@ -27,7 +27,7 @@ function FormLoadingSkeleton() {
       </div>
 
       {/* Form skeleton */}
-      <div className="animate-pulse rounded-xl border border-border bg-white p-6">
+      <div className="animate-pulse surface-card p-6">
         <div className="mb-4 h-6 w-48 rounded bg-primary-soft"></div>
         <div className="space-y-4">
           <div className="space-y-2">

@@ -58,7 +58,7 @@ export default function RfqListCard({ rfq, href, variant = "buyer", meta }: RfqL
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="min-w-0 truncate text-base font-semibold text-foreground transition-colors duration-200 group-hover:text-primary sm:text-lg">
+              <p className="min-w-0 truncate text-base font-semibold text-foreground transition-colors duration-200 group-hover:text-primary">
                 {rfq.title}
               </p>
               {isNew ? (
@@ -67,7 +67,7 @@ export default function RfqListCard({ rfq, href, variant = "buyer", meta }: RfqL
                 </span>
               ) : null}
               {chatUnread > 0 ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-whatsapp-dark">
+                <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-[10px] font-bold text-whatsapp-dark">
                   <MessageSquare className="h-3 w-3" aria-hidden />
                   {formatChatBadgeCount(chatUnread)} unread
                 </span>
@@ -77,7 +77,7 @@ export default function RfqListCard({ rfq, href, variant = "buyer", meta }: RfqL
               <p className="mt-1 truncate text-xs font-medium text-muted-fg">{buyerSubtitle}</p>
             ) : null}
             {rfq.category_name || rfq.subcategory_name ? (
-              <p className="mt-1 truncate text-xs font-medium text-muted-placeholder">
+              <p className="mt-1 truncate text-xs font-medium text-muted-fg">
                 {[rfq.category_name, rfq.subcategory_name].filter(Boolean).join(" · ")}
               </p>
             ) : null}
@@ -94,7 +94,7 @@ export default function RfqListCard({ rfq, href, variant = "buyer", meta }: RfqL
             {deadlineUrgency ? (
               <span
                 className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold ${
-                  deadlineUrgent ? "bg-amber-50 text-amber-800" : "bg-primary-soft text-primary"
+                  deadlineUrgent ? "bg-warning-soft text-warning" : "bg-primary-soft text-primary"
                 }`}
               >
                 <Clock className="h-3.5 w-3.5" aria-hidden />
@@ -114,7 +114,7 @@ export default function RfqListCard({ rfq, href, variant = "buyer", meta }: RfqL
               className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold ${
                 rfq.quotations_count && rfq.quotations_count > 0
                   ? "bg-primary-soft text-primary"
-                  : "bg-muted text-muted-placeholder"
+                  : "bg-muted text-muted-fg"
               }`}
             >
               <MessageSquare className="h-3.5 w-3.5" aria-hidden />
@@ -123,7 +123,7 @@ export default function RfqListCard({ rfq, href, variant = "buyer", meta }: RfqL
             {deadlineUrgency ? (
               <span
                 className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold ${
-                  deadlineUrgent ? "bg-amber-50 text-amber-800" : "bg-muted text-muted-fg"
+                  deadlineUrgent ? "bg-warning-soft text-warning" : "bg-muted text-muted-fg"
                 }`}
               >
                 <Clock className="h-3.5 w-3.5" aria-hidden />
@@ -133,7 +133,7 @@ export default function RfqListCard({ rfq, href, variant = "buyer", meta }: RfqL
           </div>
         ) : null}
 
-        <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 pt-3 text-xs text-muted-placeholder">
+        <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 pt-3 text-xs text-muted-fg">
           {quantity ? (
             <span className="inline-flex items-center gap-1">
               <Package className="h-3.5 w-3.5 shrink-0" aria-hidden />
@@ -154,7 +154,7 @@ export default function RfqListCard({ rfq, href, variant = "buyer", meta }: RfqL
       <div className="border-t border-border px-4 pb-4 pt-3 sm:px-5">
         <Link
           href={href}
-          className="relative inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-button)] transition-all duration-200 hover:bg-primary-hover active:scale-[0.98]"
+          className="relative inline-flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white shadow-[var(--shadow-button)] transition-all duration-200 hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-[0.98]"
         >
           {isSeller ? "View & Quote" : "View RFQ & Quotes"}
           <ArrowRight className="h-4 w-4" aria-hidden />

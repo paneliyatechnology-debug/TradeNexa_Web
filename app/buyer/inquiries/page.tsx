@@ -86,7 +86,7 @@ export default function BuyerInquiriesPage() {
         action={
           <div className="flex items-center gap-2">
             {newTodayCount > 0 ? (
-              <span className="inline-flex items-center rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary">
+              <span className="inline-flex items-center rounded-lg bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
                 {newTodayCount} new today
               </span>
             ) : null}
@@ -115,10 +115,10 @@ export default function BuyerInquiriesPage() {
                 key={tab}
                 type="button"
                 onClick={() => setActiveTab(tab)}
-                className={`shrink-0 cursor-pointer rounded-full px-3 py-1.5 text-[11px] font-bold transition ${
+                className={`shrink-0 cursor-pointer rounded-lg px-3 py-1.5 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
                   activeTab === tab
-                    ? "bg-primary text-white shadow-sm"
-                    : "bg-white text-muted-fg ring-1 ring-border hover:ring-primary/30"
+                    ? "bg-primary text-white"
+                    : "bg-card text-muted-fg ring-1 ring-border hover:ring-primary/30"
                 }`}
               >
                 {formatRfqStatusTabLabel(tab)}
@@ -131,7 +131,7 @@ export default function BuyerInquiriesPage() {
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_240px] lg:gap-6">
         <div>
           {error ? (
-            <p className="mb-4 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-600">{error}</p>
+            <p className="mb-4 rounded-xl border border-error/20 bg-error-soft p-3 text-sm text-error">{error}</p>
           ) : null}
 
           {loading ? (
@@ -177,8 +177,8 @@ export default function BuyerInquiriesPage() {
           )}
 
           {showPostPrompt ? (
-            <div className="mt-6 rounded-2xl border border-dashed border-border bg-muted p-5 text-center">
-              <p className="text-sm font-bold text-foreground">Need more quotes?</p>
+            <div className="mt-6 rounded-xl border border-dashed border-border bg-muted p-5 text-center">
+              <p className="text-sm font-semibold text-foreground">Need more quotes?</p>
               <p className="mt-1 text-xs text-muted-fg">
                 Post a new requirement or publish drafts so sellers can start quoting.
               </p>

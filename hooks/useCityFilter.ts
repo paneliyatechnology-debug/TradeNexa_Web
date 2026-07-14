@@ -10,7 +10,8 @@ interface UseCityFilterOptions {
 }
 
 export function useCityFilter(options: UseCityFilterOptions = {}) {
-  const { syncFromGeo = false } = options;
+  // Default on: preselect geo state/city wherever LocationFilterBar is used.
+  const { syncFromGeo = true } = options;
   const geo = useOptionalGeoLocation();
 
   const [stateId, setStateId] = useState("");

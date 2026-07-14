@@ -7,6 +7,7 @@ import { Loader2, Package } from "lucide-react";
 import CTABanner from "@/components/CTABanner";
 import PortalProductDetailView from "@/components/portal/PortalProductDetailView";
 import PortalEmptyState from "@/components/portal/PortalEmptyState";
+import { Button } from "@/components/common/Button";
 import {
   fetchCategoryById,
   fetchProductById,
@@ -116,11 +117,8 @@ export default function ProductDetailPage() {
             title="Invalid product"
             description="The product link is not valid."
             action={
-              <Link
-                href="/products"
-                className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white"
-              >
-                Browse Products
+              <Link href="/products">
+                <Button>Browse Products</Button>
               </Link>
             }
           />
@@ -147,11 +145,8 @@ export default function ProductDetailPage() {
             title="Product not found"
             description={error || "This product may have been removed or is unavailable."}
             action={
-              <Link
-                href="/products"
-                className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white"
-              >
-                Browse Products
+              <Link href="/products">
+                <Button>Browse Products</Button>
               </Link>
             }
           />

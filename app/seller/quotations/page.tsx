@@ -7,6 +7,7 @@ import PortalBackLink from "@/components/portal/PortalBackLink";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalEmptyState from "@/components/portal/PortalEmptyState";
 import PortalPagination from "@/components/portal/PortalPagination";
+import { Button } from "@/components/common/Button";
 import RfqListToolbar from "@/components/rfq/RfqListToolbar";
 import QuotationCard from "@/components/rfq/QuotationCard";
 import ChatSidePanel from "@/components/chat/ChatSidePanel";
@@ -93,7 +94,7 @@ export default function SellerQuotationsPage() {
       />
 
       {error ? (
-        <p className="mb-4 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-600">{error}</p>
+        <p className="mb-4 rounded-xl border border-error/20 bg-error-soft p-3 text-sm text-error">{error}</p>
       ) : null}
 
       {loading ? (
@@ -112,19 +113,12 @@ export default function SellerQuotationsPage() {
           }
           action={
             hasSearch ? (
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                className="cursor-pointer rounded-xl border border-border px-4 py-2 text-sm font-bold text-muted-fg"
-              >
+              <Button type="button" variant="secondary" onClick={() => setSearch("")}>
                 Clear search
-              </button>
+              </Button>
             ) : (
-              <Link
-                href="/seller/leads"
-                className="cursor-pointer rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white"
-              >
-                Browse RFQs
+              <Link href="/seller/leads">
+                <Button>Browse RFQs</Button>
               </Link>
             )
           }
@@ -160,31 +154,32 @@ export default function SellerQuotationsPage() {
                   hasActions ? (
                   <>
                     {revisionPending ? (
-                      <button
+                      <Button
                         type="button"
+                        size="sm"
                         onClick={() => setRevisingQuotation(quotation)}
-                        className="cursor-pointer rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-white hover:bg-primary-hover"
                       >
                         Revise quote
-                      </button>
+                      </Button>
                     ) : canUpdate ? (
-                      <button
+                      <Button
                         type="button"
+                        size="sm"
                         onClick={() => setUpdatingQuotation(quotation)}
-                        className="cursor-pointer rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-white hover:bg-primary-hover"
                       >
                         Update quote
-                      </button>
+                      </Button>
                     ) : null}
                     {canWithdraw ? (
-                      <button
+                      <Button
                         type="button"
+                        size="sm"
+                        variant="danger"
                         disabled={withdrawingId === quotation.id}
                         onClick={() => void handleWithdraw(quotation.id)}
-                        className="cursor-pointer rounded-lg border border-red-200 px-3 py-1.5 text-xs font-bold text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         Withdraw
-                      </button>
+                      </Button>
                     ) : null}
                   </>
                   ) : undefined

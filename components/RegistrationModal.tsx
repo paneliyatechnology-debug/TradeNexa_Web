@@ -141,7 +141,7 @@ export default function RegistrationModal() {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 15 }}
             data-form-scroll-container
-            className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl md:p-8"
+            className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-border bg-card p-6 shadow-[var(--shadow-elevated)] md:p-8"
           >
             <button
               onClick={handleClose}
@@ -156,7 +156,7 @@ export default function RegistrationModal() {
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                   <CheckCircle2 className="h-10 w-10" />
                 </div>
-                <h3 className="text-xl font-bold text-foreground">Registration Successful!</h3>
+                <h3 className="text-xl font-semibold text-foreground">Registration Successful!</h3>
                 <p className="mt-2 text-sm text-muted-fg">
                   Our team will review your profile and contact you within 24 hours.
                 </p>
@@ -168,7 +168,7 @@ export default function RegistrationModal() {
                     <UserPlus className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-foreground">
+                    <h3 className="text-xl font-semibold text-foreground">
                       {activeRole ? roleTitles[activeRole] : "Join TradeNexa"}
                     </h3>
                     <p className="text-sm text-muted-fg">

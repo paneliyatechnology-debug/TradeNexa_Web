@@ -85,15 +85,15 @@ export default function WhyChooseUs() {
             subtitle="Comparing key indicators affecting bulk lead generation and procurement speeds."
           />
 
-          <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-card">
+          <div className="overflow-x-auto surface-card">
             <table className="w-full border-collapse text-left text-sm text-muted-fg">
               <thead className="border-b border-border bg-muted">
                 <tr>
-                  <th className="px-6 py-4 font-bold text-navy">Feature Segment</th>
-                  <th className="bg-red-50/50 px-6 py-4 font-bold text-red-600">
+                  <th className="px-6 py-4 font-semibold text-foreground">Feature Segment</th>
+                  <th className="bg-error-soft/50 px-6 py-4 font-semibold text-error">
                     Traditional Business Channels
                   </th>
-                  <th className="bg-primary-soft px-6 py-4 font-bold text-primary">
+                  <th className="bg-primary-soft px-6 py-4 font-semibold text-primary">
                     Our Premium B2B Marketplace
                   </th>
                 </tr>
@@ -108,15 +108,15 @@ export default function WhyChooseUs() {
                     transition={{ delay: idx * 0.05 }}
                     className="transition-colors hover:bg-muted/50"
                   >
-                    <td className="px-6 py-5 font-semibold text-navy">{item.feature}</td>
-                    <td className="bg-red-50/30 px-6 py-5">
+                    <td className="px-6 py-5 font-semibold text-foreground">{item.feature}</td>
+                    <td className="bg-error-soft/30 px-6 py-5">
                       <div className="flex items-start gap-2">
-                        <X className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+                        <X className="mt-0.5 h-4 w-4 shrink-0 text-error" />
                         <span>{item.traditional}</span>
                       </div>
                     </td>
                     <td className="bg-primary-soft px-6 py-5">
-                      <div className="flex items-start gap-2 font-medium text-navy">
+                      <div className="flex items-start gap-2 font-medium text-foreground">
                         <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                         <span>{item.platform}</span>
                       </div>
@@ -131,9 +131,9 @@ export default function WhyChooseUs() {
             {highlights.map((item, idx) => (
               <div
                 key={idx}
-                className="rounded-2xl border border-border bg-card p-6 shadow-card transition hover:-translate-y-0.5 hover:shadow-elevated"
+                className="surface-card-hover p-6"
               >
-                <h3 className="mb-2 flex items-center gap-2 font-bold text-navy">
+                <h3 className="mb-2 flex items-center gap-2 font-semibold text-foreground">
                   <Check className="h-5 w-5 text-primary" />
                   {item.title}
                 </h3>

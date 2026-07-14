@@ -35,10 +35,10 @@ function ActionButton({
         e.stopPropagation();
         onClick();
       }}
-      className={`flex h-8 w-8 items-center justify-center rounded-full shadow-md backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 ${
+      className={`flex h-8 w-8 items-center justify-center rounded-lg ring-1 ring-border backdrop-blur-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
         variant === "danger"
-          ? "bg-red-500 text-white hover:bg-red-600"
-          : "bg-white/95 text-foreground hover:bg-white"
+          ? "bg-error text-white ring-error/30 hover:bg-error-hover"
+          : "bg-card/95 text-foreground hover:bg-card"
       }`}
       aria-label={label}
     >
@@ -88,7 +88,7 @@ export default function ThumbnailUpload({
       : "border-muted-fg hover:border-primary/50 hover:bg-primary/[0.03]";
 
   const containerClass = previewUrl
-    ? `border-2 border-solid bg-card shadow-sm ${error ? "border-error/50" : "border-border"}`
+    ? `border-2 border-solid bg-card ${error ? "border-error/50" : "border-border"}`
     : `border-2 border-dashed ${borderClass}`;
 
   return (
@@ -99,7 +99,7 @@ export default function ThumbnailUpload({
 
       <motion.div
         layout
-        className={`group relative mx-auto h-[180px] w-[180px] overflow-hidden rounded-2xl transition-all duration-300 lg:mx-0 ${containerClass}`}
+        className={`group relative mx-auto h-[180px] w-[180px] overflow-hidden rounded-xl transition-all duration-300 lg:mx-0 ${containerClass}`}
         onDragOver={(e) => {
           e.preventDefault();
           setDragOver(true);
@@ -118,13 +118,13 @@ export default function ThumbnailUpload({
               alt="Product thumbnail"
               className="h-full w-full object-cover"
             />
-            <span className="pointer-events-none absolute left-2.5 top-2.5 rounded-lg bg-navy/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
+            <span className="pointer-events-none absolute left-2.5 top-2.5 rounded-lg bg-navy/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm">
               Thumbnail
             </span>
             <button
               type="button"
               onClick={onRemove}
-              className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-muted-fg shadow-md transition hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 lg:opacity-0 lg:group-hover:opacity-100"
+              className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-lg bg-card/95 text-muted-fg ring-1 ring-border transition hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 lg:opacity-0 lg:group-hover:opacity-100"
               aria-label="Remove thumbnail"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -147,13 +147,13 @@ export default function ThumbnailUpload({
           <button
             type="button"
             onClick={openPicker}
-            className="flex h-full w-full flex-col items-center justify-center gap-2.5 p-4 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
+            className="flex h-full w-full flex-col items-center justify-center gap-2.5 p-4 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-2"
             aria-label="Upload thumbnail"
           >
             <motion.div
               whileHover={{ scale: 1.1 }}
               transition={{ type: "spring", stiffness: 400, damping: 18 }}
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10"
+              className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10"
             >
               <ImageIcon className="h-6 w-6 text-primary" />
             </motion.div>

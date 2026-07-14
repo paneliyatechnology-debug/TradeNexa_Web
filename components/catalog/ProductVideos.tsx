@@ -10,7 +10,7 @@ interface ProductVideosProps {
   productName: string;
 }
 
-const cardClass = "rounded-2xl border border-border bg-card shadow-sm overflow-hidden";
+const cardClass = "rounded-xl border border-border bg-card overflow-hidden";
 
 export default function ProductVideos({ videos, productName }: ProductVideosProps) {
   if (videos.length === 0) return null;

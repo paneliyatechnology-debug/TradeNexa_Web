@@ -13,6 +13,7 @@ import { ensureRolesLoaded, userRoleToRoleId } from "@/utils/authHelpers";
 import type { ApiBusinessType } from "@/types/businessType";
 import { scrollToFirstFormError } from "@/utils/scrollToFormError";
 import { Button } from "@/components/common/Button";
+import { Input } from "@/components/common/Input";
 import {
   Smartphone,
   ShieldCheck,
@@ -59,7 +60,7 @@ function StepHeader({
 }) {
   const accentClasses =
     accent === "emerald"
-      ? "bg-emerald-50 text-emerald-600 ring-emerald-100"
+      ? "bg-success-soft text-success ring-success/10"
       : "bg-primary/10 text-primary ring-primary/10";
 
   return (
@@ -83,12 +84,12 @@ function ErrorBanner({ message, centered }: { message: string; centered?: boolea
     <motion.div
       initial={{ opacity: 0, y: -4 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`flex items-start gap-2.5 rounded-xl border border-red-100 bg-red-50/80 px-4 py-3 ${
+      className={`flex items-start gap-2.5 rounded-xl border border-error/20 bg-error-soft px-4 py-3 ${
         centered ? "justify-center text-center" : ""
       }`}
     >
-      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-      <p className="text-sm font-medium text-red-600">{message}</p>
+      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-error" />
+      <p className="text-sm font-medium text-error">{message}</p>
     </motion.div>
   );
 }
@@ -98,53 +99,13 @@ function FieldError({ message, centered }: { message: string; centered?: boolean
     <motion.p
       initial={{ opacity: 0, y: -2 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`flex items-center gap-1.5 text-xs font-medium text-red-500 ${
+      className={`flex items-center gap-1.5 text-xs font-medium text-error ${
         centered ? "justify-center" : ""
       }`}
     >
       <AlertCircle className="h-3.5 w-3.5 shrink-0" />
       {message}
     </motion.p>
-  );
-}
-
-function PrimaryButton({
-  children,
-  loading,
-  loadingText,
-  disabled,
-  type = "button",
-  form,
-  onClick,
-}: {
-  children: React.ReactNode;
-  loading?: boolean;
-  loadingText?: string;
-  disabled?: boolean;
-  type?: "button" | "submit";
-  form?: string;
-  onClick?: () => void;
-}) {
-  return (
-    <motion.button
-      type={type}
-      form={form}
-      onClick={onClick}
-      disabled={disabled || loading}
-      whileHover={!disabled && !loading ? { scale: 1.01 } : undefined}
-      whileTap={!disabled && !loading ? { scale: 0.98 } : undefined}
-      transition={{ duration: 0.15 }}
-      className="group flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-white shadow-[0_1px_2px_rgba(29,78,216,0.2),0_8px_20px_-4px_rgba(29,78,216,0.35)] transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-fg disabled:shadow-none"
-    >
-      {loading ? (
-        <>
-          <Loader2 className="h-4 w-4 animate-spin" />
-          {loadingText}
-        </>
-      ) : (
-        children
-      )}
-    </motion.button>
   );
 }
 
@@ -164,7 +125,7 @@ function GhostButton({
       type="button"
       onClick={onClick}
       disabled={disabled || loading}
-      className="inline-flex items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/5 hover:text-primary-hover disabled:cursor-not-allowed disabled:text-muted-fg"
+      className="inline-flex items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary/5 hover:text-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 disabled:cursor-not-allowed disabled:text-muted-fg"
     >
       {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
       {children}
@@ -183,77 +144,10 @@ function TextLinkButton({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-fg transition-colors hover:text-foreground"
+      className="inline-flex items-center gap-1.5 rounded-lg px-1 py-0.5 text-xs font-medium text-muted-fg transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
     >
       {children}
     </button>
-  );
-}
-
-function FloatingInput({
-  id,
-  type = "text",
-  value,
-  onChange,
-  label,
-  icon: Icon,
-  error,
-  readOnly,
-  maxLength,
-  inputMode,
-  className = "",
-}: {
-  id: string;
-  type?: string;
-  value: string;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  label: string;
-  icon?: React.ElementType;
-  error?: boolean;
-  readOnly?: boolean;
-  maxLength?: number;
-  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
-  className?: string;
-}) {
-  const hasValue = value.length > 0;
-
-  return (
-    <div className={`relative ${className}`}>
-      {Icon && (
-        <Icon className="pointer-events-none absolute left-4 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-fg" />
-      )}
-      <input
-        id={id}
-        type={type}
-        value={value}
-        onChange={onChange}
-        readOnly={readOnly}
-        maxLength={maxLength}
-        inputMode={inputMode}
-        placeholder=" "
-      className={`peer h-12 w-full rounded-xl border bg-white text-sm text-foreground outline-none transition-all duration-200 ${
-        Icon ? "pl-11 pr-4" : "px-4"
-      } ${
-        readOnly
-          ? "cursor-not-allowed border-border bg-muted text-muted-fg"
-          : error
-            ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
-            : "border-border focus:border-primary focus:ring-4 focus:ring-primary/10"
-      }`}
-      />
-      <label
-        htmlFor={id}
-        className={`pointer-events-none absolute z-10 origin-left transition-all duration-200 ${
-          Icon ? "left-11" : "left-4"
-        } ${
-          hasValue
-            ? "top-2 text-[10px] font-semibold uppercase tracking-wider text-muted-fg"
-            : "top-1/2 -translate-y-1/2 text-sm text-muted-fg peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-[10px] peer-focus:font-semibold peer-focus:uppercase peer-focus:tracking-wider peer-focus:text-primary"
-        }`}
-      >
-        {label}
-      </label>
-    </div>
   );
 }
 
@@ -261,7 +155,7 @@ function BusinessTypeSkeleton() {
   return (
     <div className="space-y-2" aria-hidden>
       <div className="h-3 w-24 animate-pulse rounded bg-muted" />
-      <div className="flex h-12 items-center gap-3 rounded-xl border border-border bg-muted px-4">
+      <div className="flex h-10 items-center gap-3 rounded-lg border border-border bg-muted px-4">
         <div className="h-4 w-4 animate-pulse rounded bg-muted" />
         <div className="h-3 flex-1 animate-pulse rounded bg-muted" />
       </div>
@@ -641,7 +535,7 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
 
             <div className="space-y-2">
               <label className="block text-xs font-semibold uppercase tracking-wider text-muted-fg">
-                Phone number <span className="text-red-500">*</span>
+                Phone number <span className="text-error">*</span>
               </label>
 
               <div className="flex gap-2">
@@ -649,33 +543,28 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
                   <button
                     type="button"
                     disabled
-                    className="flex h-12 items-center gap-2 rounded-xl border border-border bg-muted px-3 text-sm font-medium text-foreground shadow-sm cursor-not-allowed"
+                    className="flex h-10 cursor-not-allowed items-center gap-2 rounded-lg border border-border bg-muted px-3 text-sm font-medium text-foreground"
                   >
-                    <IndianFlag className="h-4 w-6 shrink-0 rounded-sm shadow-sm ring-1 ring-border" />
+                    <IndianFlag className="h-4 w-6 shrink-0 rounded-sm ring-1 ring-border" />
                     <span>+91</span>
                     <ChevronDown className="h-4 w-4 text-muted-fg" />
                   </button>
                 </div>
 
-                <div className="relative min-w-0 flex-1">
-                  <input
-                    id="auth-phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => {
-                      const digits = e.target.value.replace(/[^0-9]/g, "").slice(0, 10);
-                      setPhone(digits);
-                      if (errors.phone) setErrors({});
-                    }}
-                    maxLength={10}
-                    placeholder="10-digit mobile number"
-                    className={`h-12 w-full rounded-xl border bg-white px-4 text-sm text-foreground shadow-sm placeholder:text-muted-fg outline-none transition-all duration-200 ${
-                      errors.phone
-                        ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
-                        : "border-border focus:border-primary focus:ring-4 focus:ring-primary/10"
-                    }`}
-                  />
-                </div>
+                <Input
+                  id="auth-phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/[^0-9]/g, "").slice(0, 10);
+                    setPhone(digits);
+                    if (errors.phone) setErrors({});
+                  }}
+                  maxLength={10}
+                  placeholder="10-digit mobile number"
+                  error={!!errors.phone}
+                  className="min-w-0 flex-1"
+                />
               </div>
 
               {errors.phone && <FieldError message={errors.phone} />}
@@ -683,14 +572,16 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
 
             {sendOtpState.error && <ErrorBanner message={sendOtpState.error} />}
 
-            <PrimaryButton
+            <Button
               type="submit"
               loading={sendOtpState.loading}
               loadingText="Sending verification code..."
+              size="lg"
+              fullWidth
             >
               Send OTP code
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </PrimaryButton>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
           </motion.form>
         );
 
@@ -742,12 +633,12 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.04, duration: 0.2 }}
-                    className={`h-12 w-10 sm:h-14 sm:w-12 rounded-xl border bg-white text-center text-lg font-semibold text-foreground shadow-sm outline-none transition-all duration-200 ${
+                    className={`h-11 w-10 sm:h-12 sm:w-12 rounded-lg border bg-card text-center text-lg font-semibold text-foreground outline-none transition-all duration-200 ${
                       errors.otp || verifyOtpState.error
-                        ? "border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                        ? "border-error/40 focus:border-error focus:ring-2 focus:ring-error/20"
                         : digit
-                          ? "border-primary/40 bg-primary/[0.03] focus:border-primary focus:ring-4 focus:ring-primary/10"
-                          : "border-border focus:border-primary focus:ring-4 focus:ring-primary/10"
+                          ? "border-primary/40 bg-primary/[0.03] focus:border-primary focus:ring-2 focus:ring-primary/25"
+                          : "border-border focus:border-primary focus:ring-2 focus:ring-primary/25"
                     }`}
                   />
                 ))}
@@ -760,7 +651,7 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
               <ErrorBanner message={verifyOtpState.error} centered />
             )}
 
-            <div className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-muted px-4 py-4">
+            <div className="flex flex-col items-center gap-2 rounded-xl border border-border bg-muted px-4 py-4">
               {timerActive ? (
                 <p className="text-sm text-muted-fg">
                   Resend code in{" "}
@@ -780,13 +671,15 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
               </TextLinkButton>
             </div>
 
-            <PrimaryButton
+            <Button
               type="submit"
               loading={verifyOtpState.loading}
               loadingText="Verifying code..."
+              size="lg"
+              fullWidth
             >
               Verify & continue
-            </PrimaryButton>
+            </Button>
           </motion.form>
         );
 
@@ -807,7 +700,7 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
               description="Select how you want to use TradeNexa. You can update details later."
             />
 
-            <div className="rounded-2xl border border-border bg-muted p-4 shadow-sm sm:p-5">
+            <div className="rounded-xl border border-border bg-muted p-4 sm:p-5">
               <FormField
                 label="Account type"
                 htmlFor="role-select"
@@ -861,14 +754,14 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
             </div>
 
             <FormField label="Full name" htmlFor="reg-name" required error={errors.name}>
-              <FloatingInput
+              <Input
                 id="reg-name"
                 value={regForm.name}
                 onChange={(e) => {
                   setRegForm({ ...regForm, name: e.target.value });
                   if (errors.name) setErrors({ ...errors, name: "" });
                 }}
-                label="Your full name"
+                placeholder="Your full name"
                 icon={User}
                 error={!!errors.name}
               />
@@ -876,11 +769,11 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
 
             <FormField label="Mobile number" htmlFor="reg-mobile" required>
               <div className="flex gap-2">
-                <div className="flex h-12 shrink-0 items-center gap-2 rounded-xl border border-border bg-muted px-3 text-sm font-medium text-foreground shadow-sm">
-                  <IndianFlag className="h-4 w-6 shrink-0 rounded-sm shadow-sm ring-1 ring-border" />
+                <div className="flex h-10 shrink-0 items-center gap-2 rounded-lg border border-border bg-muted px-3 text-sm font-medium text-foreground">
+                  <IndianFlag className="h-4 w-6 shrink-0 rounded-sm ring-1 ring-border" />
                   <span>+91</span>
                 </div>
-                <input
+                <Input
                   id="reg-mobile"
                   type="text"
                   readOnly
@@ -889,13 +782,13 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
                       ? sessionMobileNumber.replace(/^\+91/, "")
                       : authModalPhone
                   }
-                  className="h-12 min-w-0 flex-1 cursor-not-allowed rounded-xl border border-border bg-muted px-4 text-sm font-medium text-muted-fg shadow-sm"
+                  className="min-w-0 flex-1 cursor-not-allowed bg-muted text-muted-fg"
                 />
               </div>
             </FormField>
 
             <FormField label="Email address" htmlFor="reg-email" required error={errors.email}>
-              <FloatingInput
+              <Input
                 id="reg-email"
                 type="email"
                 value={regForm.email}
@@ -903,7 +796,7 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
                   setRegForm({ ...regForm, email: e.target.value });
                   if (errors.email) setErrors({ ...errors, email: "" });
                 }}
-                label="you@company.com"
+                placeholder="you@company.com"
                 icon={Mail}
                 error={!!errors.email}
               />
@@ -943,7 +836,7 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
                       placeholder="Select business type"
                       error={!!errors.businessTypeId}
                       disabled={!businessTypes.length && !businessTypesLoading}
-                      className="h-12 pl-11 shadow-sm"
+                      className="pl-11"
                       hasMore={businessTypesHasMore}
                       loadingMore={businessTypesLoadingMore}
                       onLoadMore={loadMoreBusinessTypes}
@@ -987,10 +880,10 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
         data-form-field="auth-terms"
         className={`group flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-all duration-200 ${
           agreedTerms
-            ? "border-primary/20 bg-primary/[0.03] shadow-sm"
+            ? "border-primary/20 bg-primary/[0.03]"
             : errors.terms
-              ? "border-red-200 bg-red-50/40"
-              : "border-border bg-muted hover:border-border"
+              ? "border-error/25 bg-error-soft/60"
+              : "border-border bg-muted hover:border-border-hover"
         }`}
       >
         <div className="relative mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center">
@@ -1005,7 +898,7 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
             className="peer sr-only"
           />
           <div
-            className={`flex h-5 w-5 items-center justify-center rounded-md border bg-white transition-all peer-focus-visible:ring-2 peer-focus-visible:ring-primary/30 ${
+            className={`flex h-5 w-5 items-center justify-center rounded-md border bg-card transition-all peer-focus-visible:ring-2 peer-focus-visible:ring-primary/25 ${
               agreedTerms ? "border-primary bg-primary" : "border-border"
             }`}
           >

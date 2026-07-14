@@ -32,7 +32,7 @@ export default function TrendingProductCard({ product, delay = 0 }: TrendingProd
       viewport={{ once: true }}
       transition={{ duration: 0.4, delay }}
       whileHover={{ y: -4 }}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5"
+      className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-primary/20"
     >
       <div className={`relative flex h-36 items-center justify-center ${product.imageColor}`}>
         <span className="text-4xl font-black text-white/20">{product.name.charAt(0)}</span>
@@ -49,7 +49,7 @@ export default function TrendingProductCard({ product, delay = 0 }: TrendingProd
         <h3 className="mb-1 line-clamp-2 text-sm font-bold text-foreground group-hover:text-primary transition-colors">
           {product.name}
         </h3>
-        <p className="mb-3 text-lg font-extrabold text-primary">
+        <p className="mb-3 text-lg font-bold text-primary">
           {product.priceRange}
           <span className="ml-1 text-xs font-normal text-muted-fg">/ {product.unit}</span>
         </p>

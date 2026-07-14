@@ -144,7 +144,7 @@ export function countsAsUnreadChatMessage(message: {
 
 /**
  * Unread to show in UI. Backend often includes SYSTEM status events in
- * unread_count; those should not keep RFQ / nav badges lit.
+ * unread_count; strip only that tip — do not wipe earlier human unread.
  */
 export function effectiveConversationUnread(conversation: {
   unread_count?: number | null;
@@ -159,9 +159,9 @@ export function effectiveConversationUnread(conversation: {
 }): number {
   const count = conversation.unread_count ?? 0;
   if (count <= 0) return 0;
-  // Status-only tip of the thread (e.g. "RFQ cancelled") is not chat unread.
+  // Status tip alone should not keep the badge lit; human unread behind it should.
   if (conversation.last_message && isSystemChatMessage(conversation.last_message)) {
-    return 0;
+    return Math.max(0, count - 1);
   }
   return count;
 }

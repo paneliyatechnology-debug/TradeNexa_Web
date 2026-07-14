@@ -81,17 +81,17 @@ export default function ProductWizardStepper({
                     aria-current={isActive ? "step" : undefined}
                     aria-label={`${step.label}${isCompleted ? ", completed" : isActive ? ", current" : ""}`}
                     onClick={() => canClick && onStepClick(idx)}
-                    className="group flex cursor-pointer flex-col items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 disabled:cursor-not-allowed"
+                    className="group flex cursor-pointer flex-col items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-2 disabled:cursor-not-allowed"
                   >
                     <motion.span
                       layout
                       className={[
-                        "relative flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-bold transition-all duration-300 sm:h-11 sm:w-11",
+                        "relative flex h-10 w-10 items-center justify-center rounded-lg border-2 text-sm font-semibold transition-colors duration-300 sm:h-11 sm:w-11",
                         isActive
-                          ? "border-primary bg-primary text-white shadow-[0_0_0_4px_rgba(21,101,192,0.2)]"
+                          ? "border-primary bg-primary text-white ring-2 ring-primary/25"
                           : isCompleted
                             ? "border-primary bg-primary text-white"
-                            : "border-border bg-white text-muted-placeholder group-hover:border-primary/50",
+                            : "border-border bg-card text-muted-placeholder group-hover:border-primary/50",
                       ].join(" ")}
                       whileHover={canClick ? { scale: 1.05 } : undefined}
                       whileTap={canClick ? { scale: 0.97 } : undefined}

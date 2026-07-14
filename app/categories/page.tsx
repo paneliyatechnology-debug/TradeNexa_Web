@@ -95,7 +95,7 @@ export default function CategoriesPage() {
 
       <section className={`${MARKETPLACE_CONTAINER} flex-1 py-8 lg:py-12`}>
         {error && (
-          <div className="mb-6 rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-medium text-red-700">
+          <div className="mb-6 rounded-xl border border-error/20 bg-error-soft p-4 text-sm font-medium text-error">
             {error}
           </div>
         )}
@@ -104,8 +104,8 @@ export default function CategoriesPage() {
           <div className="mb-6 flex items-center justify-between">
             <p className="text-sm font-medium text-muted-fg">
               Showing{" "}
-              <span className="font-semibold text-navy">{categories.length}</span> of{" "}
-              <span className="font-semibold text-navy">{pagination.total}</span> categories
+              <span className="font-semibold text-foreground">{categories.length}</span> of{" "}
+              <span className="font-semibold text-foreground">{pagination.total}</span> categories
             </p>
           </div>
         )}
@@ -137,7 +137,7 @@ export default function CategoriesPage() {
             />
           </>
         ) : (
-          <div className="rounded-2xl bg-card shadow-card">
+          <div className="surface-card">
             <CatalogEmptyState
               title="No categories match your search"
               description="Try a different keyword or clear the search to browse all categories."

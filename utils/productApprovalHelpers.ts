@@ -88,13 +88,13 @@ export function formatApprovalStatusTabLabel(tab: string): string {
 export function approvalStatusClass(status?: string | null): string {
   switch (status) {
     case "in_review":
-      return "bg-amber-50 text-amber-800 ring-1 ring-amber-200";
+      return "bg-warning-soft text-warning ring-1 ring-warning/25";
     case "revision_required":
-      return "bg-orange-50 text-orange-800 ring-1 ring-orange-200";
+      return "bg-warning-soft text-warning ring-1 ring-warning/30";
     case "approved":
-      return "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200";
+      return "bg-success-soft text-success ring-1 ring-success/25";
     case "rejected":
-      return "bg-red-50 text-red-700 ring-1 ring-red-200";
+      return "bg-error-soft text-error ring-1 ring-error/25";
     default:
       return "bg-muted text-muted-fg ring-1 ring-border";
   }

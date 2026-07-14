@@ -21,7 +21,7 @@ export const Input: React.FC<InputProps> = ({
   ...rest
 }) => {
   const isPickerInput = type === "date" || type === "datetime-local" || type === "month" || type === "time";
-  const inputStyles = `${isPickerInput ? dateInputClassName(error) : inputClassName(error)} ${Icon ? "pl-11" : ""} ${className}`;
+  const inputStyles = `${isPickerInput ? dateInputClassName(error) : inputClassName(error)} ${Icon ? "pl-10" : ""} ${className}`;
 
   const pickerHandlers = isPickerInput
     ? {
@@ -45,7 +45,7 @@ export const Input: React.FC<InputProps> = ({
 
   if (label) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <label
           htmlFor={id}
           className="block text-sm font-medium text-foreground"
@@ -54,7 +54,7 @@ export const Input: React.FC<InputProps> = ({
         </label>
         <div className="relative">
           {Icon && (
-            <Icon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-fg" aria-hidden />
+            <Icon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-fg" aria-hidden />
           )}
           {inputEl}
         </div>
@@ -65,7 +65,7 @@ export const Input: React.FC<InputProps> = ({
   if (Icon) {
     return (
       <div className="relative">
-        <Icon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-fg" aria-hidden />
+        <Icon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-fg" aria-hidden />
         {inputEl}
       </div>
     );

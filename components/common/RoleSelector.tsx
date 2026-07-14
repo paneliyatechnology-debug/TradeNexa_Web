@@ -87,20 +87,20 @@ export function RoleSelector({ value, onChange, error, compact }: RoleSelectorPr
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => onChange(role.userRole)}
-              className={`group relative flex flex-col items-center rounded-xl border text-center transition-all duration-200 ${
+              className={`group relative flex flex-col items-center rounded-xl border text-center transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
                 compact ? "p-3" : "p-4"
               } ${
                 isSelected
-                  ? "border-primary bg-primary/[0.04] shadow-[0_0_0_1px_rgba(37,99,235,0.15),0_4px_16px_-4px_rgba(37,99,235,0.15)]"
-                  : "border-border bg-card hover:border-muted hover:shadow-sm"
-              } ${error && !value ? "border-error/30" : ""}`}
+                  ? "border-primary bg-primary-soft/60 ring-1 ring-primary/20"
+                  : "border-border bg-card hover:border-border-strong"
+              } ${error && !value ? "border-error/40" : ""}`}
             >
               <div
-                className={`flex items-center justify-center rounded-xl transition-all duration-200 ${
+                className={`flex items-center justify-center rounded-xl transition-colors duration-200 ${
                   compact ? "mb-2 h-9 w-9" : "mb-3 h-10 w-10"
                 } ${
                   isSelected
-                    ? "bg-primary text-white shadow-sm"
+                    ? "bg-primary text-white"
                     : "bg-muted text-muted-fg group-hover:bg-primary/10 group-hover:text-primary"
                 }`}
               >

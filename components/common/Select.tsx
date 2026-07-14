@@ -3,8 +3,6 @@
 import React, { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, ChevronDown, Loader2 } from "lucide-react";
-import { inputClassName } from "./FormField";
-
 export interface SelectOption {
   value: string;
   label: string;
@@ -246,13 +244,17 @@ export function Select({
     }
   }
 
-  const openRing = open ? "border-primary ring-2 ring-primary/20" : "";
-  const errorRing = error ? "border-error/50 focus:border-error focus:ring-error/20" : "";
-  const horizontalPad = leadingIcon ? "pl-9" : "pl-3";
+  const openRing = open ? "border-primary ring-2 ring-primary/25" : "";
+  const errorRing = error
+    ? "border-error/40 bg-error-soft focus:border-error focus:ring-2 focus:ring-error/20"
+    : "";
+  const horizontalPad = leadingIcon ? "pl-9" : "pl-3.5";
 
-  const triggerClass = `flex h-12 w-full items-center rounded-lg border bg-card text-left text-sm outline-none transition-all duration-200 appearance-none ${horizontalPad} pr-10 ${
-    error ? errorRing : `border-border focus:border-primary focus:ring-2 focus:ring-primary/20 ${openRing}`
-  } ${disabled ? "cursor-not-allowed opacity-60" : ""} ${className}`;
+  const triggerClass = `flex h-10 w-full items-center rounded-lg border bg-card text-left text-sm outline-none transition-colors duration-200 appearance-none ${horizontalPad} pr-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
+    error
+      ? errorRing
+      : `border-border hover:border-border-hover focus:border-primary focus:ring-2 focus:ring-primary/25 ${openRing}`
+  } ${disabled ? "cursor-not-allowed bg-muted opacity-55" : ""} ${className}`;
 
   const menu =
     open && !disabled && menuPosition ? (
@@ -266,9 +268,7 @@ export function Select({
           maxHeight: menuPosition.maxHeight,
           zIndex: 9999,
         }}
-        className={`flex flex-col overflow-hidden border border-border bg-card shadow-[0_12px_40px_-12px_rgba(15,23,42,0.22)] ${
-          menuPosition.placement === "bottom" ? "rounded-xl" : "rounded-xl"
-        }`}
+        className="flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-card)]"
       >
         <ul
           ref={listRef}

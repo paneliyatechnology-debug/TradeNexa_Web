@@ -154,14 +154,14 @@ export default function MediaPreviewModal({
                   <video
                     src={item.url}
                     controls
-                    className="max-h-[75vh] max-w-full rounded-2xl shadow-2xl"
+                    className="max-h-[75vh] max-w-full rounded-xl"
                   />
                 ) : (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     src={item.url}
                     alt={item.name}
-                    className="max-h-[75vh] max-w-full rounded-2xl object-contain shadow-2xl transition-transform duration-200"
+                    className="max-h-[75vh] max-w-full rounded-xl object-contain transition-transform duration-200"
                     style={{ transform: `scale(${zoom})` }}
                   />
                 )}
@@ -195,9 +195,9 @@ function IconButton({
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
-      className={`flex h-9 w-9 items-center justify-center rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+      className={`flex h-10 w-10 items-center justify-center rounded-lg transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
         danger
-          ? "text-red-400 hover:bg-red-500/20"
+          ? "text-error hover:bg-error/20"
           : "text-white/70 hover:bg-white/10 hover:text-white"
       }`}
       aria-label={label}
@@ -214,7 +214,7 @@ function NavButton({ dir, onClick }: { dir: "prev" | "next"; onClick: () => void
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
-      className={`absolute top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/10 px-3 py-6 text-white backdrop-blur-sm transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+      className={`absolute top-1/2 z-10 -translate-y-1/2 rounded-lg bg-white/10 px-3 py-6 text-white backdrop-blur-sm transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
         dir === "prev" ? "left-3 sm:left-6" : "right-3 sm:right-6"
       }`}
       aria-label={dir === "prev" ? "Previous" : "Next"}

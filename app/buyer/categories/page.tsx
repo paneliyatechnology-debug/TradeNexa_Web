@@ -54,7 +54,7 @@ export default function BuyerCategoriesPage() {
       />
 
       {error ? (
-        <p className="mb-4 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-600">{error}</p>
+        <p className="mb-4 rounded-xl border border-error/20 bg-error-soft p-3 text-sm text-error">{error}</p>
       ) : null}
 
       {!loading && categories.length > 0 ? (
@@ -100,7 +100,7 @@ export default function BuyerCategoriesPage() {
                 <Link
                   key={cat.id}
                   href={`/buyer/category/${cat.id}`}
-                  className="flex items-center gap-3 rounded-xl border border-border bg-white p-4 transition-shadow hover:cursor-pointer hover:border-muted-fg hover:shadow-sm"
+                  className="surface-card-hover flex items-center gap-3 p-4"
                 >
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft">
                     <Icon className="h-5 w-5 text-primary" />

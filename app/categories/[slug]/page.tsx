@@ -25,7 +25,9 @@ export default function CategoryDetailPage() {
   const debouncedSearch = useDebouncedValue(search);
   const {
     stateId,
+    stateLabel,
     cityId,
+    cityLabel,
     setCityId,
     handleStateChange,
     clearLocationFilters,
@@ -180,7 +182,7 @@ export default function CategoryDetailPage() {
 
       {error && (
         <div className={`${MARKETPLACE_CONTAINER} pt-4`}>
-          <div className="rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-600">
+          <div className="rounded-xl border border-error/20 bg-error-soft p-4 text-sm text-error">
             {error}
           </div>
         </div>
@@ -201,6 +203,8 @@ export default function CategoryDetailPage() {
           searchPlaceholder={`Search within ${category.name}...`}
           stateId={stateId}
           cityId={cityId}
+          stateLabel={stateLabel}
+          cityLabel={cityLabel}
           onStateChange={handleStateChange}
           onCityChange={setCityId}
           onClearFilters={clearFilters}

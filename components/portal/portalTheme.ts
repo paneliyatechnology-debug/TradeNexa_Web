@@ -1,20 +1,23 @@
+/** Portal theme — mirrors CSS vars from `app/globals.css` (no divergent hex). */
+
 export const portalColors = {
-  primary: "#1565C0",
-  primaryLight: "#5E92F3",
-  primaryDark: "#003C8F",
-  secondary: "#FF6D00",
-  background: "#F4F6F9",
-  surface: "#FFFFFF",
-  border: "#E0E6ED",
-  textPrimary: "#0D1B2A",
-  textSecondary: "#546E7A",
-  success: "#2E7D32",
-  warning: "#F57F17",
-  error: "#C62828",
+  primary: "var(--primary)",
+  primaryLight: "var(--primary-soft)",
+  primaryDark: "var(--navy-mid)",
+  secondary: "var(--accent)",
+  background: "var(--portal-bg)",
+  surface: "var(--portal-card)",
+  border: "var(--portal-border)",
+  textPrimary: "var(--portal-fg)",
+  textSecondary: "var(--portal-muted)",
+  success: "var(--success)",
+  warning: "var(--warning)",
+  error: "var(--error)",
+  info: "var(--info)",
 } as const;
 
 export const portalGradients = {
-  primary: "linear-gradient(135deg, #1565C0 0%, #5E92F3 100%)",
-  hero: "linear-gradient(135deg, #003C8F 0%, #1565C0 50%, #5E92F3 100%)",
-  secondary: "linear-gradient(135deg, #E65100 0%, #FF6D00 50%, #FF9E40 100%)",
+  primary: "linear-gradient(135deg, var(--navy-mid) 0%, var(--primary) 100%)",
+  hero: "linear-gradient(135deg, var(--navy) 0%, var(--primary) 55%, var(--navy-mid) 100%)",
+  secondary: "linear-gradient(135deg, var(--accent-hover) 0%, var(--accent) 100%)",
 } as const;

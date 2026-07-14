@@ -19,15 +19,16 @@ const variantClasses: Record<ButtonVariant, string> = {
   primary:
     "bg-primary text-white shadow-[var(--shadow-button)] hover:bg-primary-hover active:scale-[0.98]",
   secondary:
-    "bg-white text-foreground border border-border hover:bg-muted hover:border-border-strong active:scale-[0.98]",
+    "bg-card text-foreground border border-border hover:bg-muted hover:border-border-strong active:scale-[0.98]",
   ghost: "bg-transparent text-muted-fg hover:bg-primary-soft hover:text-primary",
   danger: "bg-error text-white hover:bg-error-hover active:scale-[0.98]",
   outline:
     "bg-transparent text-primary border border-primary/25 hover:bg-primary-soft hover:border-primary/40 active:scale-[0.98]",
   accent:
-    "bg-accent text-white shadow-sm hover:bg-accent-hover active:scale-[0.98]",
+    "bg-accent text-white hover:bg-accent-hover active:scale-[0.98]",
 };
 
+/** sm=h-8 · md=h-10 (default) · lg=h-11 */
 const sizeClasses: Record<ButtonSize, string> = {
   sm: "h-8 px-3 text-xs gap-1.5 rounded-lg font-semibold",
   md: "h-10 px-4 text-sm gap-2 rounded-lg font-semibold",
@@ -52,7 +53,7 @@ export function Button({
     <button
       type={type}
       disabled={isDisabled}
-      className={`inline-flex items-center justify-center cursor-pointer transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`}
+      className={`inline-flex items-center justify-center cursor-pointer transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${variantClasses[variant]} ${sizeClasses[size]} ${fullWidth ? "w-full" : ""} ${className}`}
       {...rest}
     >
       {loading ? (

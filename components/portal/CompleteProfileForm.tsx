@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FormField } from "@/components/common/FormField";
 import { Textarea } from "@/components/common/Textarea";
 import StateSelect from "@/components/location/StateSelect";
 import CitySelect from "@/components/location/CitySelect";
 import type { CompleteProfileFormData, UserRole } from "@/types/auth";
+import { useOptionalGeoLocation } from "@/context/GeoLocationContext";
 import { fetchCities, fetchStates } from "@/services/locationService";
+import { isGeoCacheFresh, readGeoLastLocation } from "@/utils/geoLocationStorage";
 import { scrollToFirstFormError } from "@/utils/scrollToFormError";
 import {
   Building2,
@@ -58,8 +60,8 @@ function IconInput({
       <Icon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-fg" />
       <input
         id={id}
-        className={`h-11 w-full rounded-lg border bg-white py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-fg outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-          error ? "border-red-400 focus:border-red-500 focus:ring-red-500/20" : "border-border"
+        className={`h-10 w-full rounded-lg border bg-card pl-10 pr-3.5 text-sm text-foreground placeholder:text-muted-placeholder outline-none transition-colors duration-200 focus:border-primary focus:ring-2 focus:ring-primary/25 ${
+          error ? "border-error/40 bg-error-soft focus:border-error focus:ring-error/20" : "border-border hover:border-border-hover"
         } ${className}`}
         {...props}
       />
@@ -89,7 +91,7 @@ function ImageUploadField({
         className="block text-sm font-medium text-foreground"
       >
         {label}
-        {required && <span className="ml-0.5 text-red-500">*</span>}
+        {required && <span className="ml-0.5 text-error">*</span>}
       </label>
       <div className={align === "center" ? "flex justify-center" : ""}>{children}</div>
       {error && (
@@ -138,7 +140,7 @@ function UploadTile({
   }, [blobPreview]);
 
   const previewUrl = blobPreview ?? (existingUrl?.trim() ? existingUrl : null);
-  const borderClass = error ? "border-red-400" : "border-border hover:border-primary/40";
+  const borderClass = error ? "border-error/50" : "border-border hover:border-primary/40";
   const imageFitClass =
     fit === "contain" ? "object-contain object-center p-2" : "object-cover object-center";
 
@@ -165,7 +167,7 @@ function UploadTile({
             className={`h-full w-full ${imageFitClass}`}
           />
           <div className="absolute inset-0 flex items-center justify-center bg-navy/0 transition-colors group-hover:bg-navy/30">
-            <span className="rounded-lg bg-white/95 px-2.5 py-1 text-xs font-semibold text-foreground opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
+            <span className="rounded-lg bg-card/95 px-2.5 py-1 text-xs font-semibold text-foreground opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
               Click to change
             </span>
           </div>
@@ -173,7 +175,7 @@ function UploadTile({
         <button
           type="button"
           onClick={handleRemove}
-          className="absolute right-2 top-2 z-10 rounded-lg bg-white/95 p-1 text-muted-fg shadow-sm transition-colors hover:bg-white hover:text-error"
+          className="absolute right-2 top-2 z-10 rounded-lg bg-card/95 p-1 text-muted-fg shadow-sm transition-colors hover:bg-card hover:text-error"
           aria-label={`Remove ${label}`}
         >
           <X className="h-4 w-4" />
@@ -239,9 +241,56 @@ export default function CompleteProfileForm({
   const [form, setForm] = useState<CompleteProfileFormData>(EMPTY_COMPLETE_PROFILE_FORM);
   const [stateId, setStateId] = useState("");
   const [cityId, setCityId] = useState("");
+  const geo = useOptionalGeoLocation();
+  const geoPrefillDone = useRef(false);
 
   const MAX_IMAGE_SIZE_MB = 5;
   const id = (key: string) => `${fieldIdPrefix}-${key}`;
+
+  // Prefill from geo when profile has no saved state yet.
+  useEffect(() => {
+    if (geoPrefillDone.current || stateId || form.state?.trim()) return;
+    if (initialValues?.state?.trim()) return;
+
+    const apply = (
+      nextStateId: number,
+      nextCityId: number,
+      stateName: string,
+      cityName: string
+    ) => {
+      geoPrefillDone.current = true;
+      setStateId(String(nextStateId));
+      setCityId(String(nextCityId));
+      setForm((prev) => ({
+        ...prev,
+        state: stateName || prev.state,
+        city: cityName || prev.city,
+      }));
+    };
+
+    const cached = readGeoLastLocation();
+    if (cached && isGeoCacheFresh(cached)) {
+      apply(
+        cached.state_id,
+        cached.city_id,
+        cached.state_name?.trim() || "",
+        cached.city_name?.trim() || ""
+      );
+      return;
+    }
+
+    if (geo?.stateId != null && geo.cityId != null) {
+      apply(geo.stateId, geo.cityId, geo.stateName?.trim() || "", geo.cityName?.trim() || "");
+    }
+  }, [
+    stateId,
+    form.state,
+    initialValues?.state,
+    geo?.stateId,
+    geo?.cityId,
+    geo?.stateName,
+    geo?.cityName,
+  ]);
 
   useEffect(() => {
     if (!initialValues) return;
@@ -524,7 +573,6 @@ export default function CompleteProfileForm({
                   placeholder="Select state"
                   emptyLabel="Select state"
                   error={Boolean(errors.state)}
-                  className="!h-11"
                   onChange={(nextId, label) => {
                     setStateId(nextId);
                     setCityId("");
@@ -547,7 +595,6 @@ export default function CompleteProfileForm({
                   emptyLabel="Select city"
                   disabled={!stateId}
                   error={Boolean(errors.city)}
-                  className="!h-11"
                   onChange={(nextId, label) => {
                     setCityId(nextId);
                     updateForm({ city: nextId && label ? label : "" });
@@ -661,14 +708,14 @@ export default function CompleteProfileForm({
       </div>
 
       {error ? (
-        <div className="rounded-lg bg-red-50 p-3 text-xs font-medium text-error">{error}</div>
+        <div className="rounded-lg border border-error/20 bg-error-soft p-3 text-xs font-medium text-error">{error}</div>
       ) : null}
 
       {!hideSubmitButton ? (
         <button
           type="submit"
           disabled={loading}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-medium text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-muted"
+          className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-white transition-colors duration-200 hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-muted"
         >
           {loading ? (
             <>

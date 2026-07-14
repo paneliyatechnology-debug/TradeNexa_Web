@@ -398,22 +398,22 @@ export function formatRfqStatus(status?: string | null): string {
 export function rfqStatusClass(status?: string | null): string {
   const value = (status ?? "").toUpperCase();
   if (value.includes("DRAFT")) return "bg-muted text-muted-fg";
-  if (value.includes("PUBLISH") || value.includes("OPEN")) return "bg-emerald-50 text-emerald-700";
-  if (value.includes("QUOTATION_RECEIVED")) return "bg-sky-50 text-sky-700";
-  if (value.includes("NEGOTIAT")) return "bg-amber-50 text-amber-700";
-  if (value.includes("AWARD")) return "bg-indigo-50 text-indigo-700";
-  if (value.includes("COMPLETE")) return "bg-teal-50 text-teal-700";
-  if (value.includes("CLOSE")) return "bg-violet-50 text-violet-700";
-  if (value.includes("CANCEL")) return "bg-red-50 text-red-600";
+  if (value.includes("PUBLISH") || value.includes("OPEN")) return "bg-success-soft text-success";
+  if (value.includes("QUOTATION_RECEIVED")) return "bg-info-soft text-info";
+  if (value.includes("NEGOTIAT")) return "bg-warning-soft text-warning";
+  if (value.includes("AWARD")) return "bg-primary-soft text-primary";
+  if (value.includes("COMPLETE")) return "bg-success-soft text-success";
+  if (value.includes("CLOSE")) return "bg-muted text-muted-fg";
+  if (value.includes("CANCEL")) return "bg-error-soft text-error";
   if (value.includes("EXPIRE")) return "bg-muted text-muted-fg";
   return "bg-primary-soft text-primary";
 }
 
 export function quotationStatusClass(status?: string | null): string {
   const value = (status ?? "").toUpperCase();
-  if (value.includes("ACCEPT")) return "bg-emerald-50 text-emerald-700";
-  if (value.includes("REJECT") || value.includes("WITHDRAW")) return "bg-red-50 text-red-600";
-  if (value.includes("REVISION") || value.includes("NEGOTIAT")) return "bg-amber-50 text-amber-700";
+  if (value.includes("ACCEPT")) return "bg-success-soft text-success";
+  if (value.includes("REJECT") || value.includes("WITHDRAW")) return "bg-error-soft text-error";
+  if (value.includes("REVISION") || value.includes("NEGOTIAT")) return "bg-warning-soft text-warning";
   if (value.includes("PENDING") || value.includes("SUBMIT")) return "bg-primary-soft text-primary";
   return "bg-muted text-muted-fg";
 }

@@ -96,15 +96,15 @@ export default function QuotationCard({
 
   return (
     <article
-      className={`rounded-2xl border p-4 sm:p-5 ${
+      className={`rounded-xl border p-4 ${
         disabled
           ? "pointer-events-none border-border bg-muted opacity-50"
           : inactive
             ? "border-border bg-muted opacity-80"
-            : "border-border bg-card shadow-sm"
+            : "border-border bg-card"
       } ${
         isClickable && !disabled
-          ? "cursor-pointer transition hover:border-primary/35 hover:shadow-md"
+          ? "cursor-pointer transition hover:border-primary/35"
           : ""
       }`}
       onClick={isClickable && !disabled ? handleCardActivate : undefined}
@@ -127,7 +127,7 @@ export default function QuotationCard({
         <div className="min-w-0">
           {showProductName ? (
             <p
-              className={`truncate text-base font-extrabold sm:text-lg ${
+              className={`truncate text-base font-semibold sm:text-lg ${
                 inactive ? "text-muted-fg" : "text-foreground"
               }`}
             >
@@ -136,7 +136,7 @@ export default function QuotationCard({
           ) : showSellerInfo ? (
             <>
               <p
-                className={`truncate text-base font-extrabold sm:text-lg ${
+                className={`truncate text-base font-semibold sm:text-lg ${
                   inactive ? "text-muted-fg" : "text-foreground"
                 }`}
               >
@@ -149,7 +149,7 @@ export default function QuotationCard({
               ) : null}
             </>
           ) : (
-            <p className="text-base font-extrabold text-foreground">Your quotation</p>
+            <p className="text-base font-semibold text-foreground">Your quotation</p>
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -189,7 +189,7 @@ export default function QuotationCard({
           }`}
         >
           <p className="text-[10px] font-bold uppercase tracking-wide text-muted-fg">Estimated total</p>
-          <p className={`mt-0.5 text-xl font-extrabold ${inactive ? "text-muted-fg" : "text-primary"}`}>
+          <p className={`mt-0.5 text-xl font-semibold ${inactive ? "text-muted-fg" : "text-primary"}`}>
             {formatPrice(totals.total, quotation.currency)}
           </p>
           <p className="mt-1 text-xs text-muted-fg">
@@ -232,8 +232,8 @@ export default function QuotationCard({
       </div>
 
       {buyerRevisionRemarks ? (
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-3">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-amber-800">
+        <div className="mt-4 rounded-xl border border-warning/25 bg-warning-soft px-3 py-3">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-warning">
             Buyer&apos;s revision request
           </p>
           <p className="mt-1.5 text-sm leading-relaxed text-muted-fg">{buyerRevisionRemarks}</p>
@@ -264,7 +264,7 @@ export default function QuotationCard({
       <p className="mt-3 text-xs text-muted-fg">Submitted {formatRfqDate(quotation.created_at)}</p>
 
       {sellerRevisionHint ? (
-        <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50/60 px-3 py-2.5 text-xs leading-relaxed text-muted-fg">
+        <p className="mt-4 rounded-xl border border-warning/20 bg-warning-soft/60 px-3 py-2.5 text-xs leading-relaxed text-muted-fg">
           {sellerRevisionHint}
         </p>
       ) : null}

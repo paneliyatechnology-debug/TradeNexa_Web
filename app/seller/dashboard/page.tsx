@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Eye, MessageSquare, Package, Plus, Store, TrendingUp } from "lucide-react";
+import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalStatCard from "@/components/portal/PortalStatCard";
 import PortalSection from "@/components/portal/PortalSection";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,8 +13,8 @@ import { chartDays, chartHeights, demoLeads } from "@/data/portalDemo";
 const quickActions = [
   { label: "Add Product", href: "/seller/add-product", icon: Plus, color: "text-primary", bg: "bg-primary-soft" },
   { label: "Messages", href: "/seller/leads", icon: MessageSquare, color: "text-foreground", bg: "bg-muted" },
-  { label: "My Catalog", href: "/seller/catalog", icon: Package, color: "text-warning", bg: "bg-amber-50" },
-  { label: "Analytics", href: "/seller/analytics", icon: TrendingUp, color: "text-success", bg: "bg-emerald-50" },
+  { label: "My Catalog", href: "/seller/catalog", icon: Package, color: "text-warning", bg: "bg-warning-soft" },
+  { label: "Analytics", href: "/seller/analytics", icon: TrendingUp, color: "text-success", bg: "bg-success-soft" },
 ];
 
 export default function SellerDashboardPage() {
@@ -22,23 +23,16 @@ export default function SellerDashboardPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-        className="mb-6"
-      >
-        <p className="text-sm text-muted-fg">Welcome back,</p>
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-          {user?.company || user?.name || "Seller"}
-        </h2>
-      </motion.div>
+      <PortalPageHeader
+        title={user?.company || user?.name || "Seller"}
+        subtitle="Welcome back"
+      />
 
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.08, duration: 0.35 }}
-        className="relative mb-8 overflow-hidden rounded-xl bg-navy p-6 text-white shadow-[var(--shadow-elevated)] sm:p-8"
+        className="relative mb-8 overflow-hidden rounded-xl border border-navy/20 bg-navy p-6 text-white sm:p-8"
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgb(21_101_192/0.35),transparent_55%)]" />
         <div className="relative">
@@ -81,7 +75,7 @@ export default function SellerDashboardPage() {
             value="1.2k"
             icon={Eye}
             color="text-success"
-            bg="bg-emerald-50"
+            bg="bg-success-soft"
           />
           <PortalStatCard
             title="Active Listings"
@@ -95,7 +89,7 @@ export default function SellerDashboardPage() {
             value="+12.5%"
             icon={TrendingUp}
             color="text-warning"
-            bg="bg-amber-50"
+            bg="bg-warning-soft"
           />
         </div>
       </PortalSection>
@@ -111,7 +105,7 @@ export default function SellerDashboardPage() {
                 className="flex w-24 shrink-0 flex-col items-center gap-2"
               >
                 <div
-                  className={`flex h-14 w-14 items-center justify-center rounded-xl border border-border shadow-[var(--shadow-card)] transition-shadow duration-200 hover:shadow-[var(--shadow-elevated)] ${action.bg}`}
+                  className={`flex h-14 w-14 items-center justify-center rounded-xl border border-border transition-colors duration-200 hover:border-primary/30 ${action.bg}`}
                 >
                   <Icon className={`h-6 w-6 ${action.color}`} aria-hidden />
                 </div>

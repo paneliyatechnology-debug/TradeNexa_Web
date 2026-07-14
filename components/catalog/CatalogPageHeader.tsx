@@ -38,7 +38,7 @@ export default function CatalogPageHeader({
           </span>
         )}
 
-        <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
           {title}
         </h1>
 

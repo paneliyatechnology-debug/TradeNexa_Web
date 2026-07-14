@@ -151,7 +151,7 @@ export function SubcategoryFilterSidebar({
 
   return (
     <aside className="hidden lg:block lg:w-72 lg:shrink-0 xl:w-80">
-      <div className="sticky top-24 rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <div className="sticky top-24 rounded-xl border border-border bg-card p-5">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-xs font-bold uppercase tracking-wider text-muted-fg">
             Subcategories

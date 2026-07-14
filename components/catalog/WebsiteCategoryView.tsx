@@ -217,7 +217,7 @@ export default function WebsiteCategoryView({
         ) : (
           <>
             <div>
-              <h1 className="text-2xl font-extrabold text-foreground sm:text-3xl">
+              <h1 className="text-2xl font-semibold text-foreground sm:text-3xl">
                 {initialSubSlug ? selectedSub?.name ?? category?.name : category?.name}
               </h1>
               <p className="mt-1 text-sm text-muted-fg">
@@ -253,7 +253,7 @@ export default function WebsiteCategoryView({
             </div>
 
             {productError ? (
-              <p className="mt-4 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-600">
+              <p className="mt-4 rounded-xl border border-error/20 bg-error-soft p-3 text-sm text-error">
                 {productError}
               </p>
             ) : null}

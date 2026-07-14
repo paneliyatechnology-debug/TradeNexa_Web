@@ -50,7 +50,7 @@ export default function FAQ() {
             title="General Queries"
             subtitle="Frequently asked questions about listing setup, buyer matching, and account trust."
           />
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-card sm:p-8">
+          <div className="surface-card p-6 sm:p-8">
             <FAQAccordion items={faqItems} />
           </div>
         </div>

@@ -7,6 +7,7 @@ import ConversationBadge, {
   formatChatBadgeCount,
   useChatUnreadBadge,
 } from "@/components/chat/ConversationBadge";
+import { Button } from "@/components/common/Button";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalEmptyState from "@/components/portal/PortalEmptyState";
 import PortalPagination from "@/components/portal/PortalPagination";
@@ -88,7 +89,7 @@ export default function SellerLeadsPage() {
         subtitle="Buyer requirements you can quote on"
         action={
           newTodayCount > 0 ? (
-            <span className="inline-flex items-center rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary">
+            <span className="inline-flex items-center rounded-lg bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
               {newTodayCount} new today
             </span>
           ) : null
@@ -110,10 +111,10 @@ export default function SellerLeadsPage() {
                 key={tab}
                 type="button"
                 onClick={() => setActiveTab(tab)}
-                className={`shrink-0 cursor-pointer rounded-full px-3 py-1.5 text-[11px] font-bold transition ${
+                className={`shrink-0 cursor-pointer rounded-lg px-3 py-1.5 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
                   activeTab === tab
-                    ? "bg-primary text-white shadow-sm"
-                    : "bg-white text-muted-fg ring-1 ring-border hover:ring-primary/30"
+                    ? "bg-primary text-white"
+                    : "bg-card text-muted-fg ring-1 ring-border hover:ring-primary/30"
                 }`}
               >
                 {formatRfqStatusTabLabel(tab)}
@@ -126,7 +127,7 @@ export default function SellerLeadsPage() {
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_240px] lg:gap-6">
         <div>
           {error ? (
-            <p className="mb-4 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-600">{error}</p>
+            <p className="mb-4 rounded-xl border border-error/20 bg-error-soft p-3 text-sm text-error">{error}</p>
           ) : null}
 
           {loading ? (
@@ -141,13 +142,9 @@ export default function SellerLeadsPage() {
               description={emptyDescription}
               action={
                 hasSearch ? (
-                  <button
-                    type="button"
-                    onClick={() => setSearch("")}
-                    className="cursor-pointer rounded-xl border border-border px-4 py-2 text-sm font-bold text-muted-fg"
-                  >
+                  <Button type="button" variant="secondary" onClick={() => setSearch("")}>
                     Clear search
-                  </button>
+                  </Button>
                 ) : undefined
               }
             />
@@ -175,16 +172,15 @@ export default function SellerLeadsPage() {
           )}
 
           {showCatalogPrompt ? (
-            <div className="mt-6 rounded-2xl border border-dashed border-border bg-muted p-5 text-center">
-              <p className="text-sm font-bold text-foreground">Want more leads?</p>
+            <div className="mt-6 rounded-xl border border-dashed border-border bg-muted p-5 text-center">
+              <p className="text-sm font-semibold text-foreground">Want more leads?</p>
               <p className="mt-1 text-xs text-muted-fg">
                 Keep your catalog up to date so buyers can find you for matching requirements.
               </p>
-              <Link
-                href="/seller/catalog"
-                className="mt-3 inline-flex cursor-pointer items-center gap-1 rounded-xl border border-border bg-white px-4 py-2 text-xs font-bold text-muted-fg transition hover:border-primary/40 hover:text-primary"
-              >
-                Manage catalog
+              <Link href="/seller/catalog" className="mt-3 inline-flex">
+                <Button variant="secondary" size="sm">
+                  Manage catalog
+                </Button>
               </Link>
             </div>
           ) : null}
@@ -205,7 +201,7 @@ export default function SellerLeadsPage() {
               aria-label={
                 unreadLabel ? `My Quotations, ${unreadLabel}` : "My Quotations"
               }
-              className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-border bg-white p-4 text-sm font-bold text-muted-fg transition hover:border-primary/40 hover:text-primary"
+              className="surface-card-hover flex cursor-pointer items-center justify-between gap-3 p-4 text-sm font-semibold text-muted-fg hover:text-primary"
             >
               <span className="min-w-0">
                 <span className="block">My Quotations</span>

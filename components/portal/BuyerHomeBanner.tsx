@@ -60,12 +60,12 @@ function BannerContent({
           <p className="text-[9px] font-semibold uppercase tracking-wider text-white/75 sm:text-[10px]">
             TradeNexa B2B
           </p>
-          <h3 className="mt-0.5 truncate text-base font-bold leading-tight text-white sm:text-lg">
+          <h3 className="mt-0.5 truncate text-base font-semibold leading-tight text-white sm:text-lg">
             {banner.title}
           </h3>
         </div>
         {showExplore && href ? (
-          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-white/95 px-3 py-1.5 text-xs font-semibold text-primary shadow-sm transition group-hover:bg-white sm:px-3.5 sm:py-2 sm:text-sm">
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-card/95 px-3 py-1.5 text-xs font-semibold text-primary transition group-hover:bg-card sm:px-3.5 sm:py-2 sm:text-sm">
             Explore
             <ArrowRight className="h-3.5 w-3.5" />
           </span>
@@ -113,7 +113,7 @@ export default function BuyerHomeBanner({ banners }: BuyerHomeBannerProps) {
     <div className="relative mb-5 sm:mb-6">
       <motion.div
         layout
-        className="relative overflow-hidden rounded-xl border border-border bg-muted shadow-sm sm:rounded-2xl"
+        className="relative overflow-hidden rounded-xl border border-border bg-muted"
       >
         <BannerContent banner={active} imageUrl={imageUrl} href={href} />
       </motion.div>

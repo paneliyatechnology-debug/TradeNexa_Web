@@ -22,15 +22,15 @@ export default function PortalStatCard({
 }: PortalStatCardProps) {
   const content = (
     <>
-      <div className={`inline-flex rounded-xl ${compact ? "mb-3 p-2" : "mb-4 p-2.5"} ${bg}`}>
+      <div className={`inline-flex rounded-lg ${compact ? "mb-2.5 p-2" : "mb-3 p-2.5"} ${bg}`}>
         <Icon className={`${compact ? "h-4 w-4" : "h-5 w-5"} ${color}`} strokeWidth={2} aria-hidden />
       </div>
       <p
-        className={`font-semibold tracking-tight text-foreground ${compact ? "text-lg" : "text-2xl"}`}
+        className={`font-semibold tracking-tight text-foreground ${compact ? "text-lg" : "text-xl"}`}
       >
         {value}
       </p>
-      <p className={`mt-1 font-medium text-muted-fg ${compact ? "text-xs" : "text-sm"}`}>{title}</p>
+      <p className={`mt-0.5 font-medium text-muted-fg ${compact ? "text-xs" : "text-sm"}`}>{title}</p>
     </>
   );
 

@@ -26,7 +26,7 @@ export function ProductGridSkeleton({ count = 8 }: { count?: number }) {
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className="overflow-hidden rounded-xl border border-portal-border bg-white shadow-sm"
+          className="overflow-hidden rounded-xl border border-border bg-card"
         >
           <div className="skeleton aspect-[4/3]" />
           <div className="space-y-2 p-4">

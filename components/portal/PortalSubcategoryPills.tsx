@@ -30,9 +30,9 @@ function Pill({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
         active
-          ? "bg-portal-buyer text-white shadow-sm"
+          ? "bg-portal-buyer text-white"
           : "bg-portal-buyer-light text-portal-buyer hover:bg-portal-buyer-light/80"
       }`}
     >
@@ -94,7 +94,7 @@ export default function PortalSubcategoryPills({
               type="button"
               onClick={onLoadMoreSubs}
               disabled={loadingSubs || loadingMoreSubs}
-              className="inline-flex shrink-0 items-center gap-1 rounded-full border border-portal-border bg-white px-3 py-1.5 text-xs font-semibold text-portal-muted shadow-sm transition hover:border-portal-buyer hover:text-portal-buyer disabled:opacity-50"
+              className="inline-flex shrink-0 items-center gap-1 rounded-full border border-portal-border bg-card px-3 py-1.5 text-xs font-semibold text-portal-muted transition-colors duration-200 hover:border-portal-buyer hover:text-portal-buyer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 disabled:opacity-50"
             >
               {loadingMoreSubs ? (
                 <>
