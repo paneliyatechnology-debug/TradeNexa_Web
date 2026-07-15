@@ -146,6 +146,7 @@ export default function ChatMessageBubble({
           (quote?.transportation_charge ?? 0)
         : null;
   const rfqId = message.rfq?.id ?? quote?.rfq_id ?? null;
+  const rfqTitle = message.rfq?.title ?? quote?.rfq_title ?? null;
   const rfqHref =
     rfqId != null
       ? role === "seller"
@@ -375,6 +376,11 @@ export default function ChatMessageBubble({
 
           {message.message_type === "QUOTATION" && quote ? (
             <div className="min-w-[220px] max-w-[280px]">
+              {rfqTitle ? (
+                <p className="mb-2.5 text-sm font-semibold leading-snug text-foreground">
+                  {rfqTitle}
+                </p>
+              ) : null}
               <div className="grid grid-cols-2 gap-2.5">
                 <MetaCell
                   label="Unit price"
