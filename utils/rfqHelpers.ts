@@ -640,6 +640,10 @@ export function isQuotationAccepted(status?: string | null): boolean {
   return (status ?? "").toUpperCase().includes("ACCEPT");
 }
 
+export function isQuotationRejected(status?: string | null): boolean {
+  return (status ?? "").toUpperCase().includes("REJECT");
+}
+
 export function isRfqAwarded(status?: string | null): boolean {
   return (status ?? "").toUpperCase().includes("AWARD");
 }

@@ -12,9 +12,8 @@ import {
   getBuyerRevisionRemarks,
   getQuotationStatusHint,
   getSellerRevisionStatusHint,
-  isQuotationAccepted,
+  isQuotationRejected,
   isQuotationRevisionPending,
-  isRfqAwarded,
 } from "@/utils/rfqHelpers";
 
 interface QuotationCardProps {
@@ -24,7 +23,7 @@ interface QuotationCardProps {
   showSellerInfo?: boolean;
   /** When true, shows RFQ product/title instead of seller identity (seller list view). */
   showProductName?: boolean;
-  /** Show status hints on buyer view; only dims when RFQ is awarded to another seller. */
+  /** Show status hints on buyer view; dims only rejected quotes. */
   emphasizeStatus?: boolean;
   /** RFQ status helps detect negotiation when quotation status is still "Submitted". */
   rfqStatus?: string | null;
@@ -55,15 +54,8 @@ export default function QuotationCard({
 }: QuotationCardProps) {
   const router = useRouter();
   const [showRemarks, setShowRemarks] = useState(false);
-  const accepted = isQuotationAccepted(quotation.status);
-  const rfqAwarded = isRfqAwarded(rfqStatus);
-  /** Only dim when RFQ is awarded and this quote was not selected. */
-  const disabled = emphasizeStatus && rfqAwarded && !accepted;
-  const statusHint = emphasizeStatus
-    ? disabled
-      ? "This RFQ was awarded to another seller."
-      : getQuotationStatusHint(quotation.status)
-    : null;
+  const rejected = emphasizeStatus && isQuotationRejected(quotation.status);
+  const statusHint = emphasizeStatus ? getQuotationStatusHint(quotation.status) : null;
   const sellerRevisionHint = !showSellerInfo ? getSellerRevisionStatusHint(quotation, rfqStatus) : null;
   const buyerRevisionRemarks = !showSellerInfo
     ? getBuyerRevisionRemarks(quotation, rfqStatus, buyerRemark)
@@ -92,15 +84,15 @@ export default function QuotationCard({
   return (
     <article
       className={`rounded-xl border p-4 sm:p-5 ${
-        disabled
-          ? "pointer-events-none border-border bg-muted opacity-50"
+        rejected
+          ? "border-border bg-muted opacity-50"
           : isClickable
             ? "surface-card-hover"
             : "border-border bg-card"
-      } ${isClickable && !disabled ? "cursor-pointer" : ""}`}
-      onClick={isClickable && !disabled ? handleCardActivate : undefined}
+      } ${isClickable && !rejected ? "cursor-pointer" : ""}`}
+      onClick={isClickable && !rejected ? handleCardActivate : undefined}
       onKeyDown={
-        isClickable && !disabled
+        isClickable && !rejected
           ? (event) => {
               if (event.key === "Enter" || event.key === " ") {
                 event.preventDefault();
@@ -109,17 +101,16 @@ export default function QuotationCard({
             }
           : undefined
       }
-      role={isClickable && !disabled ? "link" : undefined}
-      tabIndex={isClickable && !disabled ? 0 : undefined}
-      aria-label={isClickable && !disabled ? `Open ${productPrimary}` : undefined}
-      aria-disabled={disabled || undefined}
+      role={isClickable && !rejected ? "link" : undefined}
+      tabIndex={isClickable && !rejected ? 0 : undefined}
+      aria-label={isClickable && !rejected ? `Open ${productPrimary}` : undefined}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           {showProductName ? (
             <p
               className={`truncate text-base font-semibold ${
-                disabled ? "text-muted-fg" : "text-foreground"
+                rejected ? "text-muted-fg" : "text-foreground"
               }`}
             >
               {productPrimary}
@@ -128,7 +119,7 @@ export default function QuotationCard({
             <>
               <p
                 className={`truncate text-base font-semibold ${
-                  disabled ? "text-muted-fg" : "text-foreground"
+                  rejected ? "text-muted-fg" : "text-foreground"
                 }`}
               >
                 {sellerPrimary}
@@ -144,7 +135,7 @@ export default function QuotationCard({
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          {onChatClick && !disabled ? (
+          {onChatClick && !rejected ? (
             <button
               type="button"
               onClick={(event) => {
@@ -165,11 +156,11 @@ export default function QuotationCard({
       {totals ? (
         <div
           className={`mt-3.5 rounded-lg border px-4 py-3 ${
-            disabled ? "border-border bg-muted" : "border-primary/15 bg-primary-soft/50"
+            rejected ? "border-border bg-muted" : "border-primary/15 bg-primary-soft/50"
           }`}
         >
           <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-fg">Estimated total</p>
-          <p className={`mt-1 text-xl font-semibold leading-none ${disabled ? "text-muted-fg" : "text-primary"}`}>
+          <p className={`mt-1 text-xl font-semibold leading-none ${rejected ? "text-muted-fg" : "text-primary"}`}>
             {formatPrice(totals.total, quotation.currency)}
           </p>
           <p className="mt-1.5 text-xs text-muted-fg">
@@ -187,7 +178,7 @@ export default function QuotationCard({
       <div className="mt-3.5 grid grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-4">
         <div>
           <p className="text-[11px] font-medium uppercase tracking-wide text-muted-fg">Unit price</p>
-          <p className={`mt-0.5 text-sm font-semibold ${disabled ? "text-muted-fg" : "text-foreground"}`}>
+          <p className={`mt-0.5 text-sm font-semibold ${rejected ? "text-muted-fg" : "text-foreground"}`}>
             {quotation.price != null ? formatPrice(quotation.price, quotation.currency) : "—"}
           </p>
         </div>
