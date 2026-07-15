@@ -66,20 +66,75 @@ function SystemEventIcon({ content }: { content?: string | null }) {
   return <Info className="h-3.5 w-3.5 shrink-0" />;
 }
 
-/** RFQ title / product / quote ref from message metadata — for system status pills. */
+/** Human-readable RFQ / inquiry / product label from message metadata. */
 function getSystemContextLabel(message: ApiChatMessage): string | null {
-  const candidates = [
-    message.rfq?.title,
-    message.quotation?.rfq_title,
-    message.rfq?.description,
-    message.product?.name,
-    message.quotation?.quotation_number,
-  ];
-  for (const value of candidates) {
-    const label = value?.trim();
-    if (label) return label;
-  }
+  const rfqTitle = message.rfq?.title?.trim() || message.quotation?.rfq_title?.trim();
+  if (rfqTitle) return rfqTitle;
+
+  const productName = message.product?.name?.trim();
+  if (productName) return productName;
+
+  const description = message.rfq?.description?.trim();
+  if (description) return description;
+
+  const inquiryId = message.inquiry_id ?? message.quotation?.inquiry_id ?? null;
+  if (inquiryId != null) return `Inquiry #${inquiryId}`;
+
+  const rfqNumber = message.rfq?.rfq_number?.trim() || message.quotation?.rfq_number?.trim();
+  if (rfqNumber) return rfqNumber;
+
+  const quoteNumber = message.quotation?.quotation_number?.trim();
+  if (quoteNumber) return quoteNumber;
+
   return null;
+}
+
+/** Deep-link for RFQ / inquiry / product context in system status pills. */
+function getSystemContextHref(
+  message: ApiChatMessage,
+  role?: ChatRole
+): string | null {
+  const rfqId = message.rfq?.id ?? message.quotation?.rfq_id ?? null;
+  if (rfqId != null) {
+    return role === "seller" ? `/seller/lead/${rfqId}` : `/buyer/rfq/${rfqId}`;
+  }
+
+  const inquiryId = message.inquiry_id ?? message.quotation?.inquiry_id ?? null;
+  if (inquiryId != null) {
+    return role === "seller"
+      ? `/seller/inquiries/${inquiryId}`
+      : `/buyer/product-inquiries/${inquiryId}`;
+  }
+
+  const productId = message.product_id ?? message.product?.id ?? null;
+  if (productId != null) {
+    return role === "seller"
+      ? `/seller/product/${productId}`
+      : `/buyer/product/${productId}`;
+  }
+
+  return null;
+}
+
+function SystemContextLink({
+  href,
+  children,
+}: {
+  href: string | null;
+  children: React.ReactNode;
+}) {
+  if (!href) {
+    return <span className="font-bold text-foreground/75">{children}</span>;
+  }
+  return (
+    <Link
+      href={href}
+      className="font-bold text-primary underline-offset-2 hover:underline"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {children}
+    </Link>
+  );
 }
 
 function ReadTicks({ message }: { message: ApiChatMessage }) {
@@ -281,21 +336,41 @@ export default function ChatMessageBubble({
   if (isSystem) {
     const label = message.content?.trim() || "Status update";
     const contextLabel = getSystemContextLabel(message);
-    const showContext =
+    const contextHref = getSystemContextHref(message, role);
+    const labelHasContext =
       Boolean(contextLabel) &&
-      !label.toLowerCase().includes(contextLabel!.toLowerCase());
+      label.toLowerCase().includes(contextLabel!.toLowerCase());
+
+    let body: React.ReactNode = label;
+    if (contextLabel && labelHasContext) {
+      const matchIndex = label.toLowerCase().indexOf(contextLabel.toLowerCase());
+      const before = label.slice(0, matchIndex);
+      const matched = label.slice(matchIndex, matchIndex + contextLabel.length);
+      const after = label.slice(matchIndex + contextLabel.length);
+      body = (
+        <>
+          {before}
+          <SystemContextLink href={contextHref}>{matched}</SystemContextLink>
+          {after}
+        </>
+      );
+    } else if (contextLabel) {
+      body = (
+        <>
+          {label}
+          {" "}
+          <span className="text-muted-fg">·</span>{" "}
+          <SystemContextLink href={contextHref}>{contextLabel}</SystemContextLink>
+        </>
+      );
+    }
+
     return (
       <div className={`flex justify-center px-2 ${className}`}>
         <div className="inline-flex max-w-[95%] items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-[12px] font-semibold text-muted-fg">
           <SystemEventIcon content={label} />
           <span className="min-w-0 whitespace-normal break-words text-center leading-snug">
-            {label}
-            {showContext ? (
-              <>
-                {" "}
-                <span className="font-bold text-foreground/70">· {contextLabel}</span>
-              </>
-            ) : null}
+            {body}
           </span>
           {timeLabel ? (
             <>

@@ -192,6 +192,10 @@ function normalizeQuotationPreview(raw: unknown): ApiChatQuotationPreview | null
       pickString(item.title),
     rfq_number:
       pickString(item.rfq_number) ?? pickString(readRecord(item.rfq)?.rfq_number),
+    inquiry_id:
+      pickNumber(src.inquiry_id) ??
+      pickNumber(item.inquiry_id) ??
+      pickNumber(readRecord(item.inquiry)?.id),
   };
 }
 
@@ -562,6 +566,11 @@ export function normalizeChatMessage(
           pickString(metadata?.rfq_number) ??
           pickString(rfqMetaRecord?.rfq_number) ??
           null,
+        inquiry_id:
+          quotationRaw.inquiry_id ??
+          pickNumber(metadata?.inquiry_id) ??
+          pickNumber(readRecord(metadata?.quotation)?.inquiry_id) ??
+          null,
       }
     : null;
   const rfq =
@@ -687,6 +696,23 @@ export function normalizeChatMessage(
     resolvedType === "SYSTEM" ||
     matchesSystemChatContent(content);
 
+  const inquiryId =
+    pickNumber(item.inquiry_id) ??
+    pickNumber(metadata?.inquiry_id) ??
+    pickNumber(readRecord(metadata?.inquiry)?.id) ??
+    quotation?.inquiry_id ??
+    null;
+  const contextType =
+    pickString(item.context_type) ??
+    pickString(metadata?.context_type) ??
+    (rfq != null
+      ? "rfq"
+      : inquiryId != null
+        ? "inquiry"
+        : product != null
+          ? "product"
+          : null);
+
   const message: ApiChatMessage = {
     id,
     conversation_id: conversationId,
@@ -710,6 +736,8 @@ export function normalizeChatMessage(
       pickNumber(metadata?.quotation_id) ??
       quotation?.id ??
       null,
+    inquiry_id: inquiryId,
+    context_type: contextType,
     product,
     quotation,
     rfq,

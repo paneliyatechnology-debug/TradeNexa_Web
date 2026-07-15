@@ -52,6 +52,7 @@ export interface ApiChatQuotationPreview {
   rfq_id?: number | null;
   rfq_title?: string | null;
   rfq_number?: string | null;
+  inquiry_id?: number | null;
 }
 
 export interface ApiChatRfqPreview {
@@ -86,9 +87,12 @@ export interface ApiChatMessage {
   delivered_at?: string | null;
   product_id?: number | null;
   quotation_id?: number | null;
+  inquiry_id?: number | null;
+  /** `rfq` | `enquiry` | `inquiry` | `product` from message metadata */
+  context_type?: ChatContextType | string | null;
   product?: ApiChatProductPreview | null;
   quotation?: ApiChatQuotationPreview | null;
-  /** RFQ context from QUOTATION message metadata */
+  /** RFQ context from QUOTATION / SYSTEM message metadata */
   rfq?: ApiChatRfqPreview | null;
   media_url?: string | null;
   file_url?: string | null;
