@@ -564,6 +564,17 @@ export function isQuotationRevisionPending(
   quotation: Pick<ApiQuotation, "status" | "buyer_remark" | "revision_request_remarks">,
   rfqStatus?: string | null
 ): boolean {
+  // Terminal quote / RFQ outcomes — no further revise action.
+  if (isQuotationAccepted(quotation.status)) return false;
+  if (isQuotationRejected(quotation.status)) return false;
+  const quoteStatus = (quotation.status ?? "").toUpperCase();
+  if (quoteStatus.includes("WITHDRAW")) return false;
+  if (isRfqAwarded(rfqStatus)) return false;
+  const rfq = (rfqStatus ?? "").toUpperCase();
+  if (rfq.includes("COMPLETE") || rfq.includes("CANCEL") || rfq.includes("CLOSE") || rfq.includes("EXPIRE")) {
+    return false;
+  }
+
   if (quotation.buyer_remark?.trim()) return true;
   if (quotation.revision_request_remarks?.trim()) return true;
   if (isRevisionRequested(quotation.status)) return true;
