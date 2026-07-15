@@ -241,6 +241,8 @@ export default function CompleteProfileForm({
   const showBuyerFields = role === "buyer" || role === "both";
   const showSellerFields = role === "seller" || role === "both";
   const showSellerOnlyFields = role === "seller";
+  /** Address + state/city dropdowns — shown for every post-register profile role. */
+  const showLocationFields = showBuyerFields || showSellerFields;
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState<CompleteProfileFormData>(
@@ -250,14 +252,18 @@ export default function CompleteProfileForm({
   const [cityId, setCityId] = useState(() => String(initialCityId ?? "").trim());
   const geo = useOptionalGeoLocation();
   const geoPrefillDone = useRef(false);
+  const geoRequestAttempted = useRef(false);
   const locationHydratedRef = useRef(false);
+  const [prefilledFromLocation, setPrefilledFromLocation] = useState(false);
 
   const MAX_IMAGE_SIZE_MB = 5;
   const id = (key: string) => `${fieldIdPrefix}-${key}`;
 
-  // Prefill from geo when profile has no saved state yet.
+  // Prefill state/city from browser location when enabled (geo granted / fresh cache).
   useEffect(() => {
-    if (geoPrefillDone.current || stateId || form.state?.trim()) return;
+    if (geoPrefillDone.current) return;
+    if (String(initialStateId ?? "").trim() || String(initialCityId ?? "").trim()) return;
+    if (stateId.trim()) return;
     if (initialValues?.state?.trim()) return;
 
     const apply = (
@@ -266,7 +272,10 @@ export default function CompleteProfileForm({
       stateName: string,
       cityName: string
     ) => {
+      if (!Number.isFinite(nextStateId) || nextStateId <= 0) return;
+      if (!Number.isFinite(nextCityId) || nextCityId <= 0) return;
       geoPrefillDone.current = true;
+      setPrefilledFromLocation(true);
       setStateId(String(nextStateId));
       setCityId(String(nextCityId));
       setForm((prev) => ({
@@ -276,6 +285,18 @@ export default function CompleteProfileForm({
       }));
     };
 
+    // Live resolved location from GeoLocationProvider.
+    if (geo?.stateId != null && geo.cityId != null) {
+      apply(
+        geo.stateId,
+        geo.cityId,
+        geo.stateName?.trim() || "",
+        geo.cityName?.trim() || ""
+      );
+      return;
+    }
+
+    // Fresh cache when location was previously enabled.
     const cached = readGeoLastLocation();
     if (cached && isGeoCacheFresh(cached)) {
       apply(
@@ -287,17 +308,34 @@ export default function CompleteProfileForm({
       return;
     }
 
-    if (geo?.stateId != null && geo.cityId != null) {
-      apply(geo.stateId, geo.cityId, geo.stateName?.trim() || "", geo.cityName?.trim() || "");
+    // Permission granted but still resolving — wait for context update.
+    if (geo?.permissionStatus === "granted" && (geo.locating || !geo.ready)) {
+      return;
+    }
+
+    // Location enabled with no coords yet — ask once.
+    if (
+      geo?.permissionStatus === "granted" &&
+      geo.ready &&
+      !geo.locating &&
+      !geoRequestAttempted.current
+    ) {
+      geoRequestAttempted.current = true;
+      void geo.requestLocation();
     }
   }, [
     stateId,
-    form.state,
+    initialStateId,
+    initialCityId,
     initialValues?.state,
     geo?.stateId,
     geo?.cityId,
     geo?.stateName,
     geo?.cityName,
+    geo?.permissionStatus,
+    geo?.locating,
+    geo?.ready,
+    geo,
   ]);
 
   useEffect(() => {
@@ -442,6 +480,9 @@ export default function CompleteProfileForm({
 
     if (showBuyerFields) {
       if (!form.industry.trim()) next.industry = "Industry is required";
+    }
+
+    if (showLocationFields) {
       if (!form.address.trim()) next.address = "Address is required";
       if (!form.state.trim() || !stateId.trim()) next.state = "State is required";
       if (!form.city.trim() || !cityId.trim()) next.city = "City is required";
@@ -462,7 +503,16 @@ export default function CompleteProfileForm({
     if (Object.keys(next).length > 0) {
       const fieldOrder =
         role === "seller"
-          ? ["companyName", "gstNumber", "panNumber", "businessDescription"]
+          ? [
+              "companyName",
+              "address",
+              "state",
+              "city",
+              "pincode",
+              "gstNumber",
+              "panNumber",
+              "businessDescription",
+            ]
           : role === "both"
             ? [
                 "companyName",
@@ -596,18 +646,20 @@ export default function CompleteProfileForm({
         </FormField>
 
         {showBuyerFields && (
-          <>
-            <FormField label="Industry" htmlFor={id("industry")} required error={errors.industry}>
-              <IconInput
-                id={id("industry")}
-                icon={Factory}
-                placeholder="e.g. Textiles, Electronics"
-                value={form.industry}
-                error={!!errors.industry}
-                onChange={(e) => updateForm({ industry: e.target.value })}
-              />
-            </FormField>
+          <FormField label="Industry" htmlFor={id("industry")} required error={errors.industry}>
+            <IconInput
+              id={id("industry")}
+              icon={Factory}
+              placeholder="e.g. Textiles, Electronics"
+              value={form.industry}
+              error={!!errors.industry}
+              onChange={(e) => updateForm({ industry: e.target.value })}
+            />
+          </FormField>
+        )}
 
+        {showLocationFields && (
+          <>
             <FormField label="Address" htmlFor={id("address")} required error={errors.address}>
               <IconInput
                 id={id("address")}
@@ -629,7 +681,6 @@ export default function CompleteProfileForm({
                   emptyLabel="Select state"
                   error={Boolean(errors.state)}
                   onChange={(nextId, label) => {
-                    // Only clear city when the user actually changes state.
                     if (nextId !== stateId) {
                       setCityId("");
                       updateForm({
@@ -640,6 +691,7 @@ export default function CompleteProfileForm({
                       updateForm({ state: label });
                     }
                     setStateId(nextId);
+                    setPrefilledFromLocation(false);
                     setErrors((prev) => ({ ...prev, state: "", city: "" }));
                   }}
                 />
@@ -657,12 +709,19 @@ export default function CompleteProfileForm({
                   error={Boolean(errors.city)}
                   onChange={(nextId, label) => {
                     setCityId(nextId);
+                    setPrefilledFromLocation(false);
                     updateForm({ city: nextId && label ? label : "" });
                     setErrors((prev) => ({ ...prev, city: "" }));
                   }}
                 />
               </FormField>
             </div>
+
+            {prefilledFromLocation ? (
+              <p className="-mt-2 text-xs text-muted-fg">
+                State and city were filled from your enabled location. You can change them anytime.
+              </p>
+            ) : null}
 
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField label="Pincode" htmlFor={id("pincode")} required error={errors.pincode}>

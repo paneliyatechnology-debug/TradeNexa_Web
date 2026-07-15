@@ -58,6 +58,9 @@ export function buildProfileFormData(payload: CompleteProfileData): FormData {
     formData.append("business_description", d.businessDescription.trim());
     appendIfPresent(formData, "cin_number", d.cinNumber);
     appendIfPresent(formData, "iec_number", d.iecNumber);
+    appendIfPresent(formData, "address_line_1", d.address);
+    appendLocationIds(formData, d.city, d.state);
+    appendIfPresent(formData, "pincode", d.pincode);
     appendFile(formData, "company_logo", d.companyLogoFile);
     appendFile(formData, "company_banner", d.companyBannerFile);
     return formData;
