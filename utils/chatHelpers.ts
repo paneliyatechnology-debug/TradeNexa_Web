@@ -125,8 +125,12 @@ function normalizeProductPreview(raw: unknown): ApiChatProductPreview | null {
 /** Build product card data from nested `product`, `metadata`, or top-level fields. */
 function resolveChatProductPreview(item: Record<string, unknown>): ApiChatProductPreview | null {
   const metadata = readRecord(item.metadata) ?? readRecord(item.meta);
+  const rfqRecord = readRecord(item.rfq) ?? readRecord(metadata?.rfq);
   const fromNested =
-    normalizeProductPreview(item.product) ?? normalizeProductPreview(metadata);
+    normalizeProductPreview(item.product) ??
+    normalizeProductPreview(metadata?.product) ??
+    normalizeProductPreview(rfqRecord?.product) ??
+    normalizeProductPreview(metadata);
   if (fromNested) return fromNested;
 
   const id = pickNumber(item.product_id);
@@ -563,7 +567,10 @@ export function normalizeChatMessage(
   const rfq =
     normalizeRfqPreview(item.rfq) ??
     normalizeRfqPreview(metadata?.rfq) ??
-    (metadata?.rfq_id != null || metadata?.context_type === "rfq"
+    (metadata?.rfq_id != null ||
+    metadata?.context_type === "rfq" ||
+    pickString(metadata?.rfq_title) != null ||
+    pickString(metadata?.title) != null
       ? normalizeRfqPreview(metadata)
       : null);
   const media = readRecord(item.media);

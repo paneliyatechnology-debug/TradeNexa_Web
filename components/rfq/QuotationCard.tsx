@@ -29,6 +29,8 @@ interface QuotationCardProps {
   emphasizeStatus?: boolean;
   /** RFQ status helps detect negotiation when quotation status is still "Submitted". */
   rfqStatus?: string | null;
+  /** RFQ-level buyer revision note (fallback when quotation omits it). */
+  buyerRemark?: string | null;
   /** Open chat (buyer ↔ seller depending on page). */
   onChatClick?: () => void;
   /** RFQ id for unread matching when quotation.rfq_id is absent */
@@ -45,6 +47,7 @@ export default function QuotationCard({
   showProductName = false,
   emphasizeStatus = false,
   rfqStatus,
+  buyerRemark,
   onChatClick,
   // Keep unused prop for callers that still pass RFQ context for chat.
   chatRfqId: _chatRfqId,
@@ -66,8 +69,11 @@ export default function QuotationCard({
       : getQuotationStatusHint(quotation.status)
     : null;
   const sellerRevisionHint = !showSellerInfo ? getSellerRevisionStatusHint(quotation, rfqStatus) : null;
-  const buyerRevisionRemarks = !showSellerInfo ? getBuyerRevisionRemarks(quotation, rfqStatus) : null;
+  const buyerRevisionRemarks = !showSellerInfo
+    ? getBuyerRevisionRemarks(quotation, rfqStatus, buyerRemark)
+    : null;
   const revisionPending = isQuotationRevisionPending(quotation, rfqStatus);
+  const sellerRemarks = quotation.remarks?.trim() || null;
   const totals = computeQuotationTotalWithGst(quotation);
   const company = quotation.seller_company?.trim();
   const contact = quotation.seller_name?.trim();
@@ -216,7 +222,16 @@ export default function QuotationCard({
           <p className="text-[11px] font-semibold uppercase tracking-wide text-warning">
             Buyer&apos;s revision request
           </p>
-          <p className="mt-1.5 text-sm leading-relaxed text-muted-fg">{buyerRevisionRemarks}</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-foreground">{buyerRevisionRemarks}</p>
+        </div>
+      ) : null}
+
+      {sellerRemarks && revisionPending && buyerRevisionRemarks ? (
+        <div className="mt-3 rounded-lg border border-border bg-muted/60 px-3.5 py-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-fg">
+            Your remarks
+          </p>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-fg">{sellerRemarks}</p>
         </div>
       ) : null}
 
@@ -226,7 +241,7 @@ export default function QuotationCard({
             <span className="font-semibold text-foreground">Payment:</span> {quotation.payment_terms}
           </span>
         ) : null}
-        {quotation.remarks && !(revisionPending && buyerRevisionRemarks) ? (
+        {sellerRemarks && !(revisionPending && buyerRevisionRemarks) ? (
           <button
             type="button"
             onClick={(event) => {
@@ -241,13 +256,13 @@ export default function QuotationCard({
         <span className="ml-auto shrink-0">Submitted {formatRfqDate(quotation.created_at)}</span>
       </div>
 
-      {showRemarks && quotation.remarks && !(revisionPending && buyerRevisionRemarks) ? (
+      {showRemarks && sellerRemarks && !(revisionPending && buyerRevisionRemarks) ? (
         <p
           className="mt-1.5 text-sm leading-relaxed text-muted-fg"
           onClick={stopCardNav}
           onKeyDown={stopCardNav}
         >
-          {quotation.remarks}
+          {sellerRemarks}
         </p>
       ) : null}
 

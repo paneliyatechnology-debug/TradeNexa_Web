@@ -241,6 +241,7 @@ export default function SellerLeadDetailPage() {
               quotation={existingQuotation}
               showSellerInfo={false}
               rfqStatus={rfq.status}
+              buyerRemark={rfq.buyer_remark}
               actions={
                 <>
                   {revisionPending ? (

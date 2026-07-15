@@ -66,6 +66,22 @@ function SystemEventIcon({ content }: { content?: string | null }) {
   return <Info className="h-3.5 w-3.5 shrink-0" />;
 }
 
+/** RFQ title / product / quote ref from message metadata — for system status pills. */
+function getSystemContextLabel(message: ApiChatMessage): string | null {
+  const candidates = [
+    message.rfq?.title,
+    message.quotation?.rfq_title,
+    message.rfq?.description,
+    message.product?.name,
+    message.quotation?.quotation_number,
+  ];
+  for (const value of candidates) {
+    const label = value?.trim();
+    if (label) return label;
+  }
+  return null;
+}
+
 function ReadTicks({ message }: { message: ApiChatMessage }) {
   if (!message.is_mine) return null;
   if (message.send_status === "sending") {
@@ -264,12 +280,22 @@ export default function ChatMessageBubble({
 
   if (isSystem) {
     const label = message.content?.trim() || "Status update";
+    const contextLabel = getSystemContextLabel(message);
+    const showContext =
+      Boolean(contextLabel) &&
+      !label.toLowerCase().includes(contextLabel!.toLowerCase());
     return (
       <div className={`flex justify-center px-2 ${className}`}>
         <div className="inline-flex max-w-[95%] items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-[12px] font-semibold text-muted-fg">
           <SystemEventIcon content={label} />
           <span className="min-w-0 whitespace-normal break-words text-center leading-snug">
             {label}
+            {showContext ? (
+              <>
+                {" "}
+                <span className="font-bold text-foreground/70">· {contextLabel}</span>
+              </>
+            ) : null}
           </span>
           {timeLabel ? (
             <>

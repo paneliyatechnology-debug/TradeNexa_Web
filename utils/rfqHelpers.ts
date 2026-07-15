@@ -88,8 +88,29 @@ export function normalizeRfqDetail(raw: unknown): ApiRfqDetail | null {
   const buyer = readRecord(item.buyer);
   const company = readRecord(item.company);
 
+  const topLevelBuyerRemark =
+    pickString(item.buyer_remark) ?? pickString(item.buyer_remarks);
+
+  const myQuotationRaw =
+    readRecord(item.my_quotation) ??
+    readRecord(item.seller_quotation) ??
+    readRecord(item.quotation);
+
+  const myQuotation = normalizeQuotation(
+    myQuotationRaw && topLevelBuyerRemark
+      ? {
+          ...myQuotationRaw,
+          buyer_remark:
+            pickString(myQuotationRaw.buyer_remark) ??
+            pickString(myQuotationRaw.buyer_remarks) ??
+            topLevelBuyerRemark,
+        }
+      : myQuotationRaw
+  );
+
   return {
     ...base,
+    buyer_remark: topLevelBuyerRemark,
     address_line_1: pickString(item.address_line_1),
     address_line_2: pickString(item.address_line_2),
     pincode: pickString(item.pincode),
@@ -132,10 +153,7 @@ export function normalizeRfqDetail(raw: unknown): ApiRfqDetail | null {
             state: pickString(buyer?.state) ?? undefined,
           }
         : null,
-    my_quotation:
-      normalizeQuotation(item.my_quotation) ??
-      normalizeQuotation(item.seller_quotation) ??
-      normalizeQuotation(item.quotation),
+    my_quotation: myQuotation,
     seller_ids: (() => {
       const rawIds = item.seller_ids ?? item.sellers;
       if (!Array.isArray(rawIds)) return null;
@@ -180,12 +198,13 @@ export function normalizeQuotation(raw: unknown): ApiQuotation | null {
     payment_terms: pickString(item.payment_terms),
     validity_days: pickNumber(item.validity_days),
     remarks: pickString(item.remarks),
+    buyer_remark: pickString(item.buyer_remark) ?? pickString(item.buyer_remarks),
     revision_request_remarks:
       pickString(item.revision_request_remarks) ??
       pickString(item.revision_remarks) ??
+      pickString(item.buyer_remark) ??
       pickString(item.buyer_remarks) ??
       pickString(item.request_revision_remarks) ??
-      pickString(item.negotiation_remarks) ??
       pickString(readRecord(item.revision_request)?.remarks) ??
       pickString(readRecord(item.last_revision_request)?.remarks) ??
       pickString(readRecord(item.latest_revision_request)?.remarks),
@@ -542,9 +561,10 @@ export function isRevisionRequested(status?: string | null): boolean {
 
 /** Seller should revise when buyer asked for changes (quotation or RFQ status). */
 export function isQuotationRevisionPending(
-  quotation: Pick<ApiQuotation, "status" | "revision_request_remarks">,
+  quotation: Pick<ApiQuotation, "status" | "buyer_remark" | "revision_request_remarks">,
   rfqStatus?: string | null
 ): boolean {
+  if (quotation.buyer_remark?.trim()) return true;
   if (quotation.revision_request_remarks?.trim()) return true;
   if (isRevisionRequested(quotation.status)) return true;
   if (isRevisionRequested(rfqStatus)) return true;
@@ -553,15 +573,17 @@ export function isQuotationRevisionPending(
 
 /** Buyer's revision-request message for the seller to read. */
 export function getBuyerRevisionRemarks(
-  quotation: Pick<ApiQuotation, "status" | "remarks" | "revision_request_remarks">,
-  rfqStatus?: string | null
+  quotation: Pick<ApiQuotation, "buyer_remark" | "revision_request_remarks">,
+  _rfqStatus?: string | null,
+  rfqBuyerRemark?: string | null
 ): string | null {
-  const dedicated = quotation.revision_request_remarks?.trim();
-  if (dedicated) return dedicated;
-  if (isQuotationRevisionPending(quotation, rfqStatus) && quotation.remarks?.trim()) {
-    return quotation.remarks.trim();
-  }
-  return null;
+  // Only dedicated buyer fields — never seller quotation.remarks.
+  return (
+    quotation.buyer_remark?.trim() ||
+    quotation.revision_request_remarks?.trim() ||
+    rfqBuyerRemark?.trim() ||
+    null
+  );
 }
 
 export function getSellerRevisionStatusHint(

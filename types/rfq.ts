@@ -77,6 +77,8 @@ export interface ApiRfqDetail extends ApiRfqListItem {
   } | null;
   /** Seller's own quotation on this RFQ (when returned by GET /rfqs/seller/:id). */
   my_quotation?: ApiQuotation | null;
+  /** Buyer's latest revision request note for this RFQ. */
+  buyer_remark?: string | null;
   /** Invited sellers when visibility is PRIVATE */
   seller_ids?: number[] | null;
 }
@@ -97,6 +99,8 @@ export interface ApiQuotation {
   remarks?: string | null;
   /** Buyer's message from POST /request-revision (when returned by API). */
   revision_request_remarks?: string | null;
+  /** Buyer's revision note (API field: buyer_remark). */
+  buyer_remark?: string | null;
   currency?: string | null;
   total_amount?: number | null;
   seller_name?: string | null;
