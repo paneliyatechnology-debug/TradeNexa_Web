@@ -247,6 +247,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         page: 1,
         limit: 50,
         role: activeRoleRef.current,
+        sort_by: "last_message_at",
+        sort_order: "desc",
       });
       let systemInflation = 0;
       setConversationsMeta((prev) => {

@@ -56,7 +56,11 @@ export async function fetchConversations(
   params?: ChatListParams
 ): Promise<ChatConversationListResult> {
   const response = await apiClient.get(API_ENDPOINTS.CHATS_CONVERSATIONS, {
-    params: buildListParams(params),
+    params: buildListParams({
+      sort_by: "last_message_at",
+      sort_order: "desc",
+      ...params,
+    }),
   });
   const data = unwrapApiPayload<unknown>(response.data);
   return unwrapChatPaginated(data, normalizeChatConversation, params?.page, params?.limit);

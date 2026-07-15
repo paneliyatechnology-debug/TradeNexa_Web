@@ -169,10 +169,10 @@ export default function ChatsInbox({ role }: ChatsInboxProps) {
 
   return (
     <div className="flex h-[calc(100dvh-3.5rem-4.5rem-env(safe-area-inset-bottom))] flex-col overflow-hidden bg-portal-bg lg:-mb-6 lg:h-[calc(100dvh-3.5rem-1.5rem)]">
-      <div className="mx-auto flex h-full w-full max-w-7xl flex-1 overflow-hidden border-border bg-card shadow-[var(--shadow-soft)] sm:rounded-2xl sm:border lg:mx-4 lg:my-0 xl:mx-auto">
+      <div className="flex h-full w-full flex-1 overflow-hidden border-border bg-card shadow-[var(--shadow-soft)] sm:border-y lg:border">
         {/* Conversation list */}
         <aside
-          className={`flex h-full w-full flex-col border-r border-border bg-card md:max-w-[360px] lg:max-w-[400px] ${
+          className={`flex h-full w-full shrink-0 flex-col border-r border-border bg-card md:w-[360px] lg:w-[400px] ${
             showThreadMobile ? "hidden md:flex" : "flex"
           }`}
         >
