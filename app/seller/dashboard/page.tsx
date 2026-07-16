@@ -14,7 +14,6 @@ const quickActions = [
   { label: "Add Product", href: "/seller/add-product", icon: Plus, color: "text-primary", bg: "bg-primary-soft" },
   { label: "Messages", href: "/seller/leads", icon: MessageSquare, color: "text-foreground", bg: "bg-muted" },
   { label: "My Catalog", href: "/seller/catalog", icon: Package, color: "text-warning", bg: "bg-warning-soft" },
-  { label: "Analytics", href: "/seller/analytics", icon: TrendingUp, color: "text-success", bg: "bg-success-soft" },
 ];
 
 export default function SellerDashboardPage() {

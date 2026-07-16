@@ -1,5 +1,4 @@
 import {
-  BarChart3,
   ClipboardList,
   Home,
   LayoutDashboard,
@@ -90,12 +89,6 @@ export const sellerNavItems: PortalNavItem[] = [
     href: "/seller/chats",
     icon: MessagesSquare,
     match: (p) => p.startsWith("/seller/chats"),
-  },
-  {
-    label: "Analytics",
-    href: "/seller/analytics",
-    icon: BarChart3,
-    match: (p) => p.startsWith("/seller/analytics"),
   },
   {
     label: "Profile",
