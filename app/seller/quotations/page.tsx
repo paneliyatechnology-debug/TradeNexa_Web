@@ -145,7 +145,7 @@ export default function SellerQuotationsPage() {
                 quotation={quotation}
                 showProductName
                 rfqStatus={quotation.rfq_status}
-                href={quotation.rfq_id ? `/seller/lead/${quotation.rfq_id}` : undefined}
+                href={quotation.rfq_id ? `/seller/lead/${quotation.rfq_id}?from=feed` : undefined}
                 chatRfqId={quotation.rfq_id}
                 onChatClick={
                   quotation.rfq_id ? () => setChatTarget(quotation) : undefined

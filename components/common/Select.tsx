@@ -2,7 +2,7 @@
 
 import React, { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Check, ChevronDown, Loader2 } from "lucide-react";
+import { Check, ChevronDown, Loader2, X } from "lucide-react";
 export interface SelectOption {
   value: string;
   label: string;
@@ -249,8 +249,10 @@ export function Select({
     ? "border-error/40 bg-error-soft focus:border-error focus:ring-2 focus:ring-error/20"
     : "";
   const horizontalPad = leadingIcon ? "pl-9" : "pl-3.5";
+  const showClearSearch = open && showSearch && searchQuery.trim().length > 0;
+  const rightPad = showClearSearch ? "pr-16" : "pr-10";
 
-  const triggerClass = `flex h-10 w-full items-center rounded-lg border bg-card text-left text-sm outline-none transition-colors duration-200 appearance-none ${horizontalPad} pr-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
+  const triggerClass = `flex h-10 w-full items-center rounded-lg border bg-card text-left text-sm outline-none transition-colors duration-200 appearance-none ${horizontalPad} ${rightPad} focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
     error
       ? errorRing
       : `border-border hover:border-border-hover focus:border-primary focus:ring-2 focus:ring-primary/25 ${openRing}`
@@ -375,17 +377,36 @@ export function Select({
           </button>
         )}
 
-        <button
-          type="button"
-          tabIndex={-1}
-          disabled={disabled}
-          aria-label={open ? "Close options" : "Open options"}
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={toggleMenu}
-          className="absolute right-0 top-0 flex h-full w-10 items-center justify-center text-muted-fg transition hover:text-foreground disabled:pointer-events-none"
-        >
-          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
-        </button>
+        <div className="absolute right-0 top-0 flex h-full items-center">
+          {showClearSearch ? (
+            <button
+              type="button"
+              tabIndex={-1}
+              disabled={disabled}
+              aria-label="Clear search"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                setSearchQuery("");
+                onSearchChange?.("");
+                inputRef.current?.focus();
+              }}
+              className="flex h-full w-8 items-center justify-center text-muted-fg transition hover:text-foreground disabled:pointer-events-none"
+            >
+              <X className="h-3.5 w-3.5" aria-hidden />
+            </button>
+          ) : null}
+          <button
+            type="button"
+            tabIndex={-1}
+            disabled={disabled}
+            aria-label={open ? "Close options" : "Open options"}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={toggleMenu}
+            className="flex h-full w-10 items-center justify-center text-muted-fg transition hover:text-foreground disabled:pointer-events-none"
+          >
+            <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+          </button>
+        </div>
       </div>
 
       {mounted && menu ? createPortal(menu, document.body) : null}

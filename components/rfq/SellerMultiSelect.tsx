@@ -123,8 +123,19 @@ export default function SellerMultiSelect({
             disabled={disabled}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search sellers by company name..."
-            className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-fg disabled:opacity-50"
+            className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-fg disabled:opacity-50 [&::-webkit-search-cancel-button]:hidden"
           />
+          {query.trim() ? (
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => setQuery("")}
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-muted-fg transition hover:bg-muted hover:text-foreground disabled:opacity-50"
+              aria-label="Clear search"
+            >
+              <X className="h-3.5 w-3.5" aria-hidden />
+            </button>
+          ) : null}
           {loading ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" /> : null}
         </div>
 

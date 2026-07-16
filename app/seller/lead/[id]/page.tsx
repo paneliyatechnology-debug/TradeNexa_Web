@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { Calendar, Clock, Inbox, Loader2, MapPin, MessageSquare, Package, Wallet } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/common/Button";
@@ -30,6 +30,27 @@ import {
 } from "@/utils/rfqHelpers";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
 
+type LeadBackSource = "feed" | "inbox";
+
+function resolveLeadBackSource(fromParam: string | null): LeadBackSource {
+  const from = (fromParam ?? "").toLowerCase();
+  if (from === "inbox" || from === "chat" || from === "chats") return "inbox";
+  if (from === "feed" || from === "leads" || from === "rfq") return "feed";
+
+  if (typeof document !== "undefined") {
+    const referrer = document.referrer || "";
+    try {
+      const refPath = new URL(referrer).pathname;
+      if (refPath.startsWith("/seller/chats")) return "inbox";
+      if (refPath.startsWith("/seller/leads")) return "feed";
+    } catch {
+      // ignore invalid referrer
+    }
+  }
+
+  return "feed";
+}
+
 function MetaPill({
   icon: Icon,
   label,
@@ -56,9 +77,15 @@ function PageShell({ children }: { children: React.ReactNode }) {
 
 export default function SellerLeadDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const rfqId = Number(params.id);
   const invalidId = !rfqId || Number.isNaN(rfqId);
   const { hydrateRfqConversations } = useChat();
+  const backSource = useMemo(
+    () => resolveLeadBackSource(searchParams.get("from")),
+    [searchParams]
+  );
+  const fromFeed = backSource === "feed";
 
   const [rfq, setRfq] = useState<ApiRfqDetail | null>(null);
   const [existingQuotation, setExistingQuotation] = useState<ApiQuotation | null>(null);
@@ -113,10 +140,18 @@ export default function SellerLeadDetailPage() {
   if (invalidId) {
     return (
       <PageShell>
-        <PortalBackLink href="/seller/leads" label="RFQ Feed" />
+        {fromFeed ? <PortalBackLink href="/seller/leads" label="RFQ Feed" /> : null}
         <p className="mt-4 rounded-xl border border-error/20 bg-error-soft p-3 text-sm text-error">
           Invalid RFQ id
         </p>
+        {!fromFeed ? (
+          <Link
+            href="/seller/chats"
+            className="mt-4 block cursor-pointer text-center text-sm font-semibold text-muted-fg transition hover:text-primary"
+          >
+            Back to inbox
+          </Link>
+        ) : null}
       </PageShell>
     );
   }
@@ -124,11 +159,19 @@ export default function SellerLeadDetailPage() {
   if (loading) {
     return (
       <PageShell>
-        <PortalBackLink href="/seller/leads" label="RFQ Feed" />
+        {fromFeed ? <PortalBackLink href="/seller/leads" label="RFQ Feed" /> : null}
         <div className="flex items-center justify-center gap-2 py-20 text-sm text-muted-fg">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
           Loading RFQ...
         </div>
+        {!fromFeed ? (
+          <Link
+            href="/seller/chats"
+            className="mt-4 block cursor-pointer text-center text-sm font-semibold text-muted-fg transition hover:text-primary"
+          >
+            Back to inbox
+          </Link>
+        ) : null}
       </PageShell>
     );
   }
@@ -136,14 +179,14 @@ export default function SellerLeadDetailPage() {
   if (!rfq) {
     return (
       <PageShell>
-        <PortalBackLink href="/seller/leads" label="RFQ Feed" />
+        {fromFeed ? <PortalBackLink href="/seller/leads" label="RFQ Feed" /> : null}
         <PortalEmptyState
           icon={Inbox}
           title="RFQ not found"
           description="This requirement is no longer available or you do not have access."
           action={
-            <Link href="/seller/leads">
-              <Button variant="secondary">Back to feed</Button>
+            <Link href={fromFeed ? "/seller/leads" : "/seller/chats"}>
+              <Button variant="secondary">{fromFeed ? "Back to feed" : "Back to inbox"}</Button>
             </Link>
           }
         />
@@ -161,7 +204,7 @@ export default function SellerLeadDetailPage() {
 
   return (
     <PageShell>
-      <PortalBackLink href="/seller/leads" label="RFQ Feed" />
+      {fromFeed ? <PortalBackLink href="/seller/leads" label="RFQ Feed" /> : null}
       <PortalPageHeader
         title={rfq.title}
         subtitle={
@@ -330,12 +373,14 @@ export default function SellerLeadDetailPage() {
         />
       ) : null}
 
-      <Link
-        href="/seller/leads"
-        className="mt-4 block cursor-pointer text-center text-sm font-semibold text-muted-fg transition hover:text-primary"
-      >
-        Back to inbox
-      </Link>
+      {!fromFeed ? (
+        <Link
+          href="/seller/chats"
+          className="mt-4 block cursor-pointer text-center text-sm font-semibold text-muted-fg transition hover:text-primary"
+        >
+          Back to inbox
+        </Link>
+      ) : null}
     </PageShell>
   );
 }

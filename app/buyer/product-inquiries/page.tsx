@@ -6,6 +6,7 @@ import { FileText, Loader2, Package } from "lucide-react";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalEmptyState from "@/components/portal/PortalEmptyState";
 import PortalPagination from "@/components/portal/PortalPagination";
+import PortalSearchBar from "@/components/portal/PortalSearchBar";
 import InquiryListCard from "@/components/inquiry/InquiryListCard";
 import { Button } from "@/components/common/Button";
 import { useChat } from "@/context/ChatContext";
@@ -73,11 +74,11 @@ export default function BuyerProductInquiriesPage() {
             </button>
           ))}
         </div>
-        <input
+        <PortalSearchBar
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={setSearch}
           placeholder="Search inquiries…"
-          className="input-base max-w-xs"
+          className="w-full max-w-xs"
         />
       </div>
 

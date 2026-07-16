@@ -133,7 +133,7 @@ export default function SellerDashboardPage() {
           {recentLeads.map((lead) => (
             <Link
               key={lead.id}
-              href={`/seller/lead/${lead.id}`}
+              href={`/seller/lead/${lead.id}?from=feed`}
               className="surface-card-hover flex items-start gap-4 p-4"
             >
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-soft text-sm font-semibold text-primary">

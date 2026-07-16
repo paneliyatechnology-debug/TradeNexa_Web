@@ -96,7 +96,7 @@ function getSystemContextHref(
 ): string | null {
   const rfqId = message.rfq?.id ?? message.quotation?.rfq_id ?? null;
   if (rfqId != null) {
-    return role === "seller" ? `/seller/lead/${rfqId}` : `/buyer/rfq/${rfqId}`;
+    return role === "seller" ? `/seller/lead/${rfqId}?from=inbox` : `/buyer/rfq/${rfqId}`;
   }
 
   const inquiryId = message.inquiry_id ?? message.quotation?.inquiry_id ?? null;
@@ -221,7 +221,7 @@ export default function ChatMessageBubble({
   const rfqHref =
     rfqId != null
       ? role === "seller"
-        ? `/seller/lead/${rfqId}`
+        ? `/seller/lead/${rfqId}?from=inbox`
         : `/buyer/rfq/${rfqId}`
       : null;
   const timeLabel = formatTime(message.created_at);

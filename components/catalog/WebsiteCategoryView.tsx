@@ -7,6 +7,7 @@ import PortalProductCard from "@/components/portal/PortalProductCard";
 import PortalSubcategoryPills from "@/components/portal/PortalSubcategoryPills";
 import PortalEmptyState from "@/components/portal/PortalEmptyState";
 import PortalInfiniteScroll from "@/components/portal/PortalInfiniteScroll";
+import MarketplaceSearchBar from "@/components/catalog/marketplace/MarketplaceSearchBar";
 import {
   fetchCategoryBySlug,
   fetchProducts,
@@ -242,15 +243,12 @@ export default function WebsiteCategoryView({
               onLoadMoreSubs={loadMoreSubs}
             />
 
-            <div className="relative mt-5">
-              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-fg" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={`Search in ${selectedSub?.name ?? category?.name ?? "category"}...`}
-                className="w-full rounded-2xl border border-border bg-card py-3 pl-11 pr-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
+            <MarketplaceSearchBar
+              value={search}
+              onChange={setSearch}
+              placeholder={`Search in ${selectedSub?.name ?? category?.name ?? "category"}...`}
+              className="mt-5"
+            />
 
             {productError ? (
               <p className="mt-4 rounded-xl border border-error/20 bg-error-soft p-3 text-sm text-error">

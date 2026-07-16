@@ -137,7 +137,7 @@ export default function SellerLeadsPage() {
                   <RfqListCard
                     key={rfq.id}
                     rfq={rfq}
-                    href={`/seller/lead/${rfq.id}`}
+                    href={`/seller/lead/${rfq.id}?from=feed`}
                     variant="seller"
                     meta={rfq.buyer_company ?? undefined}
                   />
