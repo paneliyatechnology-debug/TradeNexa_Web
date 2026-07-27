@@ -14,6 +14,10 @@ export interface User {
   role: UserRole;
   phone: string;
   country_code: string;
+  /** From GET /auth/profile `industry` (buyer complete-profile required). */
+  industry?: string;
+  /** From GET /auth/profile `business_type` (register required). */
+  businessType?: string;
   /** From GET /auth/profile `is_completed_profile`. */
   isCompletedProfile?: boolean;
 }

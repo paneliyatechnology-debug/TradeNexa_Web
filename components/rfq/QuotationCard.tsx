@@ -63,10 +63,12 @@ export default function QuotationCard({
   const revisionPending = isQuotationRevisionPending(quotation, rfqStatus);
   const sellerRemarks = quotation.remarks?.trim() || null;
   const totals = computeQuotationTotalWithGst(quotation);
-  const company = quotation.seller_company?.trim();
-  const contact = quotation.seller_name?.trim();
+  // Prefer company name for buyer-facing quote cards; fall back to person name only if needed.
+  const company = quotation.seller_company?.trim() || null;
+  const contact = quotation.seller_name?.trim() || null;
   const sellerPrimary = company || contact || "Seller";
-  const sellerSecondary = company && contact ? contact : null;
+  // Show person name as secondary only when company is the primary label.
+  const sellerSecondary = company && contact && contact !== company ? contact : null;
   const productPrimary =
     quotation.product_name?.trim() || quotation.rfq_title?.trim() || "Quotation";
   const isClickable = Boolean(href || onCardClick);

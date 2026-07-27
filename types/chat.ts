@@ -22,6 +22,16 @@ export interface ApiChatParticipant {
   company_logo?: string | null;
   role?: string | null;
   is_online?: boolean | null;
+  email?: string | null;
+  phone?: string | null;
+  mobile_number?: string | null;
+  industry?: string | null;
+  city?: string | null;
+  state?: string | null;
+  business_type?: string | null;
+  address_line_1?: string | null;
+  pincode?: string | null;
+  country?: string | null;
 }
 
 export interface ApiChatProductPreview {

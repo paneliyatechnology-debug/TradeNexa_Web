@@ -2,12 +2,12 @@
 
 import React, { useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import Image from "next/image";
 import { X } from "lucide-react";
 import ChatPanel, { type ChatPanelProps } from "@/components/chat/ChatPanel";
+import ChatCounterpartyHeader from "@/components/chat/ChatCounterpartyHeader";
 import { useChat } from "@/context/ChatContext";
 import { conversationCounterpartyLogo } from "@/utils/chatHelpers";
-import { getInitials, resolveImageUrl } from "@/utils/catalogHelpers";
+import { resolveImageUrl } from "@/utils/catalogHelpers";
 
 interface ChatSidePanelProps extends Omit<ChatPanelProps, "className" | "embedded" | "hideHeader"> {
   open: boolean;
@@ -120,37 +120,30 @@ export default function ChatSidePanel({
         onClick={onClose}
       />
       <aside
-        className="relative flex h-full w-full max-w-[min(100vw,32rem)] flex-col bg-card shadow-[var(--shadow-elevated)] sm:max-w-[36rem]"
+        data-chat-thread-root
+        className="relative flex h-full w-full max-w-[min(100vw,32rem)] flex-col overflow-hidden bg-card shadow-[var(--shadow-elevated)] sm:max-w-[36rem]"
         role="dialog"
         aria-modal="true"
         aria-label={displayName}
       >
-        <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-card px-4">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-soft text-sm font-bold text-primary">
-              {logoUrl ? (
-                <Image
-                  src={logoUrl}
-                  alt=""
-                  width={36}
-                  height={36}
-                  className="h-full w-full object-cover"
-                  unoptimized
-                />
-              ) : (
-                getInitials(displayName)
-              )}
-            </span>
-            <p className="truncate text-sm font-bold text-foreground">{displayName}</p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border text-muted-fg transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-            aria-label="Close chat"
-          >
-            <X className="h-4 w-4" aria-hidden />
-          </button>
+        <header className="shrink-0 border-b border-border bg-card px-4 py-3">
+          <ChatCounterpartyHeader
+            role={chatProps.role}
+            name={displayName}
+            logoUrl={logoUrl}
+            conversation={conversationMeta}
+            sellerId={chatProps.sellerId}
+            trailing={
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border text-muted-fg transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                aria-label="Close chat"
+              >
+                <X className="h-4 w-4" aria-hidden />
+              </button>
+            }
+          />
         </header>
         <ChatPanel
           key={`${chatProps.conversationId ?? chatProps.inquiryId ?? chatProps.rfqId}-${chatProps.sellerId ?? "unknown"}`}

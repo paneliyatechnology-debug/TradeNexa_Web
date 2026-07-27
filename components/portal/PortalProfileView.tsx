@@ -8,6 +8,8 @@ import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
   Building2,
+  Briefcase,
+  Hash,
   Mail,
   MapPin,
   Phone,
@@ -48,8 +50,74 @@ const themes = {
   },
 } as const;
 
-function buildAccountDetailRows(user: User | null) {
-  const rows: { icon: typeof UserIcon; label: string; value: string }[] = [];
+type DetailRow = { icon: LucideIcon; label: string; value: string };
+
+function formatMobile(user: User): string {
+  const phone = user.phone?.trim();
+  if (!phone) return "";
+  const code = user.country_code?.trim() || "+91";
+  return `${code} ${phone}`;
+}
+
+/**
+ * Buyer account details = register required + buyer complete-profile required only.
+ * Register: full name, mobile, email, business type.
+ * Complete profile: company name, industry, address, state, city, pincode.
+ * GST is optional for buyers — omitted.
+ */
+function buildBuyerRequiredDetailRows(user: User | null): DetailRow[] {
+  if (!user) return [];
+  const rows: DetailRow[] = [];
+
+  if (user.name.trim()) {
+    rows.push({ icon: UserIcon, label: "Full name", value: user.name.trim() });
+  }
+  const mobile = formatMobile(user);
+  if (mobile) {
+    rows.push({ icon: Phone, label: "Mobile number", value: mobile });
+  }
+  if (user.email.trim()) {
+    rows.push({ icon: Mail, label: "Email", value: user.email.trim() });
+  }
+  if (user.businessType?.trim()) {
+    rows.push({
+      icon: Briefcase,
+      label: "Business type",
+      value: user.businessType.trim(),
+    });
+  }
+  if (user.company.trim()) {
+    rows.push({
+      icon: Building2,
+      label: "Company name",
+      value: user.company.trim(),
+    });
+  }
+  if (user.industry?.trim()) {
+    rows.push({
+      icon: Building2,
+      label: "Industry",
+      value: user.industry.trim(),
+    });
+  }
+  if (user.address.trim()) {
+    rows.push({ icon: MapPin, label: "Address", value: user.address.trim() });
+  }
+  if (user.state.trim()) {
+    rows.push({ icon: MapPin, label: "State", value: user.state.trim() });
+  }
+  if (user.city.trim()) {
+    rows.push({ icon: MapPin, label: "City", value: user.city.trim() });
+  }
+  if (user.pincode.trim()) {
+    rows.push({ icon: Hash, label: "Pincode", value: user.pincode.trim() });
+  }
+
+  return rows;
+}
+
+function buildSellerAccountDetailRows(user: User | null): DetailRow[] {
+  const rows: DetailRow[] = [];
 
   if (user?.name) rows.push({ icon: UserIcon, label: "Full name", value: user.name });
   if (user?.company) rows.push({ icon: Building2, label: "Company", value: user.company });
@@ -78,10 +146,20 @@ export default function PortalProfileView({ variant }: PortalProfileViewProps) {
   const theme = themes[variant];
 
   const displayName =
-    variant === "seller" ? user?.company || user?.name || "Seller" : user?.name || "Buyer";
-  const secondaryLine = variant === "seller" ? user?.name : user?.company;
+    variant === "buyer"
+      ? user?.company?.trim() || user?.name || "Buyer"
+      : user?.company || user?.name || "Seller";
+  const secondaryLine =
+    variant === "buyer"
+      ? user?.company?.trim() && user?.name?.trim()
+        ? user.name
+        : null
+      : user?.name;
   const initial = (displayName || "U").charAt(0).toUpperCase();
-  const accountDetails = buildAccountDetailRows(user);
+  const accountDetails =
+    variant === "buyer"
+      ? buildBuyerRequiredDetailRows(user)
+      : buildSellerAccountDetailRows(user);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
@@ -111,7 +189,7 @@ export default function PortalProfileView({ variant }: PortalProfileViewProps) {
               {secondaryLine ? (
                 <p className="mt-1 truncate text-sm text-white/80">{secondaryLine}</p>
               ) : null}
-              {user?.phone ? <p className="mt-1 text-xs text-white/70">{user.phone}</p> : null}
+              {user?.phone ? <p className="mt-1 text-xs text-white/70">{formatMobile(user)}</p> : null}
             </div>
           </div>
           <Link
@@ -126,7 +204,14 @@ export default function PortalProfileView({ variant }: PortalProfileViewProps) {
 
       <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
         <div className="lg:col-span-2">
-          <PortalSection title="Account Details" subtitle="Your registered information">
+          <PortalSection
+            title="Account Details"
+            subtitle={
+              variant === "buyer"
+                ? "Registration and complete-profile required fields"
+                : "Your registered information"
+            }
+          >
             {accountDetails.length > 0 ? (
               <div className="surface-card grid grid-cols-1 overflow-hidden sm:grid-cols-2">
                 {accountDetails.map((row, index) => {
@@ -141,7 +226,7 @@ export default function PortalProfileView({ variant }: PortalProfileViewProps) {
 
                   return (
                     <div
-                      key={row.label}
+                      key={`${row.label}-${row.value}`}
                       className={[
                         "flex items-start gap-3 border-border p-4 sm:p-5",
                         !inLastRow ? "border-b" : "",

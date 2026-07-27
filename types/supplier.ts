@@ -6,6 +6,8 @@ export interface ApiSupplier {
   user_id?: number | null;
   company_name: string;
   industry?: string | null;
+  /** Business classification (e.g. Manufacturer / Trader / Distributor). */
+  business_type?: string | null;
   logo?: string | null;
   verified?: boolean;
   rating?: number | null;
@@ -18,6 +20,12 @@ export interface ApiSupplier {
   city?: string | null;
   state?: string | null;
   is_active?: boolean | null;
+  /** Primary contact number (mobile preferred). */
+  mobile_number?: string | null;
+  /** Landline or generic phone fallback. */
+  phone?: string | null;
+  whatsapp?: string | null;
+  email?: string | null;
 }
 
 export interface SupplierListParams {

@@ -22,6 +22,7 @@ import {
   mapQuotationListResult,
   unwrapRfqPaginated,
 } from "@/utils/rfqHelpers";
+import { fetchSupplierById } from "@/services/supplierService";
 
 function getLoggedInUserId(): number | undefined {
   if (typeof window === "undefined") return undefined;
@@ -102,6 +103,39 @@ export async function fetchMyRfqs(params?: RfqListParams): Promise<RfqListResult
   return mapRfqList(data, page, limit);
 }
 
+/** Fill missing seller_company from /suppliers/:id when quote payloads only have person name. */
+async function enrichQuotationSellerCompanies(
+  quotations: ApiQuotation[]
+): Promise<ApiQuotation[]> {
+  const needsCompany = quotations.filter(
+    (q) => !q.seller_company?.trim() && q.seller_id != null && q.seller_id > 0
+  );
+  if (needsCompany.length === 0) return quotations;
+
+  const ids = Array.from(new Set(needsCompany.map((q) => q.seller_id!)));
+  const companyBySellerId = new Map<number, string>();
+
+  await Promise.all(
+    ids.map(async (id) => {
+      try {
+        const supplier = await fetchSupplierById(id);
+        const company = supplier.company_name?.trim();
+        if (company) companyBySellerId.set(id, company);
+      } catch {
+        /* keep person-name fallback on the card */
+      }
+    })
+  );
+
+  if (companyBySellerId.size === 0) return quotations;
+
+  return quotations.map((q) => {
+    if (q.seller_company?.trim() || q.seller_id == null) return q;
+    const company = companyBySellerId.get(q.seller_id);
+    return company ? { ...q, seller_company: company } : q;
+  });
+}
+
 /** GET /api/v1/rfqs/:id/quotations — quotations for an RFQ (buyer) */
 export async function fetchRfqQuotations(
   rfqId: number,
@@ -119,12 +153,14 @@ export async function fetchRfqQuotations(
   }
 
   const withParams = await load(true);
-  if (withParams.results.length > 0 || withParams.pagination.total > 0) {
-    return withParams;
-  }
+  const base =
+    withParams.results.length > 0 || withParams.pagination.total > 0
+      ? withParams
+      : // Some backends return a bare array and ignore (or mishandle) list query params.
+        await load(false);
 
-  // Some backends return a bare array and ignore (or mishandle) list query params.
-  return load(false);
+  const results = await enrichQuotationSellerCompanies(base.results);
+  return { ...base, results };
 }
 
 /** POST /api/v1/rfqs — create RFQ (buyer) */

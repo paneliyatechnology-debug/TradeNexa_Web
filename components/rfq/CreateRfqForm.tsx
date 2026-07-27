@@ -614,7 +614,30 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
   }, [form.categoryId, subcategoriesLoadingMore, subcategoriesHasMore, subcategoriesPage]);
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [key]: value };
+
+      // Budget = quantity × expected unit price (auto-calculated).
+      if (key === "quantity" || key === "expectedPrice") {
+        const qty = Number(key === "quantity" ? value : next.quantity);
+        const priceRaw = String(key === "expectedPrice" ? value : next.expectedPrice).trim();
+        const unitPrice = Number(priceRaw);
+        if (
+          Number.isFinite(qty) &&
+          qty > 0 &&
+          priceRaw !== "" &&
+          Number.isFinite(unitPrice) &&
+          unitPrice >= 0
+        ) {
+          const total = Math.round(qty * unitPrice * 100) / 100;
+          next.budget = Number.isInteger(total) ? String(total) : total.toFixed(2);
+        } else {
+          next.budget = "";
+        }
+      }
+
+      return next;
+    });
     setFieldErrors((prev) => {
       if (!prev[key] && !(key === "visibility" && prev.sellerIds)) return prev;
       const next = { ...prev };
@@ -1008,9 +1031,13 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
               min={0}
               step="0.01"
               value={form.budget}
-              onChange={(e) => updateField("budget", e.target.value)}
-              className={inputClass("budget")}
+              readOnly
+              title="Auto-calculated: quantity × expected unit price"
+              className={`${inputClass("budget")} cursor-default bg-muted`}
             />
+            <p className="mt-1 text-[11px] text-muted-fg">
+              Auto-calculated from quantity × expected unit price
+            </p>
           </div>
         </div>
 

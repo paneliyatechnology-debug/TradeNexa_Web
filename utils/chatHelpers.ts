@@ -40,25 +40,123 @@ function readRecord(value: unknown): Record<string, unknown> | null {
 function normalizeParticipant(raw: unknown): ApiChatParticipant | null {
   const item = readRecord(raw);
   if (!item) return null;
+  const company = readRecord(item.company);
+  const address = readRecord(item.address);
+  const contact = readRecord(item.contact);
+  const user = readRecord(item.user);
+  const location = readRecord(item.location);
   return {
-    id: pickNumber(item.id) ?? undefined,
-    user_id: pickNumber(item.user_id) ?? undefined,
+    id: pickNumber(item.id) ?? pickNumber(user?.id) ?? undefined,
+    user_id:
+      pickNumber(item.user_id) ??
+      pickNumber(user?.user_id) ??
+      pickNumber(user?.id) ??
+      undefined,
     name:
       pickString(item.name) ??
       pickString(item.full_name) ??
-      pickString(item.fullName),
-    company_name: pickString(item.company_name) ?? pickString(item.company),
+      pickString(item.fullName) ??
+      pickString(user?.name) ??
+      pickString(user?.full_name),
+    company_name:
+      pickString(item.company_name) ??
+      pickString(item.companyName) ??
+      pickString(item.business_name) ??
+      pickString(company?.name) ??
+      pickString(company?.company_name) ??
+      pickString(user?.company_name) ??
+      (typeof item.company === "string" ? pickString(item.company) : null),
     profile_image:
       pickString(item.profile_image) ??
       pickString(item.profileImage) ??
       pickString(item.avatar) ??
-      pickString(item.image),
+      pickString(item.image) ??
+      pickString(user?.profile_image) ??
+      pickString(user?.avatar),
     company_logo:
       pickString(item.company_logo) ??
       pickString(item.companyLogo) ??
-      pickString(item.logo),
-    role: pickString(item.role),
-    is_online: typeof item.is_online === "boolean" ? item.is_online : null,
+      pickString(item.logo) ??
+      pickString(company?.logo),
+    role: pickString(item.role) ?? pickString(user?.role),
+    is_online:
+      typeof item.is_online === "boolean"
+        ? item.is_online
+        : typeof user?.is_online === "boolean"
+          ? (user.is_online as boolean)
+          : null,
+    email:
+      pickString(item.email) ??
+      pickString(contact?.email) ??
+      pickString(user?.email) ??
+      pickString(company?.email),
+    phone:
+      pickString(item.phone) ??
+      pickString(item.mobile_number) ??
+      pickString(item.mobile) ??
+      pickString(contact?.phone) ??
+      pickString(contact?.mobile_number) ??
+      pickString(contact?.mobile) ??
+      pickString(contact?.whatsapp) ??
+      pickString(user?.phone) ??
+      pickString(user?.mobile_number) ??
+      pickString(user?.mobile),
+    mobile_number:
+      pickString(item.mobile_number) ??
+      pickString(item.mobile) ??
+      pickString(item.phone) ??
+      pickString(contact?.mobile_number) ??
+      pickString(contact?.mobile) ??
+      pickString(contact?.phone) ??
+      pickString(user?.mobile_number) ??
+      pickString(user?.mobile) ??
+      pickString(user?.phone),
+    industry:
+      pickString(item.industry) ??
+      pickString(company?.industry) ??
+      pickString(user?.industry),
+    city:
+      pickString(item.city) ??
+      pickString(address?.city) ??
+      pickString(location?.city) ??
+      pickString(company?.city) ??
+      pickString(user?.city),
+    state:
+      pickString(item.state) ??
+      pickString(address?.state) ??
+      pickString(location?.state) ??
+      pickString(company?.state) ??
+      pickString(user?.state),
+    business_type:
+      pickString(item.business_type) ??
+      pickString(readRecord(item.business_type)?.name) ??
+      pickString(readRecord(item.businessType)?.name) ??
+      pickString(company?.business_type) ??
+      pickString(readRecord(company?.business_type)?.name) ??
+      pickString(user?.business_type) ??
+      pickString(readRecord(user?.business_type)?.name),
+    address_line_1:
+      pickString(item.address_line_1) ??
+      pickString(item.addressLine1) ??
+      pickString(address?.address_line_1) ??
+      pickString(address?.line1) ??
+      (typeof item.address === "string" ? pickString(item.address) : null) ??
+      pickString(company?.address_line_1) ??
+      pickString(user?.address_line_1) ??
+      (typeof user?.address === "string" ? pickString(user.address) : null),
+    pincode:
+      pickString(item.pincode) ??
+      pickString(item.pin_code) ??
+      pickString(address?.pincode) ??
+      pickString(location?.pincode) ??
+      pickString(company?.pincode) ??
+      pickString(user?.pincode),
+    country:
+      pickString(item.country) ??
+      pickString(address?.country) ??
+      pickString(location?.country) ??
+      pickString(company?.country) ??
+      pickString(user?.country),
   };
 }
 
@@ -80,6 +178,16 @@ function mergeParticipant(
     company_logo: incoming.company_logo ?? existing.company_logo ?? null,
     role: incoming.role ?? existing.role ?? null,
     is_online: incoming.is_online ?? existing.is_online ?? null,
+    email: incoming.email ?? existing.email ?? null,
+    phone: incoming.phone ?? existing.phone ?? null,
+    mobile_number: incoming.mobile_number ?? existing.mobile_number ?? null,
+    industry: incoming.industry ?? existing.industry ?? null,
+    city: incoming.city ?? existing.city ?? null,
+    state: incoming.state ?? existing.state ?? null,
+    business_type: incoming.business_type ?? existing.business_type ?? null,
+    address_line_1: incoming.address_line_1 ?? existing.address_line_1 ?? null,
+    pincode: incoming.pincode ?? existing.pincode ?? null,
+    country: incoming.country ?? existing.country ?? null,
   };
 }
 

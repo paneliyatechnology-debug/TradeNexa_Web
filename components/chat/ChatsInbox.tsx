@@ -13,6 +13,9 @@ import {
   X,
 } from "lucide-react";
 import ChatPanel from "@/components/chat/ChatPanel";
+import ChatCounterpartyHeader, {
+  counterpartyDisplayName,
+} from "@/components/chat/ChatCounterpartyHeader";
 import ConversationBadge, {
   formatChatBadgeCount,
 } from "@/components/chat/ConversationBadge";
@@ -65,14 +68,7 @@ function formatWhen(value?: string | null): string {
 }
 
 function counterpartyName(conversation: ApiChatConversation, role: ChatRole): string {
-  const other =
-    conversation.other_party ??
-    (role === "buyer" ? conversation.seller : conversation.buyer);
-  return (
-    other?.company_name?.trim() ||
-    other?.name?.trim() ||
-    (role === "buyer" ? "Seller" : "Buyer")
-  );
+  return counterpartyDisplayName(conversation, role);
 }
 
 function PartyAvatar({
@@ -454,28 +450,28 @@ export default function ChatsInbox({ role }: ChatsInboxProps) {
           }`}
         >
           {selected ? (
-            <div className="flex h-full min-h-0 flex-col">
-              <header className="flex shrink-0 items-center gap-3 border-b border-border bg-card px-3 py-3 sm:px-4">
-                <button
-                  type="button"
-                  onClick={closeThread}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-fg transition-colors hover:bg-muted hover:text-primary md:hidden"
-                  aria-label="Back to chats"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </button>
-                <PartyAvatar
-                  conversation={selected}
+            <div
+              data-chat-thread-root
+              className="relative flex h-full min-h-0 flex-col overflow-hidden"
+            >
+              <header className="shrink-0 border-b border-border bg-card px-3 py-3 sm:px-4">
+                <ChatCounterpartyHeader
                   role={chatRole}
                   name={counterpartyName(selected, chatRole)}
-                  size="lg"
-                  tone={isSeller ? "seller" : "buyer"}
+                  logoUrl={conversationCounterpartyLogo(selected, chatRole)}
+                  conversation={selected}
+                  sellerId={selected.seller_id}
+                  leading={
+                    <button
+                      type="button"
+                      onClick={closeThread}
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-fg transition-colors hover:bg-muted hover:text-primary md:hidden"
+                      aria-label="Back to chats"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </button>
+                  }
                 />
-                <div className="min-w-0 flex-1">
-                  <h2 className="truncate text-sm font-semibold tracking-tight text-foreground">
-                    {counterpartyName(selected, chatRole)}
-                  </h2>
-                </div>
               </header>
               <div className="min-h-0 flex-1">
                 <ChatPanel

@@ -53,6 +53,7 @@ export interface ApiUserProfile {
   seller_id?: number | null;
   seller?: { id?: number | null } | null;
   industry?: string | null;
+  business_type?: string | { id?: number; name?: string | null; code?: string | null } | null;
   category_id?: number | string | null;
   gst_number?: string | null;
   pan_number?: string | null;
@@ -118,6 +119,14 @@ export function unwrapApiPayload<T>(payload: unknown): T {
   return payload as T;
 }
 
+function businessTypeName(
+  value: ApiUserProfile["business_type"]
+): string {
+  if (!value) return "";
+  if (typeof value === "string") return value.trim();
+  return String(value.name ?? "").trim();
+}
+
 export function mapApiProfileToUser(profile: ApiUserProfile): User {
   const mobile = String(profile.mobile_number || "");
   const addressObj =
@@ -141,6 +150,8 @@ export function mapApiProfileToUser(profile: ApiUserProfile): User {
     role: parseUserRole(profile.role, profile.role_id),
     phone: extractPhoneFromMobile(mobile),
     country_code: extractCountryCode(mobile),
+    industry: String(profile.industry ?? "").trim(),
+    businessType: businessTypeName(profile.business_type),
     isCompletedProfile: isCompletedProfileFlag(profile.is_completed_profile),
   };
 }

@@ -341,9 +341,29 @@ export function normalizeQuotation(raw: unknown): ApiQuotation | null {
       pickString(readRecord(item.latest_revision_request)?.remarks),
     currency: pickString(item.currency) ?? "INR",
     total_amount: pickNumber(item.total_amount) ?? pickNumber(item.total),
-    seller_name: pickString(item.seller_name) ?? pickString(seller?.name),
-    seller_company:
-      pickString(item.seller_company) ?? pickString(seller?.company_name) ?? pickString(seller?.company),
+    seller_name:
+      pickString(item.seller_name) ??
+      pickString(seller?.full_name) ??
+      pickString(seller?.name),
+    seller_company: (() => {
+      const sellerCompany = readRecord(seller?.company);
+      const nestedUser = readRecord(seller?.user);
+      const nestedUserCompany = readRecord(nestedUser?.company);
+      return (
+        pickString(item.seller_company) ??
+        pickString(item.seller_company_name) ??
+        pickString(item.company_name) ??
+        pickString(seller?.company_name) ??
+        pickString(seller?.companyName) ??
+        pickString(seller?.business_name) ??
+        pickString(sellerCompany?.name) ??
+        pickString(sellerCompany?.company_name) ??
+        pickString(nestedUser?.company_name) ??
+        pickString(nestedUserCompany?.name) ??
+        pickString(nestedUserCompany?.company_name) ??
+        (typeof seller?.company === "string" ? pickString(seller.company) : null)
+      );
+    })(),
     seller_id:
       pickNumber(item.seller_id) ??
       pickNumber(item.seller_user_id) ??
