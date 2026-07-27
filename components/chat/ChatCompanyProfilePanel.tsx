@@ -10,7 +10,6 @@ import {
   Briefcase,
   Building2,
   Clock3,
-  FileText,
   Hash,
   Loader2,
   Mail,
@@ -181,23 +180,10 @@ export default function ChatCompanyProfilePanel({
   const city = other?.city?.trim() || supplier?.city?.trim() || null;
   const pincode = other?.pincode?.trim() || null;
 
-  const rfqLabel =
-    conversation?.rfq_title?.trim() ||
-    conversation?.rfq_reference?.trim() ||
-    (conversation?.rfq_id ? `RFQ #${conversation.rfq_id}` : null);
-  const inquiryLabel = conversation?.inquiry_id
-    ? `Inquiry #${conversation.inquiry_id}`
-    : null;
-  const contextLabel =
-    conversation?.last_context?.title?.trim() ||
-    (conversation?.last_context?.type
-      ? String(conversation.last_context.type)
-      : null);
-
   const aboutRows: ProfileRow[] = [];
 
   if (isViewingSeller) {
-    // Seller profile: industry / business type / location / contact / linked context
+    // Seller profile: industry / business type / location / contact
     const location = [city, state].filter(Boolean).join(", ");
     const normalizedIndustry = industry?.toLowerCase();
     const normalizedBusinessType = businessType?.toLowerCase();
@@ -218,11 +204,6 @@ export default function ChatCompanyProfilePanel({
     pushRow(aboutRows, Mail, "Email", email);
     if (other?.is_online != null) {
       pushRow(aboutRows, BadgeCheck, "Status", other.is_online ? "Online" : "Offline");
-    }
-    pushRow(aboutRows, FileText, "Linked RFQ", rfqLabel);
-    pushRow(aboutRows, FileText, "Linked inquiry", inquiryLabel);
-    if (contextLabel && contextLabel !== rfqLabel && contextLabel !== inquiryLabel) {
-      pushRow(aboutRows, FileText, "Context", contextLabel);
     }
   } else {
     // Buyer profile: register + buyer complete-profile required fields only.
