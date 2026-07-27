@@ -145,16 +145,18 @@ export default function PortalProfileView({ variant }: PortalProfileViewProps) {
   const { user, logoutUser } = useAuth();
   const theme = themes[variant];
 
+  const companyName = user?.company?.trim() || "";
+  const fullName = user?.name?.trim() || "";
   const displayName =
     variant === "buyer"
-      ? user?.company?.trim() || user?.name || "Buyer"
-      : user?.company || user?.name || "Seller";
+      ? companyName || fullName || "Buyer"
+      : companyName || fullName || "Seller";
   const secondaryLine =
     variant === "buyer"
-      ? user?.company?.trim() && user?.name?.trim()
-        ? user.name
+      ? companyName && fullName
+        ? fullName
         : null
-      : user?.name;
+      : fullName || null;
   const initial = (displayName || "U").charAt(0).toUpperCase();
   const accountDetails =
     variant === "buyer"
