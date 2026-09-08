@@ -10,14 +10,15 @@ export async function GET(
   request: NextRequest,
   context: { params: Promise<{ path: string[] }> }
 ) {
-  const { path } = await context.params;
-  const targetPath = path.join("/");
-  const url = `${BACKEND_ORIGIN}/media/${targetPath}${request.nextUrl.search}`;
+    const { path } = await context.params;
+    const targetPath = path ? (Array.isArray(path) ? path.join("/") : String(path)) : "";
+    const url = `${BACKEND_ORIGIN}/media/${targetPath}${request.nextUrl.search}`;
+    console.log(`[WebMediaProxy] Fetching: ${url}`);
 
-  try {
-    const response = await fetch(url, { cache: "force-cache" });
+    const response = await fetch(url, { cache: "no-store" });
 
     if (!response.ok) {
+      console.error(`[WebMediaProxy] Failed to fetch ${url} - status: ${response.status}`);
       return new NextResponse(null, { status: response.status });
     }
 
@@ -31,7 +32,8 @@ export async function GET(
         "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
       },
     });
-  } catch {
+  } catch (err) {
+    console.error("[WebMediaProxy] Error fetching media:", err);
     return NextResponse.json(
       { success: false, message: "Unable to load media from backend." },
       { status: 502 }

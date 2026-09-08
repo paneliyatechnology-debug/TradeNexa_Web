@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { motion, Reorder } from "framer-motion";
-import { Eye, Film, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { Eye, Film, Image as ImageIcon, Plus, RefreshCw, Trash2 } from "lucide-react";
 import {
   filterImageFiles,
   filterVideoFiles,
@@ -41,7 +41,7 @@ function useVideoDuration(url: string | undefined) {
 
 interface ImageCardProps {
   file: File;
-  url: string;
+  url: string | null;
   index: number;
   onRemove: () => void;
   onReplace: () => void;
@@ -64,12 +64,18 @@ function ImageCard({ file, url, index, onRemove, onReplace, onPreview }: ImageCa
         className="absolute inset-0 z-0 h-full w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
         aria-label={`Preview image ${index + 1}`}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={url}
-          alt={file.name}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
+        {url ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={url}
+            alt={file.name}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-muted text-muted-fg">
+            <ImageIcon className="h-6 w-6 opacity-40 animate-pulse" />
+          </div>
+        )}
       </button>
 
       <span className="pointer-events-none absolute bottom-2 left-2 z-10 rounded-md bg-navy/75 px-1.5 py-0.5 text-[10px] font-semibold text-white">
@@ -137,13 +143,13 @@ function OverlayBtn({
 
 interface VideoCardProps {
   file: File;
-  url: string;
+  url: string | null;
   onRemove: () => void;
   onPreview: () => void;
 }
 
 function VideoCard({ file, url, onRemove, onPreview }: VideoCardProps) {
-  const duration = useVideoDuration(url);
+  const duration = useVideoDuration(url || undefined);
 
   return (
     <motion.div
@@ -153,7 +159,13 @@ function VideoCard({ file, url, onRemove, onPreview }: VideoCardProps) {
       whileHover={{ y: -2 }}
       className="group absolute inset-0 overflow-hidden rounded-xl border border-border bg-navy "
     >
-      <video src={url} className="h-full w-full object-cover opacity-90" muted playsInline />
+      {url ? (
+        <video src={url} className="h-full w-full object-cover opacity-90" muted playsInline />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center bg-navy text-white/50">
+          <Film className="h-6 w-6 opacity-40 animate-pulse" />
+        </div>
+      )}
       <button
         type="button"
         onClick={onPreview}
@@ -218,23 +230,28 @@ function UploadTile({ variant, disabled, onClick, onDrop }: UploadTileProps) {
             : filterVideoFiles(e.dataTransfer.files);
           if (files.length) onDrop(files);
         }}
-        className={`absolute inset-0 flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed p-2 text-center transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 disabled:cursor-not-allowed disabled:opacity-40 ${
+        className={`group relative flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 ${
           active
-            ? "border-primary bg-primary/5 shadow-[0_0_0_3px_rgba(37,99,235,0.12)]"
-            : "border-muted-fg bg-muted hover:border-primary/50 hover:bg-primary/[0.03]"
-        }`}
-        aria-label={isPhoto ? "Add photos — JPG, PNG, WebP" : "Add videos — MP4, MOV, WebM"}
+            ? "border-primary bg-primary/10 shadow-sm"
+            : "border-border bg-muted/40 hover:border-primary/50 hover:bg-muted/70"
+        } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
+        aria-label={isPhoto ? "Add product photos" : "Add product demo video"}
       >
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
-          {isPhoto ? (
-            <Plus className="h-4 w-4 text-primary" />
-          ) : (
-            <Film className="h-4 w-4 text-primary" />
-          )}
+        <div
+          className={`flex h-10 w-10 items-center justify-center rounded-xl ring-1 transition-transform duration-200 group-hover:scale-105 ${
+            active
+              ? "bg-primary text-white ring-primary/30"
+              : "bg-card text-muted-fg ring-border group-hover:text-primary"
+          }`}
+        >
+          {isPhoto ? <Plus className="h-5 w-5" /> : <Film className="h-5 w-5" />}
         </div>
-        <p className="text-[11px] font-semibold leading-tight text-foreground">
-          {isPhoto ? "Add Photos" : "Add Videos"}
-        </p>
+        <span className="mt-2 text-xs font-semibold text-foreground">
+          {isPhoto ? "Add Photos" : "Add Video"}
+        </span>
+        <span className="mt-0.5 text-[10px] text-muted-fg">
+          {isPhoto ? "PNG, JPG up to 5MB" : "MP4 up to 50MB"}
+        </span>
       </motion.button>
     </div>
   );
@@ -246,7 +263,7 @@ function ExistingUrlImageCard({
   onRemove,
   onPreview,
 }: {
-  url: string;
+  url: string | null;
   index: number;
   onRemove?: () => void;
   onPreview: () => void;
@@ -264,8 +281,10 @@ function ExistingUrlImageCard({
         className="absolute inset-0 z-0 h-full w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
         aria-label={`Preview existing image ${index + 1}`}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={url} alt="" className="h-full w-full object-cover" />
+        {url ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img src={url} alt="" className="h-full w-full object-cover" />
+        ) : null}
       </button>
       {onRemove ? (
         <button
@@ -290,7 +309,7 @@ function ExistingUrlVideoCard({
   onRemove,
   onPreview,
 }: {
-  url: string;
+  url: string | null;
   index: number;
   onRemove?: () => void;
   onPreview: () => void;
@@ -302,7 +321,9 @@ function ExistingUrlVideoCard({
       animate={{ opacity: 1, scale: 1 }}
       className="group absolute inset-0 overflow-hidden rounded-xl border border-border bg-navy "
     >
-      <video src={url} className="h-full w-full object-cover opacity-90" muted playsInline />
+      {url ? (
+        <video src={url} className="h-full w-full object-cover opacity-90" muted playsInline />
+      ) : null}
       <button
         type="button"
         onClick={onPreview}
@@ -468,7 +489,7 @@ export default function GalleryGrid({
             <Reorder.Item key={item.id} value={item} className={`${GRID_CELL} list-none`}>
               <ImageCard
                 file={item.file}
-                url={imageUrls[index] ?? ""}
+                url={imageUrls[index] || null}
                 index={index}
                 onRemove={() => onRemoveImage(index)}
                 onReplace={() => onReplaceImage(index)}
@@ -482,7 +503,7 @@ export default function GalleryGrid({
           <div key={`vid-${file.name}-${file.size}-${file.lastModified}`} className={GRID_CELL}>
             <VideoCard
               file={file}
-              url={videoUrls[index] ?? ""}
+              url={videoUrls[index] || null}
               onRemove={() => onRemoveVideo(index)}
               onPreview={() => onPreviewVideo(index)}
             />

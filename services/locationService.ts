@@ -6,6 +6,7 @@ import { unwrapPaginatedResult } from "@/utils/catalogHelpers";
 import {
   INDIA_COUNTRY_ID,
   type ApiCity,
+  type ApiCountry,
   type ApiState,
   type CitiesPageResult,
   type CityListParams,
@@ -14,6 +15,32 @@ import {
   type StatesPageResult,
 } from "@/types/location";
 import { matchNearestIndiaLocation } from "@/utils/indiaNearestLocation";
+
+let cachedIndiaCountryId: number | null = null;
+
+export async function fetchCountries(): Promise<ApiCountry[]> {
+  try {
+    const response = await apiClient.get(API_ENDPOINTS.LOCATIONS_COUNTRIES);
+    const data = unwrapApiPayload<unknown>(response.data);
+    const { results } = unwrapPaginatedResult<ApiCountry>(data);
+    return results;
+  } catch {
+    return [];
+  }
+}
+
+export async function getIndiaCountryId(): Promise<number> {
+  if (cachedIndiaCountryId) return cachedIndiaCountryId;
+  const countries = await fetchCountries();
+  const india = countries.find(
+    (c) => c.code?.toUpperCase() === "IN" || c.name?.toLowerCase() === "india"
+  );
+  if (india?.id) {
+    cachedIndiaCountryId = india.id;
+    return india.id;
+  }
+  return INDIA_COUNTRY_ID;
+}
 
 function buildLocationParams(params?: StateListParams | CityListParams) {
   const query: Record<string, string | number | boolean> = {
@@ -28,10 +55,15 @@ function buildLocationParams(params?: StateListParams | CityListParams) {
 }
 
 export async function fetchStates(params?: StateListParams): Promise<StatesPageResult> {
+  let countryId = params?.country_id;
+  if (!countryId) {
+    countryId = await getIndiaCountryId();
+  }
+
   const response = await apiClient.get(API_ENDPOINTS.LOCATIONS_STATES, {
     params: {
       ...buildLocationParams(params),
-      country_id: params?.country_id ?? INDIA_COUNTRY_ID,
+      country_id: countryId,
       ...(params?.code?.trim() ? { code: params.code.trim() } : {}),
     },
   });

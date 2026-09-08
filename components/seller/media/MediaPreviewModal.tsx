@@ -151,12 +151,14 @@ export default function MediaPreviewModal({
                 className="flex max-h-full max-w-full items-center justify-center"
               >
                 {item.kind === "video" ? (
-                  <video
-                    src={item.url}
-                    controls
-                    className="max-h-[75vh] max-w-full rounded-xl"
-                  />
-                ) : (
+                  item.url ? (
+                    <video
+                      src={item.url}
+                      controls
+                      className="max-h-[75vh] max-w-full rounded-xl"
+                    />
+                  ) : null
+                ) : item.url ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     src={item.url}
@@ -164,7 +166,7 @@ export default function MediaPreviewModal({
                     className="max-h-[75vh] max-w-full rounded-xl object-contain transition-transform duration-200"
                     style={{ transform: `scale(${zoom})` }}
                   />
-                )}
+                ) : null}
               </motion.div>
             </AnimatePresence>
 
