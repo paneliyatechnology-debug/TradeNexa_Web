@@ -5,8 +5,12 @@
 export const BACKEND_ORIGIN = (
   process.env.NEXT_PUBLIC_BACKEND_ORIGIN?.trim() ||
   process.env.API_PROXY_TARGET?.trim() ||
-  "https://tradenexabackend-production.up.railway.app"
+  "http://localhost:3000"
 ).replace(/\/$/, "");
 
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || `${BACKEND_ORIGIN}/api/v1`;
+
+
+
+// "https://tradenexabackend-production.up.railway.app"

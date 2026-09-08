@@ -15,9 +15,13 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
-        source: "/firebase-messaging-sw.js",
-        destination: "/api/firebase-messaging-sw",
+        source: "/api/:path*",
+        destination: "http://localhost:3000/api/v1/:path*",
       },
+      // {
+      //   source: "/firebase-messaging-sw.js",
+      //   destination: "/api/firebase-messaging-sw",
+      // },
     ];
   },
 };
