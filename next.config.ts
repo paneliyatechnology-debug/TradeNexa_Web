@@ -4,25 +4,15 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "t3.storageapi.dev" },
+      { protocol: "https", hostname: "tradenexabackend-dev.up.railway.app" },
       { protocol: "https", hostname: "tradenexabackend-production.up.railway.app" },
       { protocol: "https", hostname: "**.railway.app" },
+      { protocol: "http", hostname: "localhost" },
+      { protocol: "http", hostname: "127.0.0.1" },
     ],
   },
   experimental: {
     optimizePackageImports: ["framer-motion"],
-  },
-  // Serve SW from API so firebase.initializeApp(...) uses process.env at request time.
-  async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: "http://localhost:3000/api/v1/:path*",
-      },
-      // {
-      //   source: "/firebase-messaging-sw.js",
-      //   destination: "/api/firebase-messaging-sw",
-      // },
-    ];
   },
 };
 
