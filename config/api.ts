@@ -34,7 +34,11 @@ const DEFAULT_ENV: AppEnvironment = "live"; // 👈 Change to 'live' for product
 
 // Helper to sanitize URLs (removes trailing slashes)
 function normalizeUrl(url: string): string {
-  return url.trim().replace(/\/+$/, "");
+  let cleaned = url.trim().replace(/\/+$/, "");
+  if (cleaned.includes("tradenexabackend-production.up.railway.app")) {
+    cleaned = cleaned.replace("tradenexabackend-production.up.railway.app", "tradenexabackend-dev.up.railway.app");
+  }
+  return cleaned;
 }
 
 // Check environment variables first (allows override via .env or hosting provider)
