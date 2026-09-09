@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { BACKEND_ORIGIN } from "@/config/api";
+import { BACKEND_ORIGIN, URL_CONFIG } from "@/config/api";
 
 /**
  * Proxies backend /uploads/* files through the Next.js origin.
@@ -10,40 +10,37 @@ export async function GET(
 ) {
   try {
     const { path } = await context.params;
-    const targetPath = path ? (Array.isArray(path) ? path.join("/") : String(path)) : "";
-    const url = `${BACKEND_ORIGIN}/uploads/${targetPath}${request.nextUrl.search}`;
+    const rawPath = path ? (Array.isArray(path) ? path.join("/") : String(path)) : "";
+    const cleanPath = rawPath.replace(/^(uploads|media)\//, "");
+    const search = request.nextUrl.search;
 
-    const response = await fetch(url, { cache: "no-store" });
+    const candidateUrls = [
+      `${BACKEND_ORIGIN}/uploads/${cleanPath}${search}`,
+      `${BACKEND_ORIGIN}/media/${cleanPath}${search}`,
+      `${URL_CONFIG.live.origin}/uploads/${cleanPath}${search}`,
+      `${URL_CONFIG.live.origin}/media/${cleanPath}${search}`,
+    ];
 
-    if (!response.ok) {
-      // Fallback: also try fetching from /media/ if backend stored under S3 key
-      const fallbackUrl = `${BACKEND_ORIGIN}/media/${targetPath}${request.nextUrl.search}`;
-      const fallbackRes = await fetch(fallbackUrl, { cache: "no-store" });
-      if (fallbackRes.ok) {
-        const contentType = fallbackRes.headers.get("content-type") || "application/octet-stream";
-        const body = await fallbackRes.arrayBuffer();
-        return new NextResponse(body, {
-          status: 200,
-          headers: {
-            "Content-Type": contentType,
-            "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
-          },
-        });
+    for (const targetUrl of candidateUrls) {
+      try {
+        const response = await fetch(targetUrl, { cache: "no-store" });
+        if (response.ok) {
+          const contentType = response.headers.get("content-type") || "application/octet-stream";
+          const body = await response.arrayBuffer();
+          return new NextResponse(body, {
+            status: 200,
+            headers: {
+              "Content-Type": contentType,
+              "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
+            },
+          });
+        }
+      } catch {
+        /* try next candidate */
       }
-
-      return new NextResponse(null, { status: response.status });
     }
 
-    const contentType = response.headers.get("content-type") || "application/octet-stream";
-    const body = await response.arrayBuffer();
-
-    return new NextResponse(body, {
-      status: 200,
-      headers: {
-        "Content-Type": contentType,
-        "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
-      },
-    });
+    return new NextResponse(null, { status: 404 });
   } catch (err) {
     console.error("[WebUploadsProxy] Error fetching uploads:", err);
     return NextResponse.json(
