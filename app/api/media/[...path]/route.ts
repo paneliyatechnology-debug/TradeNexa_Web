@@ -10,6 +10,7 @@ export async function GET(
   request: NextRequest,
   context: { params: Promise<{ path: string[] }> }
 ) {
+  try {
     const { path } = await context.params;
     const targetPath = path ? (Array.isArray(path) ? path.join("/") : String(path)) : "";
     const url = `${BACKEND_ORIGIN}/media/${targetPath}${request.nextUrl.search}`;

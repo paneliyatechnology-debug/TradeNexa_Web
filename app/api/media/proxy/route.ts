@@ -30,12 +30,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, message: "Bad backend origin" }, { status: 500 });
   }
 
-  if (target.host !== backendHost) {
-    return NextResponse.json({ success: false, message: "Host not allowed" }, { status: 403 });
-  }
+  const targetUrl = `${BACKEND_ORIGIN}${target.pathname}${target.search}`;
 
   try {
-    const response = await fetch(target.toString(), { cache: "force-cache" });
+    const response = await fetch(targetUrl, { cache: "force-cache" });
     if (!response.ok) {
       return new NextResponse(null, { status: response.status });
     }

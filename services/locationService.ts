@@ -239,8 +239,9 @@ async function resolvePlaceNamesFromCoordinates(
 }
 
 async function findStateId(place: PlaceNames): Promise<ApiState | null> {
+  const countryId = await getIndiaCountryId();
   const byName = await publicLocationGet<ApiState>("/locations/states", {
-    country_id: INDIA_COUNTRY_ID,
+    country_id: countryId,
     page: 1,
     limit: 10,
     search: place.stateName,
@@ -252,7 +253,7 @@ async function findStateId(place: PlaceNames): Promise<ApiState | null> {
 
   if (!state && place.stateCode) {
     const byCode = await publicLocationGet<ApiState>("/locations/states", {
-      country_id: INDIA_COUNTRY_ID,
+      country_id: countryId,
       page: 1,
       limit: 5,
       code: place.stateCode,

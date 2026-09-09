@@ -20,6 +20,7 @@ import { fetchCities, fetchStates } from "@/services/locationService";
 import { createRfq, fetchPublicRfqById, publishRfq, updateRfq } from "@/services/rfqService";
 import { fetchSupplierById, fetchSuppliers } from "@/services/supplierService";
 import type { ApiCategory, ApiSubcategory } from "@/types/catalog";
+import type { ApiCity, ApiState } from "@/types/location";
 import type { ApiRfqDetail, CreateRfqPayload } from "@/types/rfq";
 import type { ApiSupplier } from "@/types/supplier";
 import { formatApiValidationSummary, getApiFieldErrors } from "@/utils/apiErrors";
@@ -452,9 +453,9 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
             if (cancelled) return;
             const q = stateName.toLowerCase();
             const matchedState =
-              states.find((s) => s.name.toLowerCase() === q) ??
-              states.find((s) => s.name.toLowerCase().startsWith(q)) ??
-              states.find((s) => s.name.toLowerCase().includes(q)) ??
+              states.find((s: ApiState) => s.name.toLowerCase() === q) ??
+              states.find((s: ApiState) => s.name.toLowerCase().startsWith(q)) ??
+              states.find((s: ApiState) => s.name.toLowerCase().includes(q)) ??
               null;
             if (matchedState) {
               setStateId(String(matchedState.id));
@@ -472,9 +473,9 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
                 if (cancelled) return;
                 const cq = cityName.toLowerCase();
                 const matchedCity =
-                  cities.find((c) => c.name.toLowerCase() === cq) ??
-                  cities.find((c) => c.name.toLowerCase().startsWith(cq)) ??
-                  cities.find((c) => c.name.toLowerCase().includes(cq)) ??
+                  cities.find((c: ApiCity) => c.name.toLowerCase() === cq) ??
+                  cities.find((c: ApiCity) => c.name.toLowerCase().startsWith(cq)) ??
+                  cities.find((c: ApiCity) => c.name.toLowerCase().includes(cq)) ??
                   null;
                 if (matchedCity) {
                   setCityId(String(matchedCity.id));

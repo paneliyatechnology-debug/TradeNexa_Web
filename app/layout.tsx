@@ -69,9 +69,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
     >
-      <body className="flex min-h-dvh min-w-0 flex-col bg-background text-foreground">
+      <body suppressHydrationWarning className="flex min-h-dvh min-w-0 flex-col bg-background text-foreground">
         <Script
           id="fcm-root-recover"
           strategy="beforeInteractive"

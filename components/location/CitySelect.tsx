@@ -107,8 +107,8 @@ export default function CitySelect({
         sort_order: "asc",
       });
       setCities((prev) => {
-        const seen = new Set(prev.map((city) => city.id));
-        return [...prev, ...results.filter((city) => !seen.has(city.id))];
+        const seen = new Set(prev.map((c: ApiCity) => c.id));
+        return [...prev, ...results.filter((c: ApiCity) => !seen.has(c.id))];
       });
       setPage(pagination.page || nextPage);
       setHasMore(pagination.page < pagination.totalPages);

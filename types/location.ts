@@ -27,6 +27,7 @@ export interface CityListParams extends CatalogListParams {
 }
 
 export type StatesPageResult = PaginatedResult<ApiState>;
+export type CitiesPageResult = PaginatedResult<ApiCity>;
 export interface ApiCountry {
   id: number;
   name: string;
@@ -38,7 +39,7 @@ export interface ApiCountry {
 export type CountriesPageResult = PaginatedResult<ApiCountry>;
 
 /** India — default country ID. */
-export const INDIA_COUNTRY_ID = 4;
+export const INDIA_COUNTRY_ID = 1;
 
 /** Result of resolving browser coordinates to platform state/city IDs. */
 export interface ResolvedGeoLocation {

@@ -375,7 +375,7 @@ export default function CompleteProfileForm({
 
     let cancelled = false;
 
-    function matchByName<T extends { name: string }>(items: T[], needle: string): T | null {
+    function matchByName<T extends { id: number; name: string }>(items: T[], needle: string): T | null {
       const q = needle.trim().toLowerCase();
       if (!q || items.length === 0) return null;
       return (

@@ -4,17 +4,37 @@ import { extractApprovalStatus, parseApprovalStatus } from "@/utils/productAppro
 import { parseWishlistFlag, readProductWishlistFlag } from "@/utils/wishlistHelpers";
 
 function proxyBackendMediaUrl(url: URL): string | null {
-  const backendHost = new URL(BACKEND_ORIGIN).host;
-  if (url.host !== backendHost) return null;
+  if (url.pathname.startsWith("/api/media/")) {
+    return `${url.pathname}${url.search}`;
+  }
 
-  // Legacy product media: /media/foo → /api/media/foo
+  if (url.pathname.startsWith("/api/uploads/")) {
+    return `${url.pathname}${url.search}`;
+  }
+
+  // If it's a backend media or uploads path regardless of what host was in DB:
   if (url.pathname.startsWith("/media/")) {
     const mediaPath = url.pathname.slice("/media/".length);
     return mediaPath ? `/api/media/${mediaPath}${url.search}` : null;
   }
 
-  // Chat uploads and other backend paths — generic same-origin proxy.
-  return `/api/media/proxy?url=${encodeURIComponent(url.toString())}`;
+  if (url.pathname.startsWith("/uploads/")) {
+    const uploadPath = url.pathname.slice("/uploads/".length);
+    return uploadPath ? `/api/uploads/${uploadPath}${url.search}` : null;
+  }
+
+  const backendHost = new URL(BACKEND_ORIGIN).host;
+  const isKnownBackend =
+    url.host === backendHost ||
+    url.host === "localhost:3000" ||
+    url.host === "127.0.0.1:3000" ||
+    url.host.includes("railway.app");
+
+  if (isKnownBackend) {
+    return `/api/media/proxy?url=${encodeURIComponent(url.toString())}`;
+  }
+
+  return null;
 }
 
 function coerceImageUrl(input: unknown): string | null {
@@ -54,8 +74,8 @@ function coerceImageUrl(input: unknown): string | null {
 
 /**
  * Resolves API image URLs for use in <img> tags.
- * Backend media URLs are rewritten to same-origin /api/media/* because
- * Railway sets Cross-Origin-Resource-Policy: same-origin (blocks cross-site images).
+ * Rewrites any media/upload URL to same-origin /api/media/* or /api/uploads/*
+ * dynamically bound to active BACKEND_ORIGIN configured in api.ts.
  */
 export function resolveImageUrl(url: unknown): string | null {
   const normalized = coerceImageUrl(url);
@@ -81,7 +101,12 @@ export function resolveImageUrl(url: unknown): string | null {
     return mediaPath ? `/api/media/${mediaPath}` : null;
   }
 
-  // Relative non-/media paths (e.g. /uploads/chat/x.jpg) — proxy via backend origin.
+  if (cleanUrl.startsWith("/uploads/")) {
+    const uploadPath = cleanUrl.slice("/uploads/".length);
+    return uploadPath ? `/api/uploads/${uploadPath}` : null;
+  }
+
+  // Relative non-/media paths (e.g. chat/x.jpg) — proxy via backend origin.
   try {
     const absolute = new URL(cleanUrl, BACKEND_ORIGIN);
     const proxied = proxyBackendMediaUrl(absolute);
