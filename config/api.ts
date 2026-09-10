@@ -3,20 +3,16 @@
  * TradeNexa Web - API & Server URL Configuration
  * ==============================================================================
  * 
- * Aap yahan se easily Local (Testing) aur Live (Production) URL switch kar sakte hain.
+ * Aap yahan se easily Local (Testing) aur Live (Production) URL switch kar sakte hain:
  * 
- * 1. DIRECT TOGGLE:
- *    Neeche diye gaye `ACTIVE_ENV` ko 'local' ya 'live' set karein.
- * 
- * 2. YA .env FILE SE:
- *    .env.local me `NEXT_PUBLIC_ENV=local` ya `NEXT_PUBLIC_ENV=live` likhein.
+ * 👉 Bas neeche `ACTIVE_ENV` ko 'local' ya 'live' set karein.
  */
 
 // Available environments
 export const URL_CONFIG = {
   local: {
-    origin: "http://localhost:3000",
-    apiUrl: "http://localhost:3000/api/v1",
+    origin: "http://localhost:5000",
+    apiUrl: "http://localhost:5000/api/v1",
   },
   live: {
     origin: "https://tradenexabackend-dev.up.railway.app",
@@ -27,52 +23,49 @@ export const URL_CONFIG = {
 export type AppEnvironment = keyof typeof URL_CONFIG;
 
 // ==============================================================================
-// ⚙️ MANUAL TOGGLE (Yahan change karke toggle kar sakte hain):
-// Set to 'local' for testing, or 'live' for production
+// ⚙️ MANUAL TOGGLE (Yahan change karke toggle karein):
+// Set to 'local' for localhost:5000, or 'live' for Railway Production
 // ==============================================================================
-const DEFAULT_ENV: AppEnvironment = "live"; // 👈 Change to 'live' for production
+export const ACTIVE_ENV: AppEnvironment = "live"; // 👈 Change to 'local' or 'live'
 
-// Helper to sanitize URLs (removes trailing slashes)
-function normalizeUrl(url: unknown, fallback: string): string {
-  if (!url || typeof url !== "string" || !url.trim()) {
-    return fallback;
-  }
-  let cleaned = url.trim().replace(/\/+$/, "");
-  if (cleaned.includes("tradenexabackend-production.up.railway.app")) {
-    cleaned = cleaned.replace("tradenexabackend-production.up.railway.app", "tradenexabackend-dev.up.railway.app");
-  }
-  return cleaned || fallback;
-}
-
-// Check environment variables first (allows override via .env or hosting provider)
-const envOverride = process.env.NEXT_PUBLIC_ENV?.toLowerCase()?.trim() as AppEnvironment | undefined;
+// Check environment variables first (if NEXT_PUBLIC_ENV is provided)
+const envVar = process.env.NEXT_PUBLIC_ENV?.toLowerCase()?.trim();
 export const CURRENT_ENV: AppEnvironment =
-  envOverride && URL_CONFIG[envOverride] ? envOverride : DEFAULT_ENV;
+  envVar === "local" || envVar === "live" ? envVar : ACTIVE_ENV;
 
 export const IS_LIVE = CURRENT_ENV === "live";
 
-const defaultOrigin = URL_CONFIG[CURRENT_ENV].origin;
-const defaultApiUrl = URL_CONFIG[CURRENT_ENV].apiUrl;
+/**
+ * Dynamically resolves Backend Origin.
+ * On mobile/LAN devices accessing via Wi-Fi (e.g. http://192.168.1.103:3000),
+ * this automatically points to http://192.168.1.103:5000 instead of dead localhost:5000 on the phone.
+ */
+export function getBackendOrigin(): string {
+  if (CURRENT_ENV === "live") {
+    return URL_CONFIG.live.origin;
+  }
+  if (typeof window !== "undefined" && window.location?.hostname) {
+    const host = window.location.hostname;
+    if (host && host !== "localhost" && host !== "127.0.0.1") {
+      return `http://${host}:5000`;
+    }
+  }
+  return URL_CONFIG.local.origin;
+}
 
-// Resolve Backend Origin & API Base URL
-export const BACKEND_ORIGIN = normalizeUrl(
-  process.env.NEXT_PUBLIC_BACKEND_ORIGIN ||
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  process.env.API_PROXY_TARGET,
-  defaultOrigin
-);
+export function getApiBaseUrl(): string {
+  return `${getBackendOrigin()}/api/v1`;
+}
 
-export const BACKEND_URL = BACKEND_ORIGIN;
-
-export const API_BASE_URL = normalizeUrl(
-  process.env.NEXT_PUBLIC_API_BASE_URL,
-  `${BACKEND_ORIGIN}/api/v1`
-);
+// Resolve Backend Origin & API Base URL strictly from current environment
+export const BACKEND_ORIGIN: string = getBackendOrigin();
+export const BACKEND_URL: string = BACKEND_ORIGIN;
+export const API_BASE_URL: string = getApiBaseUrl();
 
 // 🔍 Console Log Indicator (Browser Console / Terminal me dikhega)
 if (typeof window !== "undefined" || process.env.NODE_ENV !== "production") {
   console.log(
-    `%c[TradeNexa Web] 🌐 Active ENV: %c${CURRENT_ENV.toUpperCase()}%c | API: %c${API_BASE_URL}`,
+    `%c[TradeNexa Web] 🌐 Active ENV: %c${CURRENT_ENV.toUpperCase()}%c | API: %c${getApiBaseUrl()}`,
     "color: #888; font-weight: bold;",
     `color: ${IS_LIVE ? "#10b981" : "#f59e0b"}; font-weight: bold;`,
     "color: #888;",

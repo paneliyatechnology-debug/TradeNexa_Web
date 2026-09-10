@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Laptop } from "lucide-react";
 import RoleSwitcher from "@/components/portal/RoleSwitcher";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import DeleteAccountButton from "@/components/portal/DeleteAccountButton";
@@ -31,6 +31,25 @@ export default function BuyerSettingsPage() {
           </div>
         ))}
       </div>
+
+      <div className="mt-4">
+        <Link
+          href="/buyer/settings/login-devices"
+          className="surface-card flex items-center justify-between p-4 transition hover:border-primary/40 hover:bg-muted/40"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-soft text-primary">
+              <Laptop className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Login Devices</p>
+              <p className="text-xs text-muted-fg">Manage active sessions and logged in browsers</p>
+            </div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-fg" />
+        </Link>
+      </div>
+
       <div className="mt-8">
         <DeleteAccountButton />
       </div>

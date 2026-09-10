@@ -3,7 +3,7 @@ import axios, {
   type AxiosResponse,
   type InternalAxiosRequestConfig,
 } from "axios";
-import { API_BASE_URL } from "@/config/api";
+import { API_BASE_URL, getApiBaseUrl } from "@/config/api";
 import { API_ENDPOINTS } from "@/config/endpoints";
 import { getAccessToken, getRefreshToken, unwrapApiPayload } from "@/utils/authHelpers";
 
@@ -152,8 +152,8 @@ function formatApiError(error: unknown) {
 
   const message = axiosError.response
     ? axiosError.response?.data?.message ||
-      axiosError.response?.data?.error ||
-      `Request failed (${axiosError.response.status})`
+    axiosError.response?.data?.error ||
+    `Request failed (${axiosError.response.status})`
     : axiosError.code === "ERR_NETWORK" || !axiosError.response
       ? "Unable to reach the server. Check your connection or try again."
       : axiosError.message || "An unexpected network error occurred. Please try again.";
@@ -167,6 +167,8 @@ function formatApiError(error: unknown) {
 
 apiClient.interceptors.request.use(
   (config) => {
+    config.baseURL = getApiBaseUrl();
+
     if (config.data instanceof FormData && config.headers) {
       // Let the browser set multipart/form-data with the correct boundary
       if (typeof config.headers.delete === "function") {

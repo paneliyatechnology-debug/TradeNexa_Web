@@ -197,7 +197,7 @@ export function navigateFromFcmNotification(
 /** Listen for background SW notification clicks that need a role switch + navigate. */
 export function subscribeFcmServiceWorkerNavigation(): () => void {
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
-    return () => {};
+    return () => { };
   }
 
   const onMessage = (event: MessageEvent) => {
@@ -221,9 +221,9 @@ export function subscribeFcmServiceWorkerNavigation(): () => void {
           ? data.url
           : data.data && typeof data.data === "object"
             ? resolveFcmNavigationPath(
-                data.data as FcmPushData,
-                readStoredActiveRole() ?? "buyer"
-              )
+              data.data as FcmPushData,
+              readStoredActiveRole() ?? "buyer"
+            )
             : "";
       if (path && path !== "/") {
         path = clampPortalPathForAccount(path, accountRole);
@@ -377,13 +377,13 @@ export function getFcmNotificationContent(payload: MessagePayload): {
 export async function subscribeForegroundMessages(
   handler: FcmForegroundHandler
 ): Promise<() => void> {
-  if (typeof window === "undefined") return () => {};
-  if (!isFirebaseConfigured()) return () => {};
+  if (typeof window === "undefined") return () => { };
+  if (!isFirebaseConfigured()) return () => { };
 
   await getFcmToken();
 
   const messaging = await getFirebaseMessaging();
-  if (!messaging) return () => {};
+  if (!messaging) return () => { };
 
   return onMessage(messaging, (payload) => {
     handler(payload);

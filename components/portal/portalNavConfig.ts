@@ -49,6 +49,7 @@ export const buyerNavItems: PortalNavItem[] = [
     match: (p) =>
       p.startsWith("/buyer/profile") ||
       p.startsWith("/buyer/settings") ||
+      p.startsWith("/buyer/login-devices") ||
       p.startsWith("/buyer/edit-profile"),
   },
 ];
@@ -95,6 +96,8 @@ export const sellerNavItems: PortalNavItem[] = [
     icon: User,
     match: (p) =>
       p.startsWith("/seller/profile") ||
+      p.startsWith("/seller/settings") ||
+      p.startsWith("/seller/login-devices") ||
       p.startsWith("/seller/edit-profile") ||
       p.startsWith("/seller/plans"),
   },

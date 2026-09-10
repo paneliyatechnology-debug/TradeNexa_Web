@@ -37,6 +37,8 @@ export const API_ENDPOINTS = {
   NOTIFICATIONS_UNREAD_COUNT: "/notifications/unread-count",
   NOTIFICATIONS_READ: "/notifications/read",
   NOTIFICATIONS_READ_ALL: "/notifications/read-all",
+  AUTH_DEVICES: "/auth/devices",
+  AUTH_DEVICES_LOGOUT_ALL: "/auth/devices/logout-all",
 } as const;
 
 /** GET /sellers/:id/products */
@@ -47,4 +49,9 @@ export function sellerProductsEndpoint(id: number | string): string {
 /** PATCH /notifications/:id/read */
 export function notificationReadEndpoint(id: number | string): string {
   return `/notifications/${id}/read`;
+}
+
+/** DELETE /auth/devices/:id */
+export function authDeviceDeleteEndpoint(id: number | string): string {
+  return `/auth/devices/${id}`;
 }

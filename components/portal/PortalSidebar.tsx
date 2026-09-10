@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { Globe, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { Globe, Laptop, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { getInitials } from "@/utils/catalogHelpers";
 import type { PortalNavItem } from "@/components/portal/PortalBottomNav";
@@ -113,14 +113,34 @@ function SidebarNav({
 
 function SidebarFooter({
   collapsed,
+  accent,
   onNavigate,
 }: {
   collapsed?: boolean;
+  accent?: "buyer" | "seller";
   onNavigate?: () => void;
 }) {
+  const isSeller = accent === "seller";
+  const loginDevicesHref = isSeller
+    ? "/seller/settings/login-devices"
+    : "/buyer/settings/login-devices";
+
   return (
     <div className="shrink-0 px-3 pb-1 pt-2">
       <div className="mb-2 h-px bg-white/[0.08]" aria-hidden />
+      <Link
+        href={loginDevicesHref}
+        onClick={onNavigate}
+        title={collapsed ? "Login Devices" : undefined}
+        className={`group flex h-11 items-center rounded-lg text-[13.5px] font-normal text-slate-400 transition-colors duration-200 hover:bg-white/[0.05] hover:text-slate-200 ${
+          collapsed ? "justify-center px-0" : "gap-3 px-3"
+        }`}
+      >
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center text-slate-500 transition-colors group-hover:text-slate-300">
+          <Laptop className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
+        </span>
+        {!collapsed ? <span className="flex-1">Login Devices</span> : null}
+      </Link>
       <Link
         href="/"
         onClick={onNavigate}
@@ -209,7 +229,7 @@ function SidebarPanel({
         accent={accent}
         onNavigate={onNavigate}
       />
-      <SidebarFooter collapsed={collapsed} onNavigate={onNavigate} />
+      <SidebarFooter collapsed={collapsed} accent={accent} onNavigate={onNavigate} />
       {onCollapsedChange ? (
         <CollapseToggle
           collapsed={collapsed ?? false}

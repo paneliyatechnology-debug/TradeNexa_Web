@@ -1,10 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { BACKEND_ORIGIN } from "@/config/api";
+import { BACKEND_ORIGIN, URL_CONFIG, CURRENT_ENV } from "@/config/api";
+
+const otherOrigin = CURRENT_ENV === "local" ? URL_CONFIG.live.origin : URL_CONFIG.local.origin;
 
 async function proxyRequest(request: NextRequest, path: string[]) {
   const targetPath = path.join("/");
   const search = request.nextUrl.search;
-  const url = `${BACKEND_ORIGIN}/api/v1/${targetPath}${search}`;
+  const reqHost = request.headers.get("host") || "";
+
+  // Guard against self-looping when Web & Backend share the same host/port in local mode
+  const isSelfCall =
+    BACKEND_ORIGIN.includes(reqHost) && !BACKEND_ORIGIN.includes("railway.app");
+
+  const candidateOrigins = Array.from(
+    new Set(
+      [
+        !isSelfCall ? BACKEND_ORIGIN : null,
+        otherOrigin,
+        "http://localhost:5000",
+        "http://127.0.0.1:3000",
+        URL_CONFIG.live.origin,
+      ].filter(Boolean) as string[]
+    )
+  );
 
   const headers = new Headers();
   const contentType = request.headers.get("content-type");
@@ -13,32 +31,44 @@ async function proxyRequest(request: NextRequest, path: string[]) {
   const authorization = request.headers.get("authorization");
   if (authorization) headers.set("Authorization", authorization);
 
-  const init: RequestInit = {
-    method: request.method,
-    headers,
-    cache: "no-store",
-  };
-
+  let bodyBuffer: ArrayBuffer | null = null;
   if (request.method !== "GET" && request.method !== "HEAD") {
-    init.body = await request.arrayBuffer();
+    bodyBuffer = await request.arrayBuffer();
   }
 
-  try {
-    const response = await fetch(url, init);
-    const body = await response.text();
+  for (const origin of candidateOrigins) {
+    const url = `${origin}/api/v1/${targetPath}${search}`;
 
-    return new NextResponse(body, {
-      status: response.status,
-      headers: {
-        "Content-Type": response.headers.get("content-type") || "application/json",
-      },
-    });
-  } catch {
-    return NextResponse.json(
-      { success: false, message: "Unable to reach backend server." },
-      { status: 502 }
-    );
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3500); // 3.5s max timeout (never hang 30s)
+
+      const response = await fetch(url, {
+        method: request.method,
+        headers,
+        body: bodyBuffer,
+        cache: "no-store",
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeout);
+
+      const body = await response.text();
+      return new NextResponse(body, {
+        status: response.status,
+        headers: {
+          "Content-Type": response.headers.get("content-type") || "application/json",
+        },
+      });
+    } catch {
+      /* Try next candidate */
+    }
   }
+
+  return NextResponse.json(
+    { success: false, message: "Unable to reach backend server." },
+    { status: 502 }
+  );
 }
 
 export async function GET(

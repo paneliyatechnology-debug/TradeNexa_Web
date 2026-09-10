@@ -48,9 +48,9 @@ async function tryRecoverFromRoot(): Promise<boolean> {
  */
 export function FcmListener() {
   useEffect(() => {
-    let unsubscribe = () => {};
+    let unsubscribe = () => { };
     let cancelled = false;
-    let unsubSwNav = () => {};
+    let unsubSwNav = () => { };
 
     const onMaybeRecover = () => {
       void tryRecoverFromRoot();

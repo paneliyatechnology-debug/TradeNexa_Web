@@ -14,6 +14,7 @@ import {
   MapPin,
   Phone,
   LogOut,
+  Laptop,
   User as UserIcon,
 } from "lucide-react";
 import PortalSection from "@/components/portal/PortalSection";
@@ -275,6 +276,20 @@ export default function PortalProfileView({ variant }: PortalProfileViewProps) {
 
         <div className="space-y-6">
           <RoleSwitcher />
+
+          <div className="surface-card p-5">
+            <p className="text-sm font-semibold text-foreground">Login Devices</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-fg">
+              Manage active sessions and all devices logged into your account.
+            </p>
+            <Link
+              href={variant === "buyer" ? "/buyer/settings/login-devices" : "/seller/settings/login-devices"}
+              className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-primary/30 bg-primary-soft px-4 text-sm font-semibold text-primary transition hover:bg-primary hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+            >
+              <Laptop className="h-4 w-4" />
+              Manage Login Devices
+            </Link>
+          </div>
 
           <div className="surface-card p-5">
             <p className="text-sm font-semibold text-foreground">Sign out</p>

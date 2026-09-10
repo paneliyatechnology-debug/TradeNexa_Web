@@ -259,6 +259,31 @@ export function getChatSocket(): Socket {
     pendingConnectFlushBound = false;
   });
 
+  socket.on("SESSION_REVOKED", (payload?: { device_id?: string | number; all_except_current?: boolean; current_log_id?: string | number }) => {
+    if (typeof window === "undefined") return;
+
+    const mySessionId = sessionStorage.getItem("current_session_device_id");
+
+    if (payload?.all_except_current) {
+      // If logoutAll was called and this session is the current initiator session, keep logged in
+      if (mySessionId && String(payload.current_log_id) === String(mySessionId)) {
+        return;
+      }
+    } else if (payload?.device_id) {
+      // If a specific device was revoked and it is NOT this device, keep logged in
+      if (mySessionId && String(payload.device_id) !== String(mySessionId)) {
+        return;
+      }
+    }
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user");
+    sessionStorage.removeItem("current_session_device_id");
+    window.dispatchEvent(new Event("auth_unauthorized"));
+    window.location.replace("/");
+  });
+
   socket.io.on("reconnect_attempt", () => {
     setStatus("reconnecting");
     const latest = getStoredAccessToken() ?? "";
