@@ -30,17 +30,14 @@ export default function MarketplaceCategoryRow({
       className="group flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-shadow hover:cursor-pointer hover:border-muted-fg hover:shadow-sm"
     >
       <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/10">
-        {imageUrl ? (
-          <CatalogImage
-            src={imageUrl}
-            alt={title}
-            fallbackIcon={FallbackIcon}
-            fallbackClassName="bg-primary/10"
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <FallbackIcon className="h-5 w-5 text-primary" strokeWidth={1.75} />
-        )}
+        <CatalogImage
+          src={imageUrl}
+          alt={title}
+          fallbackIcon={FallbackIcon}
+          fallbackClassName="bg-primary/10"
+          fallbackIconClassName="h-5 w-5 text-primary"
+          className="h-full w-full object-cover"
+        />
       </div>
       <div className="min-w-0">
         <p className="truncate text-sm font-medium text-foreground group-hover:text-primary">

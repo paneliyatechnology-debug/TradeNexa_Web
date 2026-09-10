@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { BACKEND_ORIGIN } from "@/config/api";
+import { BACKEND_ORIGIN, URL_CONFIG } from "@/config/api";
+
+const PLACEHOLDER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" fill="none">
+  <rect width="200" height="200" rx="12" fill="#f1f5f9"/>
+  <path d="M60 135L88 100L108 120L128 92L152 135H60Z" fill="#cbd5e1"/>
+  <circle cx="80" cy="78" r="10" fill="#cbd5e1"/>
+</svg>`;
 
 /**
  * Proxies backend /media/* files through the Next.js origin.
- * Required because Railway serves media with `Cross-Origin-Resource-Policy: same-origin`,
- * which blocks <img> tags on localhost / Vercel from loading images directly.
  */
 export async function GET(
   request: NextRequest,
@@ -12,32 +16,57 @@ export async function GET(
 ) {
   try {
     const { path } = await context.params;
-    const targetPath = path ? (Array.isArray(path) ? path.join("/") : String(path)) : "";
-    const url = `${BACKEND_ORIGIN}/media/${targetPath}${request.nextUrl.search}`;
-    console.log(`[WebMediaProxy] Fetching: ${url}`);
+    const rawPath = path ? (Array.isArray(path) ? path.join("/") : String(path)) : "";
+    const cleanPath = rawPath.replace(/^(uploads|media)\//, "");
+    const search = request.nextUrl.search;
 
-    const response = await fetch(url, { cache: "no-store" });
+    const candidateUrls = [
+      `${BACKEND_ORIGIN}/media/${cleanPath}${search}`,
+      `${BACKEND_ORIGIN}/uploads/${cleanPath}${search}`,
+      `${BACKEND_ORIGIN}/api/media/${cleanPath}${search}`,
+      `${BACKEND_ORIGIN}/api/uploads/${cleanPath}${search}`,
+      `http://localhost:5000/media/${cleanPath}${search}`,
+      `http://localhost:5000/uploads/${cleanPath}${search}`,
+      `${URL_CONFIG.live.origin}/media/${cleanPath}${search}`,
+      `${URL_CONFIG.live.origin}/uploads/${cleanPath}${search}`,
+      `${URL_CONFIG.live.origin}/api/media/${cleanPath}${search}`,
+      `${URL_CONFIG.live.origin}/api/uploads/${cleanPath}${search}`,
+    ];
 
-    if (!response.ok) {
-      console.error(`[WebMediaProxy] Failed to fetch ${url} - status: ${response.status}`);
-      return new NextResponse(null, { status: response.status });
+    for (const targetUrl of candidateUrls) {
+      try {
+        const response = await fetch(targetUrl, { cache: "no-store" });
+        if (response.ok) {
+          const contentType = response.headers.get("content-type") || "application/octet-stream";
+          const body = await response.arrayBuffer();
+          return new NextResponse(body, {
+            status: 200,
+            headers: {
+              "Content-Type": contentType,
+              "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
+            },
+          });
+        }
+      } catch {
+        /* try next candidate */
+      }
     }
 
-    const contentType = response.headers.get("content-type") || "application/octet-stream";
-    const body = await response.arrayBuffer();
-
-    return new NextResponse(body, {
+    return new NextResponse(PLACEHOLDER_SVG, {
       status: 200,
       headers: {
-        "Content-Type": contentType,
-        "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
+        "Content-Type": "image/svg+xml",
+        "Cache-Control": "public, max-age=3600",
       },
     });
   } catch (err) {
     console.error("[WebMediaProxy] Error fetching media:", err);
-    return NextResponse.json(
-      { success: false, message: "Unable to load media from backend." },
-      { status: 502 }
-    );
+    return new NextResponse(PLACEHOLDER_SVG, {
+      status: 200,
+      headers: {
+        "Content-Type": "image/svg+xml",
+        "Cache-Control": "public, max-age=3600",
+      },
+    });
   }
 }
