@@ -11,6 +11,7 @@ interface CatalogImageProps {
   className?: string;
   fallbackIcon?: LucideIcon;
   fallbackClassName?: string;
+  fallbackIconClassName?: string;
   showInitials?: boolean;
 }
 
@@ -20,6 +21,7 @@ export default function CatalogImage({
   className = "h-full w-full object-cover",
   fallbackIcon: FallbackIcon = Layers,
   fallbackClassName = "bg-gradient-to-br from-primary/10 via-primary/5 to-muted",
+  fallbackIconClassName,
   showInitials = false,
 }: CatalogImageProps) {
   const [failed, setFailed] = useState(false);
@@ -31,7 +33,7 @@ export default function CatalogImage({
         {showInitials ? (
           <span className="text-4xl font-black text-primary/25">{getInitials(alt)}</span>
         ) : (
-          <FallbackIcon className="h-12 w-12 text-primary/35" />
+          <FallbackIcon className={fallbackIconClassName || "h-7 w-7 text-primary"} />
         )}
       </div>
     );

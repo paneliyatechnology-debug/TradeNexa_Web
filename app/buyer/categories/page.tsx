@@ -11,6 +11,7 @@ import { fetchCategories } from "@/services/catalogService";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useLoadMoreList } from "@/hooks/useLoadMoreList";
 import { getCategoryFallbackIcon } from "@/utils/categoryIcons";
+import CatalogImage from "@/components/catalog/CatalogImage";
 
 export default function BuyerCategoriesPage() {
   const [search, setSearch] = useState("");
@@ -102,8 +103,15 @@ export default function BuyerCategoriesPage() {
                   href={`/buyer/category/${cat.id}`}
                   className="surface-card-hover flex items-center gap-3 p-4"
                 >
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft">
-                    <Icon className="h-5 w-5 text-primary" />
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary-soft">
+                    <CatalogImage
+                      src={cat.icon || cat.image}
+                      alt={cat.name}
+                      fallbackIcon={Icon}
+                      fallbackClassName="bg-primary-soft"
+                      fallbackIconClassName="h-5 w-5 text-primary"
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-foreground">{cat.name}</p>

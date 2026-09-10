@@ -11,6 +11,7 @@ import PortalSearchBar from "@/components/portal/PortalSearchBar";
 import PortalEmptyState from "@/components/portal/PortalEmptyState";
 import PortalProductGrid from "@/components/portal/PortalProductGrid";
 import PortalInfiniteScroll from "@/components/portal/PortalInfiniteScroll";
+import CatalogImage from "@/components/catalog/CatalogImage";
 import { fetchCategoryById, fetchProducts, fetchSubcategories } from "@/services/catalogService";
 import { useCityFilter } from "@/hooks/useCityFilter";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -203,18 +204,13 @@ function BuyerCategoryContent({ categoryId }: { categoryId: number }) {
         <>
           <div className="mb-5 flex items-center gap-3 sm:gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary-soft sm:h-14 sm:w-14">
-              {logoUrl ? (
-                <Image
-                  src={logoUrl}
-                  alt={category?.name ?? "Category"}
-                  width={56}
-                  height={56}
-                  className="h-full w-full object-cover"
-                  unoptimized
-                />
-              ) : (
-                <FallbackIcon className="h-6 w-6 text-primary" strokeWidth={1.75} />
-              )}
+              <CatalogImage
+                src={category?.icon || category?.image}
+                alt={category?.name ?? "Category"}
+                fallbackIcon={FallbackIcon}
+                fallbackClassName="bg-primary-soft text-primary"
+                className="h-full w-full object-cover"
+              />
             </div>
             <div className="min-w-0">
               <h2 className="truncate text-xl font-semibold text-foreground sm:text-2xl">

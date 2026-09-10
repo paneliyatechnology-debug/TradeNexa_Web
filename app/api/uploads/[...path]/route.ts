@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { BACKEND_ORIGIN, URL_CONFIG } from "@/config/api";
 
+const PLACEHOLDER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" fill="none">
+  <rect width="200" height="200" rx="12" fill="#f1f5f9"/>
+  <path d="M60 135L88 100L108 120L128 92L152 135H60Z" fill="#cbd5e1"/>
+  <circle cx="80" cy="78" r="10" fill="#cbd5e1"/>
+</svg>`;
+
 /**
  * Proxies backend /uploads/* files through the Next.js origin.
  */
@@ -17,8 +23,14 @@ export async function GET(
     const candidateUrls = [
       `${BACKEND_ORIGIN}/uploads/${cleanPath}${search}`,
       `${BACKEND_ORIGIN}/media/${cleanPath}${search}`,
+      `${BACKEND_ORIGIN}/api/uploads/${cleanPath}${search}`,
+      `${BACKEND_ORIGIN}/api/media/${cleanPath}${search}`,
+      `http://localhost:5000/uploads/${cleanPath}${search}`,
+      `http://localhost:5000/media/${cleanPath}${search}`,
       `${URL_CONFIG.live.origin}/uploads/${cleanPath}${search}`,
       `${URL_CONFIG.live.origin}/media/${cleanPath}${search}`,
+      `${URL_CONFIG.live.origin}/api/uploads/${cleanPath}${search}`,
+      `${URL_CONFIG.live.origin}/api/media/${cleanPath}${search}`,
     ];
 
     for (const targetUrl of candidateUrls) {
@@ -40,12 +52,22 @@ export async function GET(
       }
     }
 
-    return new NextResponse(null, { status: 404 });
+    // Return friendly placeholder image instead of broken 404
+    return new NextResponse(PLACEHOLDER_SVG, {
+      status: 200,
+      headers: {
+        "Content-Type": "image/svg+xml",
+        "Cache-Control": "public, max-age=3600",
+      },
+    });
   } catch (err) {
     console.error("[WebUploadsProxy] Error fetching uploads:", err);
-    return NextResponse.json(
-      { success: false, message: "Unable to load uploads from backend." },
-      { status: 502 }
-    );
+    return new NextResponse(PLACEHOLDER_SVG, {
+      status: 200,
+      headers: {
+        "Content-Type": "image/svg+xml",
+        "Cache-Control": "public, max-age=3600",
+      },
+    });
   }
 }

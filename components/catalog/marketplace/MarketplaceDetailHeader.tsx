@@ -61,12 +61,13 @@ export default function MarketplaceDetailHeader({
             </div>
           ) : (
             <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-border bg-muted">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-primary/20 bg-primary-soft">
                 <CatalogImage
                   src={iconSrc}
                   alt={title}
                   fallbackIcon={FallbackIcon}
-                  fallbackClassName="bg-muted"
+                  fallbackClassName="bg-primary-soft"
+                  fallbackIconClassName="h-7 w-7 text-primary"
                   className="h-full w-full object-cover"
                 />
               </div>
@@ -98,12 +99,13 @@ export default function MarketplaceDetailHeader({
             </div>
           ) : (
             <div className="flex flex-wrap items-center gap-6 xl:gap-8">
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-white/15 bg-muted xl:h-28 xl:w-28">
+              <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-white/15 bg-white/10 xl:h-28 xl:w-28">
                 <CatalogImage
                   src={iconSrc}
                   alt={title}
                   fallbackIcon={FallbackIcon}
-                  fallbackClassName="bg-muted"
+                  fallbackClassName="bg-white/10"
+                  fallbackIconClassName="h-12 w-12 text-white"
                   className="h-full w-full object-cover"
                 />
               </div>

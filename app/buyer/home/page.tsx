@@ -24,6 +24,7 @@ import { useGetActiveBannersQuery, useGetCategoriesQuery } from "@/store/api/ref
 import type { ApiProductListItem } from "@/types/catalog";
 import type { ApiSupplier } from "@/types/supplier";
 import { getCategoryFallbackIcon } from "@/utils/categoryIcons";
+import CatalogImage from "@/components/catalog/CatalogImage";
 
 const HOME_CATEGORY_COUNT = 8;
 
@@ -223,8 +224,15 @@ export default function BuyerHomePage() {
                 href={`/buyer/category/${cat.id}`}
                 className="surface-card-hover flex min-w-[120px] shrink-0 snap-start flex-col items-center p-3.5 text-center sm:min-w-[140px] sm:p-4 md:min-w-0"
               >
-                <div className="mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-primary-soft sm:h-12 sm:w-12">
-                  <Icon className="h-5 w-5 text-primary sm:h-6 sm:w-6" aria-hidden />
+                <div className="mb-2 flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-primary-soft sm:h-12 sm:w-12">
+                  <CatalogImage
+                    src={cat.icon || cat.image}
+                    alt={cat.name}
+                    fallbackIcon={Icon}
+                    fallbackClassName="bg-primary-soft"
+                    fallbackIconClassName="h-5 w-5 text-primary sm:h-6 sm:w-6"
+                    className="h-full w-full object-cover"
+                  />
                 </div>
                 <p className="line-clamp-2 text-xs font-medium text-foreground sm:text-sm">
                   {cat.name}
