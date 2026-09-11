@@ -24,15 +24,14 @@ function notificationMatchesRole(
   notification: AppNotification,
   role: "buyer" | "seller"
 ): boolean {
-  if (notification.role === "buyer" || notification.role === "seller") {
-    return notification.role === role;
+  if (!notification.role || notification.role === role) {
+    return true;
   }
   const fromData = notification.data?.role;
-  if (fromData === "buyer" || fromData === "seller") {
-    return fromData === role;
+  if (!fromData || fromData === role) {
+    return true;
   }
   const type = String(notification.type ?? "").toUpperCase();
-  // Chat is dual-portal; don't drop socket events based on the buyer default.
   if (type === "CHAT_MESSAGE") return true;
   return recipientPortalForType(notification.type) === role;
 }
@@ -120,6 +119,10 @@ interface NotificationsInboxProps {
   accent?: "buyer" | "seller";
 }
 
+import apiClient from "@/services/apiClient";
+import { API_ENDPOINTS } from "@/config/endpoints";
+import { showSuccessToast, showErrorToast, showNotificationToast } from "@/utils/toast";
+
 export default function NotificationsInbox({ accent = "buyer" }: NotificationsInboxProps) {
   const router = useRouter();
   const { activeRole, setActiveRole } = useActiveRole();
@@ -136,6 +139,24 @@ export default function NotificationsInbox({ accent = "buyer" }: NotificationsIn
   const [markingSelected, setMarkingSelected] = useState(false);
   const [openingId, setOpeningId] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [testingPush, setTestingPush] = useState(false);
+
+  const handleTestNotification = async () => {
+    setTestingPush(true);
+    try {
+      await apiClient.post(API_ENDPOINTS.NOTIFICATIONS + "/test-push", {
+        title: "TradeNexa Live Notification",
+        body: "નવી Inquiry અને Quotation અપડેટ સફળતાપૂર્વક પ્રાપ્ત થઈ છે!",
+      });
+      void reload();
+      void refreshUnreadCount();
+    } catch (err) {
+      console.error(err);
+      showErrorToast("ટેસ્ટ નોટિફિકેશન મોકલવામાં ભૂલ આવી.");
+    } finally {
+      setTestingPush(false);
+    }
+  };
 
   const isReadParam =
     filter === "unread" ? false : filter === "read" ? true : undefined;
@@ -401,23 +422,36 @@ export default function NotificationsInbox({ accent = "buyer" }: NotificationsIn
             : "RFQ and inquiry updates"
         }
         action={
-          unreadCount > 0 ? (
+          <div className="flex items-center gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              disabled={markingAll || markingSelected}
-              onClick={() => void handleMarkAll()}
+              disabled={testingPush}
+              onClick={() => void handleTestNotification()}
               className="inline-flex items-center gap-1.5"
             >
-              {markingAll ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-              ) : (
-                <CheckCheck className="h-3.5 w-3.5" aria-hidden />
-              )}
-              Mark all as read
+              <Bell className="h-3.5 w-3.5 text-primary" />
+              {testingPush ? "Testing..." : "Test Notification"}
             </Button>
-          ) : null
+            {unreadCount > 0 ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={markingAll || markingSelected}
+                onClick={() => void handleMarkAll()}
+                className="inline-flex items-center gap-1.5"
+              >
+                {markingAll ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                ) : (
+                  <CheckCheck className="h-3.5 w-3.5" aria-hidden />
+                )}
+                Mark all as read
+              </Button>
+            ) : null}
+          </div>
         }
       />
 

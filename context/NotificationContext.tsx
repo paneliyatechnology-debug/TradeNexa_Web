@@ -63,6 +63,8 @@ const EMPTY_COUNTS: NotificationUnreadCount = {
   role: null,
 };
 
+import { showNotificationToast } from "@/utils/toast";
+
 const NotificationContext = createContext<NotificationContextValue | null>(null);
 
 const inboxListeners = new Set<InboxListener>();
@@ -82,6 +84,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const { activeRole } = useActiveRole();
   const [unreadByRole, setUnreadByRole] = useState<NotificationUnreadCount>(EMPTY_COUNTS);
   const refreshSeqRef = useRef(0);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
+  }, []);
 
   const unreadCount = useMemo(
     () => unreadCountForRole(unreadByRole, activeRole),
@@ -162,31 +170,15 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       });
 
       try {
-        // POST /api/v1/notifications/read { ids }
-        const { updated } = await markNotificationsRead(uniqueIds);
-        uniqueIds.forEach((id) => {
+        const res = await markNotificationsRead(uniqueIds);
+        uniqueIds.forEach((id) =>
           notifyInboxListeners({
             kind: "updated",
-            notification: {
-              id,
-              user_id: 0,
-              type: "",
-              role: null,
-              title: "",
-              body: "",
-              reference_id: null,
-              sender_id: null,
-              click_action: null,
-              data: null,
-              is_read: true,
-              read_at: new Date().toISOString(),
-              created_at: "",
-              updated_at: "",
-            },
-          });
-        });
-        // Optimistic count already applied; socket unread_count is authoritative.
-        return updated;
+            notification: { id, is_read: true } as AppNotification,
+          })
+        );
+        void refreshUnreadCount();
+        return res.updated;
       } catch {
         void refreshUnreadCount();
         return 0;
@@ -196,6 +188,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   );
 
   const markAllRead = useCallback(async (): Promise<number> => {
+    // Clear active role unread badge optimistically.
     setUnreadByRole((prev) => {
       const nextBuyer = activeRole === "buyer" ? 0 : prev.buyer;
       const nextSeller = activeRole === "seller" ? 0 : prev.seller;
@@ -205,16 +198,14 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         seller: nextSeller,
         total: Math.max(0, nextBuyer + nextSeller),
         unread_count: Math.max(0, nextBuyer + nextSeller),
-        role: null,
       };
     });
     emitNotificationMarkAllRead(activeRole);
     try {
-      // POST /api/v1/notifications/read-all?role=buyer|seller
-      const { updated } = await markAllNotificationsRead(activeRole);
+      const res = await markAllNotificationsRead(activeRole);
       notifyInboxListeners({ kind: "mark_all" });
-      // Optimistic zero already applied for this role; socket confirms.
-      return updated;
+      void refreshUnreadCount();
+      return res.updated;
     } catch {
       void refreshUnreadCount();
       return 0;
@@ -254,6 +245,45 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const notification = extractNotificationFromSocketPayload(payload);
       if (notification) {
         notifyInboxListeners({ kind: "new", notification });
+
+        // Show prominent in-app notification popup toast
+        showNotificationToast({
+          title: notification.title || "New Notification",
+          body: notification.body || "You received a new update.",
+          onClick: () => {
+            if (notification.click_action) {
+              window.location.href = notification.click_action;
+            } else if (notification.type?.includes("INQUIRY")) {
+              window.location.href = activeRole === "seller" ? "/seller/inquiries" : "/buyer/inquiries";
+            } else if (notification.type?.includes("RFQ")) {
+              window.location.href = activeRole === "seller" ? "/seller/rfq" : "/buyer/rfq";
+            } else {
+              window.location.href = activeRole === "seller" ? "/seller/notifications" : "/buyer/notifications";
+            }
+          },
+        });
+
+        // Trigger native browser desktop notification if permitted
+        if (
+          typeof window !== "undefined" &&
+          "Notification" in window &&
+          Notification.permission === "granted"
+        ) {
+          try {
+            const n = new Notification(notification.title || "TradeNexa", {
+              body: notification.body,
+              icon: "/favicon.ico",
+            });
+            n.onclick = () => {
+              window.focus();
+              if (notification.click_action) {
+                window.location.href = notification.click_action;
+              }
+            };
+          } catch {
+            /* ignore notification creation error */
+          }
+        }
       }
       // Badge: prefer `notification:unread_count` (emitted with new) — no local bump.
     };
@@ -281,7 +311,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       unsubNew();
       unsubUpdated();
     };
-  }, [isAuthenticated, refreshUnreadCount]);
+  }, [isAuthenticated, refreshUnreadCount, activeRole]);
 
   const value = useMemo(
     () => ({

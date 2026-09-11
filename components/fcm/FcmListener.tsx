@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { toast } from "react-hot-toast";
+import { showNotificationToast } from "@/utils/toast";
 import {
   clearFcmPendingPath,
   getFcmNotificationContent,
@@ -78,29 +78,13 @@ export function FcmListener() {
           Boolean(payload.notification?.title?.trim()) || Boolean(data.title?.trim());
         const hasBody =
           Boolean(payload.notification?.body?.trim()) || Boolean(data.body?.trim());
-        if (!hasTitle && !hasBody) return;
-
-        const message = body ? `${title}: ${body}` : title;
-
-        toast(
-          (t) => (
-            <button
-              type="button"
-              className="text-left"
-              onClick={() => {
-                toast.dismiss(t.id);
-                navigateFromFcmNotification({ url, data });
-              }}
-            >
-              {message}
-              <span className="mt-1 block text-xs opacity-70">Click to open</span>
-            </button>
-          ),
-          {
-            duration: 6000,
-            position: "top-center",
-          }
-        );
+        showNotificationToast({
+          title: title || "TradeNexa Notification",
+          body: body || "You received a new update.",
+          onClick: () => {
+            navigateFromFcmNotification({ url, data });
+          },
+        });
       });
 
       if (cancelled) {

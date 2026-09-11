@@ -47,7 +47,7 @@ import {
   effectiveConversationUnread,
   mergeConversationMeta,
 } from "@/utils/chatHelpers";
-import { showErrorToast } from "@/utils/toast";
+import { showErrorToast, showNotificationToast } from "@/utils/toast";
 import type {
   ApiChatConversation,
   ApiChatMessage,
@@ -379,6 +379,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
               last_message_sender_id: owned.sender_id ?? existing?.last_message_sender_id ?? null,
             },
           };
+        });
+      }
+
+      // Show popup toast if message is from the other user and not currently inside this conversation
+      if (!owned.is_mine && activeConversationId !== owned.conversation_id) {
+        showNotificationToast({
+          title: owned.sender_name || "New Chat Message",
+          body: owned.content || "You received a new message.",
+          onClick: () => {
+            window.location.href = `/${activeRoleRef.current}/chats?conversation=${owned.conversation_id}`;
+          },
         });
       }
     };

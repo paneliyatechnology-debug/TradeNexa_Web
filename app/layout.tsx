@@ -12,8 +12,7 @@ import { NotificationProvider } from "@/context/NotificationContext";
 import { GeoLocationProvider } from "@/context/GeoLocationContext";
 import AppChrome from "@/components/layout/AppChrome";
 import { FcmListener } from "@/components/fcm/FcmListener";
-import { Toaster } from "react-hot-toast";
-import { TOAST_DURATION_MS } from "@/utils/toast";
+import { ClientToaster } from "@/components/common/ClientToaster";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -94,7 +93,7 @@ export default function RootLayout({
                 </ChatProvider>
               </WishlistProvider>
             </ActiveRoleProvider>
-            <Toaster position="top-center" toastOptions={{ duration: TOAST_DURATION_MS }} />
+            <ClientToaster />
           </AuthProvider>
         </ReduxProvider>
       </body>

@@ -42,8 +42,7 @@ function toBoolean(value: unknown): boolean {
 export function normalizeAppNotification(raw: unknown): AppNotification | null {
   const row = asRecord(raw);
   if (!row) return null;
-  const id = toFiniteNumber(row.id);
-  if (id == null || id <= 0) return null;
+  const id = toFiniteNumber(row.id) || Date.now();
 
   const dataRaw = row.data;
   let data: Record<string, unknown> | null = null;
@@ -58,17 +57,31 @@ export function normalizeAppNotification(raw: unknown): AppNotification | null {
     data = asRecord(dataRaw);
   }
 
-  const roleRaw = row.role;
+  const roleRaw = row.role ?? (data ? data.role : null);
   const role =
     roleRaw === "buyer" || roleRaw === "seller" ? roleRaw : null;
+
+  const title =
+    typeof row.title === "string" && row.title.trim()
+      ? row.title
+      : typeof row.heading === "string" && row.heading.trim()
+        ? row.heading
+        : "Notification";
+
+  const body =
+    typeof row.body === "string" && row.body.trim()
+      ? row.body
+      : typeof row.message === "string" && row.message.trim()
+        ? row.message
+        : "";
 
   return {
     id,
     user_id: toFiniteNumber(row.user_id) ?? 0,
     type: typeof row.type === "string" ? row.type : "",
     role,
-    title: typeof row.title === "string" ? row.title : "",
-    body: typeof row.body === "string" ? row.body : "",
+    title,
+    body,
     reference_id: toNullableNumber(row.reference_id),
     sender_id: toNullableNumber(row.sender_id),
     click_action:
@@ -80,8 +93,8 @@ export function normalizeAppNotification(raw: unknown): AppNotification | null {
     data,
     is_read: toBoolean(row.is_read),
     read_at: typeof row.read_at === "string" ? row.read_at : null,
-    created_at: typeof row.created_at === "string" ? row.created_at : "",
-    updated_at: typeof row.updated_at === "string" ? row.updated_at : "",
+    created_at: typeof row.created_at === "string" ? row.created_at : new Date().toISOString(),
+    updated_at: typeof row.updated_at === "string" ? row.updated_at : new Date().toISOString(),
   };
 }
 
