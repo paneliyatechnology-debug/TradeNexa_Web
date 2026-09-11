@@ -9,7 +9,8 @@ import { getCategoryFallbackIcon } from "@/utils/categoryIcons";
 import type { LucideIcon } from "lucide-react";
 
 interface CategoryCardProps {
-  icon?: LucideIcon;
+  icon?: LucideIcon | string | null;
+  iconUrl?: string | null;
   imageUrl?: string | null;
   slug?: string;
   title: string;
@@ -21,7 +22,8 @@ interface CategoryCardProps {
 }
 
 export default function CategoryCard({
-  icon: Icon,
+  icon: iconProp,
+  iconUrl,
   imageUrl,
   slug,
   title,
@@ -38,13 +40,15 @@ export default function CategoryCard({
         ? `${subcategoryCount} subcategories`
         : "Explore";
 
-  const FallbackIcon = Icon ?? getCategoryFallbackIcon(slug, title);
+  const LucideIconComp = typeof iconProp === "function" ? iconProp : undefined;
+  const FallbackIcon = LucideIconComp ?? getCategoryFallbackIcon(slug, title);
+  const imageSrc = imageUrl || iconUrl || (typeof iconProp === "string" ? iconProp : null);
 
   const inner = (
     <>
       <div className="relative h-28 overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-muted">
         <CatalogImage
-          src={imageUrl}
+          src={imageSrc}
           alt={title}
           fallbackIcon={FallbackIcon}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -72,6 +76,8 @@ export default function CategoryCard({
       </div>
     </>
   );
+
+  console.log(`[CategoryCard] Title: "${title}", Image URL:`, imageSrc);
 
   const className =
     "group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-primary/25";
