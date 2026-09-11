@@ -85,37 +85,23 @@ export function resolveImageUrl(url: unknown): string | null {
   if (normalized.startsWith("blob:")) return normalized;
 
   if (normalized.startsWith("http://") || normalized.startsWith("https://")) {
-    try {
-      const proxied = proxyBackendMediaUrl(new URL(normalized));
-      if (proxied) return proxied;
-    } catch {
-      return normalized;
+    let clean = normalized;
+    if (clean.includes("tradenexabackend-production.up.railway.app")) {
+      clean = clean.replace(
+        "tradenexabackend-production.up.railway.app",
+        "tradenexabackend-dev.up.railway.app"
+      );
     }
-    return normalized;
+    return clean;
   }
 
-  const cleanUrl = normalized.startsWith("/") ? normalized : `/${normalized}`;
+  const cleanUrl = normalized.replace(/^\/+/, "");
 
-  if (cleanUrl.startsWith("/media/")) {
-    const mediaPath = cleanUrl.slice("/media/".length);
-    return mediaPath ? `/api/media/${mediaPath}` : null;
+  if (cleanUrl.startsWith("media/") || cleanUrl.startsWith("uploads/")) {
+    return `${BACKEND_ORIGIN}/${cleanUrl}`;
   }
 
-  if (cleanUrl.startsWith("/uploads/")) {
-    const uploadPath = cleanUrl.slice("/uploads/".length);
-    return uploadPath ? `/api/uploads/${uploadPath}` : null;
-  }
-
-  // Relative non-/media paths (e.g. chat/x.jpg) — proxy via backend origin.
-  try {
-    const absolute = new URL(cleanUrl, BACKEND_ORIGIN);
-    const proxied = proxyBackendMediaUrl(absolute);
-    if (proxied) return proxied;
-  } catch {
-    /* fall through */
-  }
-
-  return `${BACKEND_ORIGIN}${cleanUrl}`;
+  return `${BACKEND_ORIGIN}/media/${cleanUrl}`;
 }
 
 export type ProductVideoType = "youtube" | "vimeo" | "file";

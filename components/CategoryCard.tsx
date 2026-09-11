@@ -10,8 +10,7 @@ import type { LucideIcon } from "lucide-react";
 
 interface CategoryCardProps {
   icon?: LucideIcon | string | null;
-  iconUrl?: string | null;
-  imageUrl?: string | null;
+
   slug?: string;
   title: string;
   description?: string;
@@ -23,8 +22,7 @@ interface CategoryCardProps {
 
 export default function CategoryCard({
   icon: iconProp,
-  iconUrl,
-  imageUrl,
+
   slug,
   title,
   description,
@@ -42,7 +40,7 @@ export default function CategoryCard({
 
   const LucideIconComp = typeof iconProp === "function" ? iconProp : undefined;
   const FallbackIcon = LucideIconComp ?? getCategoryFallbackIcon(slug, title);
-  const imageSrc = imageUrl || iconUrl || (typeof iconProp === "string" ? iconProp : null);
+  const imageSrc = (typeof iconProp === "string" ? iconProp : null);
 
   const inner = (
     <>
