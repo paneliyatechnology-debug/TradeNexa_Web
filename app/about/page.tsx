@@ -8,6 +8,7 @@ import MarketplacePageHero from "@/components/catalog/marketplace/MarketplacePag
 import { MARKETPLACE_CONTAINER } from "@/components/catalog/marketplace/marketplaceLayout";
 import { useApp } from "@/app/context/AppContext";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   Shield,
   Target,
@@ -27,66 +28,120 @@ import { motion } from "framer-motion";
 export default function About() {
   const { openRegisterModal } = useApp();
   const { isAuthenticated } = useAuth();
+  const { t } = useLanguage();
 
   const values = [
     {
-      title: "Trust & Transparency",
-      desc: "Verifying seller profiles and maintaining clear communication channels to foster reliable business deals.",
+      title: t("about.valTrustTitle", "Trust & Transparency"),
+      desc: t(
+        "about.valTrustDesc",
+        "Verifying seller profiles and maintaining clear communication channels to foster reliable business deals."
+      ),
       icon: Shield,
     },
     {
-      title: "Empowerment",
-      desc: "Equipping local sellers with digital catalog management and lead generation systems to scale nationwide.",
+      title: t("about.valEmpowermentTitle", "Empowerment"),
+      desc: t(
+        "about.valEmpowermentDesc",
+        "Equipping local sellers with digital catalog management and lead generation systems to scale nationwide."
+      ),
       icon: Target,
     },
     {
-      title: "Innovation",
-      desc: "Continuously improving search queries, category sorting, and match speeds to simplify B2B trade.",
+      title: t("about.valInnovationTitle", "Innovation"),
+      desc: t(
+        "about.valInnovationDesc",
+        "Continuously improving search queries, category sorting, and match speeds to simplify B2B trade."
+      ),
       icon: Compass,
     },
     {
-      title: "Customer Centricity",
-      desc: "Prioritizing ease of use for traditional business owners who might not be technically advanced.",
+      title: t("about.valCustomerTitle", "Customer Centricity"),
+      desc: t(
+        "about.valCustomerDesc",
+        "Prioritizing ease of use for traditional business owners who might not be technically advanced."
+      ),
       icon: Heart,
     },
   ];
 
   const impactStats = [
-    { label: "Verified Sellers", value: "5,000+", icon: Store, color: "text-primary bg-primary-soft" },
-    { label: "Products Listed", value: "10,000+", icon: Package, color: "text-navy-mid bg-muted" },
-    { label: "Cities Connected", value: "50+", icon: MapPin, color: "text-muted-fg bg-muted" },
-    { label: "Successful Matches", value: "25,000+", icon: Handshake, color: "text-primary bg-primary-soft" },
+    {
+      label: t("about.statVerifiedSellers", "Verified Sellers"),
+      value: "5,000+",
+      icon: Store,
+      color: "text-primary bg-primary-soft",
+    },
+    {
+      label: t("about.statProductsListed", "Products Listed"),
+      value: "10,000+",
+      icon: Package,
+      color: "text-navy-mid bg-muted",
+    },
+    {
+      label: t("about.statCitiesConnected", "Cities Connected"),
+      value: "50+",
+      icon: MapPin,
+      color: "text-muted-fg bg-muted",
+    },
+    {
+      label: t("about.statMatches", "Successful Matches"),
+      value: "25,000+",
+      icon: Handshake,
+      color: "text-primary bg-primary-soft",
+    },
   ];
 
   const roleCards = [
     {
       role: "seller" as const,
-      title: "For Sellers",
+      title: t("about.forSellersTitle", "For Sellers"),
       icon: Store,
-      description:
-        "Manufacturers, distributors, and wholesalers list catalogs, receive RFQs, and grow reach beyond their local market.",
-      features: ["Free business profile", "Product catalog listing", "Direct buyer inquiries", "Nationwide visibility"],
-      cta: "Register as Seller",
+      description: t(
+        "about.forSellersDesc",
+        "Manufacturers, distributors, and wholesalers list catalogs, receive RFQs, and grow reach beyond their local market."
+      ),
+      features: [
+        t("about.forSellersFeat1", "Free business profile"),
+        t("about.forSellersFeat2", "Product catalog listing"),
+        t("about.forSellersFeat3", "Direct buyer inquiries"),
+        t("about.forSellersFeat4", "Nationwide visibility"),
+      ],
+      cta: t("about.forSellersCta", "Register as Seller"),
       accent: "from-navy-mid to-navy",
     },
     {
       role: "buyer" as const,
-      title: "For Buyers",
+      title: t("about.forBuyersTitle", "For Buyers"),
       icon: ShoppingCart,
-      description:
-        "Retailers, contractors, and procurement teams discover verified suppliers and compare quotes without middlemen.",
-      features: ["Verified supplier search", "One-click RFQ forms", "Direct seller contact", "No platform commission"],
-      cta: "Register as Buyer",
+      description: t(
+        "about.forBuyersDesc",
+        "Retailers, contractors, and procurement teams discover verified suppliers and compare quotes without middlemen."
+      ),
+      features: [
+        t("about.forBuyersFeat1", "Verified supplier search"),
+        t("about.forBuyersFeat2", "One-click RFQ forms"),
+        t("about.forBuyersFeat3", "Direct seller contact"),
+        t("about.forBuyersFeat4", "No platform commission"),
+      ],
+      cta: t("about.forBuyersCta", "Register as Buyer"),
       accent: "from-navy to-navy-mid",
     },
     {
       role: "both" as const,
-      title: "For Both",
+      title: t("about.forBothTitle", "For Both"),
       icon: ArrowLeftRight,
-      description:
-        "Many businesses buy raw materials and sell finished goods. One account handles both sides of your trade.",
-      features: ["Dual buyer & seller dashboard", "Unified business profile", "Cross-category sourcing", "Flexible role switching"],
-      cta: "Register for Both",
+      description: t(
+        "about.forBothDesc",
+        "Many businesses buy raw materials and sell finished goods. One account handles both sides of your trade."
+      ),
+      features: [
+        t("about.forBothFeat1", "Dual buyer & seller dashboard"),
+        t("about.forBothFeat2", "Unified business profile"),
+        t("about.forBothFeat3", "Cross-category sourcing"),
+        t("about.forBothFeat4", "Flexible role switching"),
+      ],
+      cta: t("about.forBothCta", "Register for Both"),
       accent: "from-primary to-navy-mid",
     },
   ];
@@ -94,13 +149,19 @@ export default function About() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <MarketplacePageHero
-        eyebrow="About Us"
+        eyebrow={t("about.eyebrow", "About Us")}
         title={
           <>
-            Our Mission is to <span className="text-primary-soft">Digitally Empower Businesses</span>
+            {t("about.heroTitlePrefix", "Our Mission is to")}{" "}
+            <span className="text-primary-soft">
+              {t("about.heroTitleHighlight", "Digitally Empower Businesses")}
+            </span>
           </>
         }
-        subtitle="We build marketplace tools that let sellers, buyers, and dual-role businesses connect instantly, transparently, and nationwide."
+        subtitle={t(
+          "about.heroSubtitle",
+          "We build marketplace tools that let sellers, buyers, and dual-role businesses connect instantly, transparently, and nationwide."
+        )}
         centered={false}
       />
 
@@ -108,31 +169,38 @@ export default function About() {
         <div className={MARKETPLACE_CONTAINER}>
           <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12">
             <div className="space-y-6 lg:col-span-7">
-              <h2 className="text-3xl font-semibold tracking-tight text-foreground">Who We Are</h2>
+              <h2 className="text-3xl font-semibold tracking-tight text-foreground">
+                {t("about.whoWeAreTitle", "Who We Are")}
+              </h2>
               <p className="text-sm leading-relaxed text-muted-fg">
-                We are a modern team dedicated to rebuilding B2B marketplace tools. Traditional commerce directories
-                are often slow and cluttered. We provide a sleek, search-optimized platform designed to help
-                manufacturers, distributors, bulk buyers, and businesses that do both connect with confidence.
+                {t(
+                  "about.whoWeAreDesc",
+                  "We are a modern team dedicated to rebuilding B2B marketplace tools. Traditional commerce directories are often slow and cluttered. We provide a sleek, search-optimized platform designed to help manufacturers, distributors, bulk buyers, and businesses that do both connect with confidence."
+                )}
               </p>
               <div className="grid grid-cols-1 gap-6 pt-4 sm:grid-cols-2">
                 <div className="surface-card p-5">
                   <h3 className="mb-2 flex items-center gap-2 font-semibold text-foreground">
                     <Target className="h-5 w-5 text-primary" />
-                    Our Mission
+                    {t("about.missionTitle", "Our Mission")}
                   </h3>
                   <p className="text-xs leading-relaxed text-muted-fg">
-                    To digitize trading and communication for over 10 million small and medium enterprises across
-                    India, converting local catalog setups into high-volume national sales pipelines.
+                    {t(
+                      "about.missionDesc",
+                      "To digitize trading and communication for over 10 million small and medium enterprises across India, converting local catalog setups into high-volume national sales pipelines."
+                    )}
                   </p>
                 </div>
                 <div className="surface-card p-5">
                   <h3 className="mb-2 flex items-center gap-2 font-semibold text-foreground">
                     <Compass className="h-5 w-5 text-primary" />
-                    Our Vision
+                    {t("about.visionTitle", "Our Vision")}
                   </h3>
                   <p className="text-xs leading-relaxed text-muted-fg">
-                    To become the most user-friendly and trusted marketplace where B2B negotiations and supply
-                    catalog searches resolve within minutes rather than weeks.
+                    {t(
+                      "about.visionDesc",
+                      "To become the most user-friendly and trusted marketplace where B2B negotiations and supply catalog searches resolve within minutes rather than weeks."
+                    )}
                   </p>
                 </div>
               </div>
@@ -150,8 +218,12 @@ export default function About() {
                     <Users className="h-5 w-5" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold text-foreground">Platform at a Glance</h4>
-                    <p className="text-xs text-muted-fg">Real impact across India&apos;s B2B ecosystem</p>
+                    <h4 className="text-sm font-semibold text-foreground">
+                      {t("about.glanceTitle", "Platform at a Glance")}
+                    </h4>
+                    <p className="text-xs text-muted-fg">
+                      {t("about.glanceSubtitle", "Real impact across India's B2B ecosystem")}
+                    </p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -166,7 +238,9 @@ export default function About() {
                         transition={{ delay: i * 0.08 }}
                         className="surface-card p-4"
                       >
-                        <div className={`mb-2 inline-flex h-8 w-8 items-center justify-center rounded-lg ${stat.color}`}>
+                        <div
+                          className={`mb-2 inline-flex h-8 w-8 items-center justify-center rounded-lg ${stat.color}`}
+                        >
                           <Icon className="h-4 w-4" />
                         </div>
                         <p className="text-lg font-semibold text-foreground">{stat.value}</p>
@@ -184,9 +258,12 @@ export default function About() {
       <section className="border-y border-border bg-muted py-16">
         <div className={MARKETPLACE_CONTAINER}>
           <SectionHeading
-            badge="Ethos"
-            title="Our Values"
-            subtitle="The fundamental standards guiding our development, platform policies, and support systems."
+            badge={t("about.ethosBadge", "Ethos")}
+            title={t("about.valuesTitle", "Our Values")}
+            subtitle={t(
+              "about.valuesSubtitle",
+              "The fundamental standards guiding our development, platform policies, and support systems."
+            )}
           />
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <motion.div
@@ -243,9 +320,12 @@ export default function About() {
       <section className="bg-card py-16">
         <div className={MARKETPLACE_CONTAINER}>
           <SectionHeading
-            badge="Ecosystem"
-            title="Built For Every Business"
-            subtitle="Whether you sell, buy, or do both — TradeNexa adapts to how your business actually operates."
+            badge={t("about.ecosystemBadge", "Ecosystem")}
+            title={t("about.rolesTitle", "Built For Every Business")}
+            subtitle={t(
+              "about.rolesSubtitle",
+              "Whether you sell, buy, or do both — TradeNexa adapts to how your business actually operates."
+            )}
           />
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {(() => {
@@ -326,7 +406,7 @@ export default function About() {
               href="/how-it-works"
               className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-muted-fg transition hover:border-border-strong hover:bg-muted"
             >
-              See how each role works
+              {t("about.seeHowRolesWork", "See how each role works")}
               <ArrowRight className="h-4 w-4 text-primary" />
             </Link>
           </div>

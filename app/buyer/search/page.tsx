@@ -15,7 +15,10 @@ import { useCityFilter } from "@/hooks/useCityFilter";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useLoadMoreList } from "@/hooks/useLoadMoreList";
 
+import { useLanguage } from "@/context/LanguageContext";
+
 export default function BuyerSearchPage() {
+  const { t } = useLanguage();
   const [query, setQuery] = React.useState("");
   const debounced = useDebouncedValue(query, 400);
   const {
@@ -59,17 +62,24 @@ export default function BuyerSearchPage() {
   }
 
   const resultsLabel = loading
-    ? "Searching..."
-    : `${pagination.total.toLocaleString()} product${pagination.total === 1 ? "" : "s"} found`;
+    ? t("catalog.searching", "Searching...")
+    : `${pagination.total.toLocaleString()} ${
+        pagination.total === 1
+          ? t("catalog.productFound", "product found")
+          : t("catalog.productsFound", "products found")
+      }`;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
-      <PortalPageHeader title="Search Products" subtitle="Find suppliers and products across India" />
+      <PortalPageHeader
+        title={t("catalog.searchProducts", "Search Products")}
+        subtitle={t("catalog.findSuppliersProducts", "Find suppliers and products across India")}
+      />
       <div className="mb-6 space-y-2.5">
         <PortalSearchBar
           value={query}
           onChange={setQuery}
-          placeholder="Search by product, category, or supplier..."
+          placeholder={t("catalog.searchByProductCategory", "Search by product, category, or supplier...")}
         />
         <LocationFilterBar
           idPrefix="buyer-search"
@@ -95,16 +105,16 @@ export default function BuyerSearchPage() {
       {loading ? (
         <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-fg">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
-          Searching...
+          {t("catalog.searching", "Searching...")}
         </div>
       ) : products.length === 0 ? (
         <PortalEmptyState
           icon={Search}
-          title="No products found"
-          description="Try a different search term, city, or browse categories."
+          title={t("catalog.noProductsFound", "No products found")}
+          description={t("catalog.searchEmptyLocationDesc", "Try a different search term, city, or browse categories.")}
           action={
             <Link href="/buyer/categories">
-              <Button>Browse Categories</Button>
+              <Button>{t("catalog.browseCategories", "Browse Categories")}</Button>
             </Link>
           }
         />

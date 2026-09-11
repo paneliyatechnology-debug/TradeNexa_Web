@@ -23,6 +23,7 @@ import {
 import toast from "react-hot-toast";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   fetchActiveDevices,
   logoutDevice,
@@ -79,6 +80,7 @@ function formatRelativeTime(dateString: string): string {
 export default function LoginDevicesView({ variant }: LoginDevicesViewProps) {
   const router = useRouter();
   const { user, logoutUser } = useAuth();
+  const { currentLanguage, t } = useLanguage();
   const [devices, setDevices] = useState<LoginDevice[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -101,7 +103,7 @@ export default function LoginDevicesView({ variant }: LoginDevicesViewProps) {
         sessionStorage.setItem("current_session_device_id", String(current.id));
       }
     } catch {
-      toast.error("Failed to load active login devices.");
+      toast.error(t("loginDevices.toastFailedLoad", "Failed to load active login devices."));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -110,19 +112,19 @@ export default function LoginDevicesView({ variant }: LoginDevicesViewProps) {
 
   useEffect(() => {
     void loadDevices();
-  }, []);
+  }, [currentLanguage]);
 
   async function handleRevokeDevice(device: LoginDevice) {
     if (device.is_current) {
       // If logging out the current session
-      if (!confirm("Logging out your current session will sign you out of TradeNexa on this browser. Continue?")) {
+      if (!confirm(t("loginDevices.confirmCurrentSession", "Logging out your current session will sign you out of TradeNexa on this browser. Continue?"))) {
         return;
       }
       try {
         await logoutUser();
         router.replace("/");
       } catch {
-        toast.error("Failed to sign out.");
+        toast.error(t("loginDevices.toastFailedSignOut", "Failed to sign out."));
       }
       return;
     }
@@ -131,9 +133,9 @@ export default function LoginDevicesView({ variant }: LoginDevicesViewProps) {
     try {
       await logoutDevice(device.id);
       setDevices((prev) => prev.filter((d) => d.id !== device.id));
-      toast.success(`${device.title || "Device"} logged out successfully.`);
+      toast.success(`${device.title || "Device"} ${t("loginDevices.toastLoggedOutSuccess", "logged out successfully.")}`);
     } catch {
-      toast.error("Failed to revoke device session.");
+      toast.error(t("loginDevices.toastFailedRevoke", "Failed to revoke device session."));
     } finally {
       setRevokingId(null);
     }
@@ -146,9 +148,9 @@ export default function LoginDevicesView({ variant }: LoginDevicesViewProps) {
         // Keep only current device
         setDevices((prev) => prev.filter((d) => d.is_current));
         setShowLogoutAllModal(false);
-        toast.success("Successfully logged out from all other devices.");
+        toast.success(t("loginDevices.toastLogoutAllSuccess", "Successfully logged out from all other devices."));
       } catch {
-        toast.error("Failed to log out from other devices.");
+        toast.error(t("loginDevices.toastLogoutAllFailed", "Failed to log out from other devices."));
       }
     });
   }
@@ -160,22 +162,22 @@ export default function LoginDevicesView({ variant }: LoginDevicesViewProps) {
       {/* Breadcrumb Navigation */}
       <nav className="mb-4 flex items-center gap-1.5 text-xs font-medium text-muted-fg">
         <Link href={profileHref} className="transition-colors hover:text-foreground">
-          Profile
+          {t("loginDevices.profile", "Profile")}
         </Link>
         <ChevronRight className="h-3.5 w-3.5 text-muted-fg/60" />
         <Link href={settingsHref} className="transition-colors hover:text-foreground">
-          Settings
+          {t("loginDevices.settings", "Settings")}
         </Link>
         <ChevronRight className="h-3.5 w-3.5 text-muted-fg/60" />
-        <span className="font-semibold text-foreground">Login Devices</span>
+        <span className="font-semibold text-foreground">{t("loginDevices.title", "Login Devices")}</span>
       </nav>
 
       {/* Header with Title & Refresh Action */}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <PortalPageHeader
-            title="Login Devices"
-            subtitle="Manage and review all active devices and sessions logged into your account"
+            title={t("loginDevices.title", "Login Devices")}
+            subtitle={t("loginDevices.subtitle", "Manage and review all active devices and sessions logged into your account")}
           />
         </div>
         <div className="flex items-center gap-2">
@@ -184,10 +186,10 @@ export default function LoginDevicesView({ variant }: LoginDevicesViewProps) {
             onClick={() => void loadDevices(true)}
             disabled={loading || refreshing}
             className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs font-semibold text-muted-fg transition hover:bg-muted hover:text-foreground disabled:opacity-50"
-            title="Refresh device list"
+            title={t("loginDevices.refreshTitle", "Refresh device list")}
           >
             <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin text-primary" : ""}`} />
-            Refresh
+            {t("loginDevices.refresh", "Refresh")}
           </button>
           {otherDevicesCount > 0 ? (
             <button
@@ -196,7 +198,7 @@ export default function LoginDevicesView({ variant }: LoginDevicesViewProps) {
               className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-error/30 bg-error-soft px-3 text-xs font-semibold text-error transition hover:bg-error/15"
             >
               <LogOut className="h-3.5 w-3.5" />
-              Log Out All Other Devices ({otherDevicesCount})
+              {t("loginDevices.logoutAllOther", "Log Out All Other Devices")} ({otherDevicesCount})
             </button>
           ) : null}
         </div>
@@ -210,9 +212,9 @@ export default function LoginDevicesView({ variant }: LoginDevicesViewProps) {
       >
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <div className="flex-1">
-          <p className="font-semibold text-primary">Account Security & Active Sessions</p>
+          <p className="font-semibold text-primary">{t("loginDevices.securityBannerTitle", "Account Security & Active Sessions")}</p>
           <p className="mt-0.5 text-muted-fg">
-            If you see any unfamiliar browser or device location, immediately click <strong>Log Out</strong> to revoke access, and ensure your registered mobile number is secure.
+            {t("loginDevices.securityBannerDesc", "If you see any unfamiliar browser or device location, immediately click Log Out to revoke access, and ensure your registered mobile number is secure.")}
           </p>
         </div>
       </motion.div>
@@ -242,9 +244,9 @@ export default function LoginDevicesView({ variant }: LoginDevicesViewProps) {
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-soft text-primary">
               <Shield className="h-6 w-6" />
             </div>
-            <p className="mt-3 text-sm font-semibold text-foreground">No active sessions found</p>
+            <p className="mt-3 text-sm font-semibold text-foreground">{t("loginDevices.noActiveSessions", "No active sessions found")}</p>
             <p className="mt-1 text-xs text-muted-fg">
-              Your login activity will appear here once authenticated.
+              {t("loginDevices.noActiveSessionsDesc", "Your login activity will appear here once authenticated.")}
             </p>
           </div>
         ) : (
@@ -280,12 +282,12 @@ export default function LoginDevicesView({ variant }: LoginDevicesViewProps) {
                         {device.is_current ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            Current Device
+                            {t("loginDevices.currentDevice", "Current Device")}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                            Active
+                            {t("loginDevices.active", "Active")}
                           </span>
                         )}
                       </div>
@@ -297,7 +299,7 @@ export default function LoginDevicesView({ variant }: LoginDevicesViewProps) {
                         </span>
                         <span className="inline-flex items-center gap-1">
                           <Clock className="h-3 w-3 text-muted-fg/70" />
-                          {device.is_current ? "Active now" : "Active Session"}
+                          {device.is_current ? t("loginDevices.activeNow", "Active now") : t("loginDevices.activeSession", "Active Session")}
                         </span>
                       </div>
                     </div>
@@ -318,12 +320,12 @@ export default function LoginDevicesView({ variant }: LoginDevicesViewProps) {
                       {isRevoking ? (
                         <>
                           <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                          Revoking...
+                          {t("loginDevices.revoking", "Revoking...")}
                         </>
                       ) : (
                         <>
                           <LogOut className="h-3.5 w-3.5" />
-                          {device.is_current ? "Sign Out" : "Log Out Device"}
+                          {device.is_current ? t("loginDevices.signOut", "Sign Out") : t("loginDevices.logoutDevice", "Log Out Device")}
                         </>
                       )}
                     </button>
@@ -357,10 +359,10 @@ export default function LoginDevicesView({ variant }: LoginDevicesViewProps) {
                 <AlertTriangle className="h-6 w-6" />
               </div>
               <h3 className="mt-4 text-lg font-semibold text-foreground">
-                Log Out All Other Devices?
+                {t("loginDevices.modalTitle", "Log Out All Other Devices?")}
               </h3>
               <p className="mt-2 text-xs leading-relaxed text-muted-fg">
-                This will immediately invalidate all {otherDevicesCount} other active login session(s). Anyone using your account on other browsers, mobile apps, or computers will be required to log in again with OTP.
+                {t("loginDevices.modalDesc", "This will immediately invalidate all other active login session(s). Anyone using your account on other browsers, mobile apps, or computers will be required to log in again with OTP.")}
               </p>
 
               <div className="mt-6 flex items-center justify-end gap-3">
@@ -370,7 +372,7 @@ export default function LoginDevicesView({ variant }: LoginDevicesViewProps) {
                   disabled={isPending}
                   className="inline-flex h-9 items-center rounded-lg border border-border bg-card px-4 text-xs font-semibold text-foreground transition hover:bg-muted"
                 >
-                  Cancel
+                  {t("loginDevices.cancel", "Cancel")}
                 </button>
                 <button
                   type="button"
@@ -381,12 +383,12 @@ export default function LoginDevicesView({ variant }: LoginDevicesViewProps) {
                   {isPending ? (
                     <>
                       <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                      Logging out...
+                      {t("loginDevices.loggingOut", "Logging out...")}
                     </>
                   ) : (
                     <>
                       <LogOut className="h-3.5 w-3.5" />
-                      Confirm Log Out All
+                      {t("loginDevices.confirmLogoutAll", "Confirm Log Out All")}
                     </>
                   )}
                 </button>

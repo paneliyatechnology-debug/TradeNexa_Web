@@ -5,12 +5,14 @@ import Link from "next/link";
 import { ArrowRight, Store, Search } from "lucide-react";
 import { useApp } from "@/app/context/AppContext";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/context/LanguageContext";
 import { motion } from "framer-motion";
 import { Button } from "@/components/common/Button";
 
 export default function CTABanner() {
   const { openRegisterModal } = useApp();
   const { isAuthenticated } = useAuth();
+  const { t } = useLanguage();
 
   if (isAuthenticated) return null;
 
@@ -27,7 +29,7 @@ export default function CTABanner() {
           transition={{ duration: 0.4 }}
           className="text-3xl font-semibold tracking-tight text-white sm:text-4xl"
         >
-          Ready to grow your business?
+          {t("ctaBanner.title", "Ready to grow your business?")}
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 12 }}
@@ -36,8 +38,10 @@ export default function CTABanner() {
           transition={{ duration: 0.4, delay: 0.05 }}
           className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-white/70 sm:text-lg"
         >
-          Join sellers and buyers expanding their reach through TradeNexa — verified profiles,
-          direct inquiries, and nationwide discovery.
+          {t(
+            "ctaBanner.subtitle",
+            "Join sellers and buyers expanding their reach through TradeNexa — verified profiles, direct inquiries, and nationwide discovery."
+          )}
         </motion.p>
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -48,7 +52,7 @@ export default function CTABanner() {
         >
           <Button onClick={() => openRegisterModal("seller")} size="lg">
             <Store className="h-4 w-4" aria-hidden />
-            Join as Seller
+            {t("ctaBanner.joinSeller", "Join as Seller")}
           </Button>
           <Button
             onClick={() => openRegisterModal("buyer")}
@@ -57,7 +61,7 @@ export default function CTABanner() {
             className="border-white/20 bg-white/10 text-white hover:border-white/30 hover:bg-white/20"
           >
             <Search className="h-4 w-4" aria-hidden />
-            Join as Buyer
+            {t("ctaBanner.joinBuyer", "Join as Buyer")}
           </Button>
           <Link href="/how-it-works">
             <Button
@@ -65,7 +69,7 @@ export default function CTABanner() {
               size="lg"
               className="text-white/70 hover:bg-white/10 hover:text-white"
             >
-              How it works
+              {t("ctaBanner.howItWorks", "How it works")}
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Button>
           </Link>

@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import ConversationBadge, { formatChatBadgeCount } from "@/components/chat/ConversationBadge";
+import { useLanguage } from "@/context/LanguageContext";
 import type { PortalNavItem } from "@/components/portal/PortalBottomNav";
 
 interface SidebarItemProps {
@@ -20,17 +21,20 @@ export default function SidebarItem({
   accent = "buyer",
   onNavigate,
 }: SidebarItemProps) {
+  const { t } = useLanguage();
   const Icon = item.icon;
   const isSeller = accent === "seller";
   const accentIcon = isSeller ? "text-orange-300" : "text-sky-300";
   const badgeClass =
     "bg-sky-400 text-white shadow-none ring-2 ring-[#0d1b2a]";
 
+  const translatedLabel = t(`portalNav.${item.label.toLowerCase()}`, item.label);
+
   return (
     <Link
       href={item.href}
       onClick={onNavigate}
-      title={collapsed ? item.label : undefined}
+      title={collapsed ? translatedLabel : undefined}
       className={`group relative flex h-11 items-center rounded-lg text-[13.5px] tracking-[-0.01em] transition-colors duration-200 ${
         collapsed ? "justify-center px-0" : "gap-3 px-3"
       } ${
@@ -49,7 +53,7 @@ export default function SidebarItem({
 
       {!collapsed ? (
         <>
-          <span className="min-w-0 flex-1 truncate">{item.label}</span>
+          <span className="min-w-0 flex-1 truncate">{translatedLabel}</span>
           {item.badge ? (
             <ConversationBadge count={item.badge} className={badgeClass} />
           ) : null}

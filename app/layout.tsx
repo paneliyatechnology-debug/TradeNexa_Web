@@ -10,6 +10,7 @@ import { WishlistProvider } from "@/context/WishlistContext";
 import { ChatProvider } from "@/context/ChatContext";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { GeoLocationProvider } from "@/context/GeoLocationContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 import AppChrome from "@/components/layout/AppChrome";
 import { FcmListener } from "@/components/fcm/FcmListener";
 import { Toaster } from "react-hot-toast";
@@ -81,18 +82,20 @@ export default function RootLayout({
         <ReduxProvider>
           <AuthProvider>
             <ActiveRoleProvider>
-              <WishlistProvider>
-                <ChatProvider>
-                  <NotificationProvider>
-                    <GeoLocationProvider>
-                      <AppProvider>
-                        <AppChrome>{children}</AppChrome>
-                        <FcmListener />
-                      </AppProvider>
-                    </GeoLocationProvider>
-                  </NotificationProvider>
-                </ChatProvider>
-              </WishlistProvider>
+              <LanguageProvider>
+                <WishlistProvider>
+                  <ChatProvider>
+                    <NotificationProvider>
+                      <GeoLocationProvider>
+                        <AppProvider>
+                          <AppChrome>{children}</AppChrome>
+                          <FcmListener />
+                        </AppProvider>
+                      </GeoLocationProvider>
+                    </NotificationProvider>
+                  </ChatProvider>
+                </WishlistProvider>
+              </LanguageProvider>
             </ActiveRoleProvider>
             <Toaster position="top-center" toastOptions={{ duration: TOAST_DURATION_MS }} />
           </AuthProvider>

@@ -10,6 +10,7 @@ import { Button } from "@/components/common/Button";
 import { portalFilterChipClass } from "@/components/portal/portalLayout";
 import { useActiveRole } from "@/context/ActiveRoleContext";
 import { useNotifications } from "@/context/NotificationContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { fetchNotifications, markNotificationRead, markNotificationsRead } from "@/services/notificationService";
 import {
@@ -123,6 +124,7 @@ interface NotificationsInboxProps {
 export default function NotificationsInbox({ accent = "buyer" }: NotificationsInboxProps) {
   const router = useRouter();
   const { activeRole, setActiveRole } = useActiveRole();
+  const { currentLanguage } = useLanguage();
   const {
     unreadCount,
     markRead,
@@ -151,12 +153,12 @@ export default function NotificationsInbox({ accent = "buyer" }: NotificationsIn
         is_read: isReadParam,
         role: notificationRole,
       }),
-    [isReadParam, notificationRole]
+    [isReadParam, notificationRole, currentLanguage]
   );
 
   const { items, setItems, pagination, loading, error, goToPage, reload } = usePaginatedList({
     fetchPage,
-    resetDeps: [filter, notificationRole],
+    resetDeps: [filter, notificationRole, currentLanguage],
   });
 
   useEffect(() => {

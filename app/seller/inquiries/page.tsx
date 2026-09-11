@@ -11,6 +11,7 @@ import { useChat } from "@/context/ChatContext";
 import { fetchSellerInquiries } from "@/services/inquiryService";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   INQUIRY_STATUS_TABS,
   formatInquiryStatusLabel,
@@ -22,6 +23,7 @@ import { portalFilterChipClass } from "@/components/portal/portalLayout";
 const PAGE_SIZE = 6;
 
 export default function SellerInquiriesPage() {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<InquiryStatusTab>("all");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
@@ -49,14 +51,35 @@ export default function SellerInquiriesPage() {
     resetDeps: [activeTab, debouncedSearch],
   });
 
+  const getTabLabel = (tab: InquiryStatusTab) => {
+    switch (tab) {
+      case "all":
+        return t("inquiries.tabs.all", "All");
+      case "pending":
+        return t("inquiries.tabs.pending", "Pending");
+      case "quoted":
+        return t("inquiries.tabs.quoted", "Quoted");
+      case "accepted":
+        return t("inquiries.tabs.accepted", "Accepted");
+      case "rejected":
+        return t("inquiries.tabs.rejected", "Rejected");
+      case "cancelled":
+        return t("inquiries.tabs.cancelled", "Cancelled");
+      case "closed":
+        return t("inquiries.tabs.closed", "Closed");
+      default:
+        return formatInquiryStatusLabel(tab);
+    }
+  };
+
   const hasSearch = debouncedSearch.trim().length > 0;
-  const tabLabel = formatInquiryStatusLabel(activeTab).toLowerCase();
+  const tabLabel = getTabLabel(activeTab).toLowerCase();
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 lg:px-8">
       <PortalPageHeader
-        title="Product inquiries"
-        subtitle="Buyer questions on your catalog products"
+        title={t("inquiries.title", "Product Inquiries")}
+        subtitle={t("inquiries.subtitle", "Buyer questions on your catalog products")}
       />
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -68,14 +91,14 @@ export default function SellerInquiriesPage() {
               onClick={() => setActiveTab(tab)}
               className={portalFilterChipClass(activeTab === tab)}
             >
-              {formatInquiryStatusLabel(tab)}
+              {getTabLabel(tab)}
             </button>
           ))}
         </div>
         <PortalSearchBar
           value={search}
           onChange={setSearch}
-          placeholder="Search inquiries…"
+          placeholder={t("inquiries.searchPlaceholder", "Search inquiries…")}
           className="w-full max-w-xs"
         />
       </div>
@@ -87,7 +110,7 @@ export default function SellerInquiriesPage() {
       ) : error ? (
         <PortalEmptyState
           icon={FileText}
-          title="Could not load inquiries"
+          title={t("inquiries.couldNotLoad", "Could not load inquiries")}
           description={error}
         />
       ) : items.length === 0 ? (
@@ -95,15 +118,15 @@ export default function SellerInquiriesPage() {
           icon={Package}
           title={
             hasSearch
-              ? "No inquiries match your search"
+              ? t("inquiries.noInquiriesFound", "No inquiries match your search")
               : activeTab === "all"
-                ? "No product inquiries yet"
-                : `No ${tabLabel} inquiries`
+                ? t("inquiries.noInquiriesYet", "No product inquiries yet")
+                : `${t("inquiries.noStatusInquiries", `No ${tabLabel} inquiries`).replace("{status}", tabLabel)}`
           }
           description={
             hasSearch
-              ? `No results for "${debouncedSearch.trim()}".`
-              : "When buyers inquire on your products, they will appear here."
+              ? t("inquiries.noInquiriesMatchDesc", `No results for "${debouncedSearch.trim()}".`).replace("{search}", debouncedSearch.trim())
+              : t("inquiries.noInquiriesYetDesc", "When buyers inquire on your products, they will appear here.")
           }
         />
       ) : (

@@ -34,6 +34,7 @@ import {
   inquiryProductTitle,
   canResubmitInquiry,
 } from "@/utils/inquiryHelpers";
+import { useLanguage } from "@/context/LanguageContext";
 import { formatPrice, getInitials, resolveImageUrl } from "@/utils/catalogHelpers";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import type { ApiInquiry } from "@/types/inquiry";
@@ -62,6 +63,7 @@ function SnapshotStat({
 }
 
 export default function BuyerProductInquiryDetailPage() {
+  const { t } = useLanguage();
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -85,12 +87,12 @@ export default function BuyerProductInquiryDetailPage() {
       if (loadRequestRef.current === requestId) setInquiry(data);
     } catch (err) {
       if (loadRequestRef.current !== requestId) return;
-      showErrorToast(getInquiryErrorMessage(err, "Could not load inquiry"));
+      showErrorToast(getInquiryErrorMessage(err, t("inquiries.couldNotLoad", "Could not load inquiry")));
       setInquiry(null);
     } finally {
       if (loadRequestRef.current === requestId) setLoading(false);
     }
-  }, [inquiryId]);
+  }, [inquiryId, t]);
 
   useEffect(() => {
     void load();
@@ -109,7 +111,7 @@ export default function BuyerProductInquiryDetailPage() {
     try {
       const updated = await cancelInquiry(inquiry.id);
       setInquiry(updated);
-      showSuccessToast("Inquiry cancelled");
+      showSuccessToast(t("inquiries.inquiryCancelledToast", "Inquiry cancelled"));
     } catch (err) {
       showErrorToast(getInquiryErrorMessage(err, "Could not cancel inquiry"));
     } finally {
@@ -123,7 +125,7 @@ export default function BuyerProductInquiryDetailPage() {
     try {
       const updated = await acceptInquiryQuotation(inquiry.quotation.id, inquiry.id);
       setInquiry(updated);
-      showSuccessToast("Quotation accepted");
+      showSuccessToast(t("inquiries.quotationAcceptedToast", "Quotation accepted"));
     } catch (err) {
       showErrorToast(getInquiryErrorMessage(err, "Could not accept quotation"));
     } finally {
@@ -137,7 +139,7 @@ export default function BuyerProductInquiryDetailPage() {
     try {
       const updated = await rejectInquiryQuotation(inquiry.quotation.id, inquiry.id);
       setInquiry(updated);
-      showSuccessToast("Quotation rejected — seller can re-quote");
+      showSuccessToast(t("inquiries.quotationRejectedToast", "Quotation rejected — seller can re-quote"));
     } catch (err) {
       showErrorToast(getInquiryErrorMessage(err, "Could not reject quotation"));
     } finally {
@@ -157,7 +159,7 @@ export default function BuyerProductInquiryDetailPage() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-5">
         <PortalBackLink href="/buyer/product-inquiries" />
-        <p className="mt-6 text-sm text-muted-fg">Inquiry not found.</p>
+        <p className="mt-6 text-sm text-muted-fg">{t("inquiries.inquiryNotFound", "Inquiry not found.")}</p>
       </div>
     );
   }
@@ -189,7 +191,7 @@ export default function BuyerProductInquiryDetailPage() {
               href={`/buyer/product/${inquiry.product_id}`}
               className="font-medium text-primary hover:underline"
             >
-              View product
+              {t("inquiries.viewProduct", "View product")}
             </Link>
           </span>
         }
@@ -224,11 +226,11 @@ export default function BuyerProductInquiryDetailPage() {
               <p className="text-xs text-muted-fg">
                 {canSendNewInquiry
                   ? status === "rejected"
-                    ? "Seller declined this inquiry"
+                    ? t("inquiries.sellerDeclined", "Seller declined this inquiry")
                     : status === "cancelled"
-                      ? "You cancelled this inquiry"
-                      : "This inquiry is closed"
-                  : "Inquiry sent to this seller"}
+                      ? t("inquiries.youCancelled", "You cancelled this inquiry")
+                      : t("inquiries.inquiryClosed", "This inquiry is closed")
+                  : t("inquiries.inquirySentToSeller", "Inquiry sent to this seller")}
               </p>
             </div>
           </div>
@@ -237,7 +239,7 @@ export default function BuyerProductInquiryDetailPage() {
               <Link href={`/buyer/send-inquiry?product=${inquiry.product_id}`}>
                 <Button type="button" variant="primary" className="inline-flex items-center gap-2">
                   <Send className="h-4 w-4" />
-                  Send new inquiry
+                  {t("inquiries.sendNewInquiry", "Send new inquiry")}
                 </Button>
               </Link>
             ) : null}
@@ -248,7 +250,7 @@ export default function BuyerProductInquiryDetailPage() {
               className="inline-flex items-center gap-2"
             >
               <MessageSquare className="h-4 w-4" />
-              Open chat
+              {t("inquiries.openChat", "Open chat")}
             </Button>
           </div>
         </div>
@@ -256,7 +258,7 @@ export default function BuyerProductInquiryDetailPage() {
         {canSendNewInquiry && rejectReason ? (
           <div className="rounded-xl border border-error/20 bg-error-soft/60 px-4 py-3 sm:px-5">
             <p className="text-xs font-semibold uppercase tracking-wide text-error">
-              Rejection reason
+              {t("inquiries.rejectionReason", "Rejection reason")}
             </p>
             <p className="mt-1 text-sm text-foreground/90">{rejectReason}</p>
           </div>
@@ -274,26 +276,26 @@ export default function BuyerProductInquiryDetailPage() {
         >
           <SnapshotStat
             icon={Package}
-            label="Quantity"
+            label={t("inquiries.quantity", "Quantity")}
             value={`${inquiry.quantity} ${inquiry.unit || ""}`.trim()}
           />
           {inquiry.expected_price != null ? (
             <SnapshotStat
               icon={IndianRupee}
-              label="Target price"
+              label={t("inquiries.targetPriceLabel", "Target price")}
               value={formatPrice(inquiry.expected_price, inquiry.currency || "INR")}
             />
           ) : null}
           {inquiry.required_before ? (
             <SnapshotStat
               icon={Calendar}
-              label="Required by"
+              label={t("inquiries.requiredBy", "Required by")}
               value={formatInquiryDate(inquiry.required_before)}
             />
           ) : null}
           <SnapshotStat
             icon={Clock}
-            label="Submitted"
+            label={t("inquiries.submitted", "Submitted")}
             value={formatInquiryDate(inquiry.created_at)}
           />
         </motion.div>
@@ -306,7 +308,7 @@ export default function BuyerProductInquiryDetailPage() {
             </span>
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-fg">
-                Your message
+                {t("inquiries.yourMessage", "Your message")}
               </p>
               <p className="mt-1.5 text-sm leading-relaxed text-foreground/90">
                 {inquiry.message}
@@ -328,7 +330,7 @@ export default function BuyerProductInquiryDetailPage() {
                 <InquiryQuotationDetails
                   quote={quote}
                   currency={inquiry.currency}
-                  title="Seller's quotation"
+                  title={t("inquiries.sellersQuotation", "Seller's quotation")}
                   showSeller
                   actions={
                     inquiry.status === "quoted" ? (
@@ -339,7 +341,7 @@ export default function BuyerProductInquiryDetailPage() {
                           loading={actionLoading}
                           onClick={() => void handleAcceptQuote()}
                         >
-                          Accept quote
+                          {t("inquiries.acceptQuote", "Accept quote")}
                         </Button>
                         <Button
                           type="button"
@@ -347,7 +349,7 @@ export default function BuyerProductInquiryDetailPage() {
                           disabled={actionLoading}
                           onClick={() => void handleRejectQuote()}
                         >
-                          Reject quote
+                          {t("inquiries.rejectQuote", "Reject quote")}
                         </Button>
                       </div>
                     ) : null
@@ -366,7 +368,7 @@ export default function BuyerProductInquiryDetailPage() {
               loading={actionLoading}
               onClick={() => void handleCancel()}
             >
-              Cancel inquiry
+              {t("inquiries.cancelInquiry", "Cancel inquiry")}
             </Button>
           </div>
         ) : null}
@@ -375,7 +377,7 @@ export default function BuyerProductInquiryDetailPage() {
       <ChatSidePanel
         open={chatOpen}
         onClose={() => setChatOpen(false)}
-        title="Chat with Seller"
+        title={t("inquiries.chatWithSeller", "Chat with Seller")}
         role="buyer"
         inquiryId={inquiry.id}
         conversationId={inquiry.conversation_id}

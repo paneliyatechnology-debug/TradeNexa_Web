@@ -18,15 +18,10 @@ import {
 import PortalStatCard from "@/components/portal/PortalStatCard";
 import PortalSection from "@/components/portal/PortalSection";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/context/LanguageContext";
 import { fetchSellerDashboard } from "@/services/sellerDashboardService";
 import type { SellerDashboardData } from "@/types/sellerDashboard";
 import { formatPrice, productGradient, resolveImageUrl } from "@/utils/catalogHelpers";
-
-const quickActions = [
-  { label: "Add Product", href: "/seller/add-product", icon: Plus, color: "text-primary", bg: "bg-primary-soft" },
-  { label: "Leads", href: "/seller/leads", icon: MessageSquare, color: "text-foreground", bg: "bg-muted" },
-  { label: "My Catalog", href: "/seller/catalog", icon: Package, color: "text-warning", bg: "bg-warning-soft" },
-];
 
 function formatCount(value: number): string {
   return new Intl.NumberFormat("en-IN").format(value);
@@ -38,10 +33,17 @@ function formatLabel(value: string): string {
 
 export default function SellerDashboardPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [dashboard, setDashboard] = useState<SellerDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const dashboardRequestRef = useRef(0);
+
+  const quickActions = [
+    { label: t("dashboard.addProduct", "Add Product"), href: "/seller/add-product", icon: Plus, color: "text-primary", bg: "bg-primary-soft" },
+    { label: t("dashboard.leads", "Leads"), href: "/seller/leads", icon: MessageSquare, color: "text-foreground", bg: "bg-muted" },
+    { label: t("dashboard.myCatalog", "My Catalog"), href: "/seller/catalog", icon: Package, color: "text-warning", bg: "bg-warning-soft" },
+  ];
 
   const displayName = user?.name || user?.company || "Seller";
   const initial = displayName.charAt(0).toUpperCase();
@@ -56,7 +58,7 @@ export default function SellerDashboardPage() {
       })
       .catch(() => {
         if (dashboardRequestRef.current === requestId) {
-          setError("Could not load seller dashboard.");
+          setError(t("dashboard.couldNotLoad", "Could not load seller dashboard."));
         }
       })
       .finally(() => {
@@ -74,7 +76,7 @@ export default function SellerDashboardPage() {
       })
       .catch(() => {
         if (dashboardRequestRef.current === requestId) {
-          setError("Could not load seller dashboard.");
+          setError(t("dashboard.couldNotLoad", "Could not load seller dashboard."));
         }
       })
       .finally(() => {
@@ -83,7 +85,7 @@ export default function SellerDashboardPage() {
     return () => {
       dashboardRequestRef.current += 1;
     };
-  }, []);
+  }, [t]);
 
   const top = dashboard?.top_performing_product ?? null;
   const thumb = top ? resolveImageUrl(top.thumbnail) : null;
@@ -101,14 +103,14 @@ export default function SellerDashboardPage() {
           {initial}
         </div>
         <div className="min-w-0">
-          <p className="text-xs text-muted-fg sm:text-sm">Welcome back,</p>
+          <p className="text-xs text-muted-fg sm:text-sm">{t("dashboard.welcomeBack", "Welcome back,")}</p>
           <h2 className="truncate text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
             {displayName}
           </h2>
         </div>
       </motion.div>
 
-      <PortalSection title="Quick Actions">
+      <PortalSection title={t("dashboard.quickActions", "Quick Actions")}>
         <div className="flex gap-4 overflow-x-auto pb-2">
           {quickActions.map((action) => {
             const Icon = action.icon;
@@ -144,15 +146,15 @@ export default function SellerDashboardPage() {
             className="mt-3 text-sm font-semibold text-primary"
             onClick={() => void loadDashboard()}
           >
-            Try again
+            {t("dashboard.tryAgain", "Try again")}
           </button>
         </div>
       ) : dashboard ? (
         <>
-          <PortalSection title="Performance Overview">
+          <PortalSection title={t("dashboard.performanceOverview", "Performance Overview")}>
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               <PortalStatCard
-                title="Total Products"
+                title={t("dashboard.totalProducts", "Total Products")}
                 value={formatCount(dashboard.total_products)}
                 icon={Package}
                 color="text-primary"
@@ -160,7 +162,7 @@ export default function SellerDashboardPage() {
                 href="/seller/catalog"
               />
               <PortalStatCard
-                title="Today's Leads"
+                title={t("dashboard.todaysLeads", "Today's Leads")}
                 value={formatCount(dashboard.todays_leads)}
                 icon={MessageSquare}
                 color="text-accent"
@@ -168,14 +170,14 @@ export default function SellerDashboardPage() {
                 href="/seller/leads"
               />
               <PortalStatCard
-                title="Profile Views"
+                title={t("dashboard.profileViews", "Profile Views")}
                 value={formatCount(dashboard.profile_views)}
                 icon={Eye}
                 color="text-success"
                 bg="bg-success-soft"
               />
               <PortalStatCard
-                title="Replies Sent"
+                title={t("dashboard.repliesSent", "Replies Sent")}
                 value={formatCount(dashboard.replies_sent)}
                 icon={Reply}
                 color="text-warning"
@@ -184,10 +186,10 @@ export default function SellerDashboardPage() {
             </div>
           </PortalSection>
 
-          <PortalSection title="Today's Leads Breakdown">
+          <PortalSection title={t("dashboard.todaysLeadsBreakdown", "Today's Leads Breakdown")}>
             <div className="grid grid-cols-2 gap-3">
               <PortalStatCard
-                title="Inquiries"
+                title={t("dashboard.inquiries", "Inquiries")}
                 value={formatCount(breakdown?.inquiries ?? 0)}
                 icon={ClipboardList}
                 color="text-primary"
@@ -196,7 +198,7 @@ export default function SellerDashboardPage() {
                 compact
               />
               <PortalStatCard
-                title="RFQ Invites"
+                title={t("dashboard.rfqInvites", "RFQ Invites")}
                 value={formatCount(breakdown?.rfq_invites ?? 0)}
                 icon={MessageSquare}
                 color="text-accent"
@@ -207,7 +209,7 @@ export default function SellerDashboardPage() {
             </div>
           </PortalSection>
 
-          <PortalSection title="Top Performing Product">
+          <PortalSection title={t("dashboard.topPerformingProduct", "Top Performing Product")}>
             {top ? (
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
@@ -219,13 +221,13 @@ export default function SellerDashboardPage() {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <p className="text-sm font-semibold text-foreground">
-                        Ranked by {formatLabel(top.ranking_method)}
+                        {t("dashboard.rankedBy", "Ranked by")} {formatLabel(top.ranking_method)}
                       </p>
-                      <p className="mt-0.5 text-xs text-muted-fg">Product ID #{top.id}</p>
+                      <p className="mt-0.5 text-xs text-muted-fg">{t("dashboard.productId", "Product ID #")}{top.id}</p>
                     </div>
                     <span className="inline-flex items-center gap-1 rounded-lg bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary">
                       <TrendingUp className="h-3.5 w-3.5" aria-hidden />
-                      {formatCount(top.inquiries_total)} total inquiries
+                      {formatCount(top.inquiries_total)} {t("dashboard.totalInquiriesCount", "total inquiries")}
                     </span>
                   </div>
                 </div>
@@ -258,31 +260,31 @@ export default function SellerDashboardPage() {
                         <span className="font-normal text-muted-fg"> / {top.unit}</span>
                       ) : null}
                     </p>
-                    <p className="mt-1 text-xs text-muted-fg">MOQ: {formatCount(top.moq)}</p>
+                    <p className="mt-1 text-xs text-muted-fg">{t("dashboard.moq", "MOQ:")} {formatCount(top.moq)}</p>
                   </div>
                 </Link>
 
                 <div className="grid grid-cols-2 gap-px border-t border-border bg-border sm:grid-cols-4">
                   <div className="bg-card px-4 py-3">
-                    <p className="text-[11px] font-medium text-muted-fg">Total inquiries</p>
+                    <p className="text-[11px] font-medium text-muted-fg">{t("dashboard.totalInquiries", "Total inquiries")}</p>
                     <p className="mt-1 text-lg font-semibold text-foreground">
                       {formatCount(top.inquiries_total)}
                     </p>
                   </div>
                   <div className="bg-card px-4 py-3">
-                    <p className="text-[11px] font-medium text-muted-fg">Pending</p>
+                    <p className="text-[11px] font-medium text-muted-fg">{t("dashboard.pending", "Pending")}</p>
                     <p className="mt-1 text-lg font-semibold text-foreground">
                       {formatCount(top.inquiries_pending)}
                     </p>
                   </div>
                   <div className="bg-card px-4 py-3">
-                    <p className="text-[11px] font-medium text-muted-fg">Quoted</p>
+                    <p className="text-[11px] font-medium text-muted-fg">{t("dashboard.quoted", "Quoted")}</p>
                     <p className="mt-1 text-lg font-semibold text-foreground">
                       {formatCount(top.inquiries_quoted)}
                     </p>
                   </div>
                   <div className="bg-card px-4 py-3">
-                    <p className="text-[11px] font-medium text-muted-fg">Accepted</p>
+                    <p className="text-[11px] font-medium text-muted-fg">{t("dashboard.accepted", "Accepted")}</p>
                     <p className="mt-1 text-lg font-semibold text-foreground">
                       {formatCount(top.inquiries_accepted)}
                     </p>
@@ -291,7 +293,7 @@ export default function SellerDashboardPage() {
 
                 <div className="flex flex-wrap gap-2 border-t border-border px-4 py-3 sm:px-5">
                   <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-xs font-semibold capitalize text-foreground">
-                    Status: {formatLabel(top.approval_status)}
+                    {t("dashboard.status", "Status:")} {formatLabel(top.approval_status)}
                   </span>
                   <span
                     className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold ${
@@ -305,21 +307,21 @@ export default function SellerDashboardPage() {
                     ) : (
                       <XCircle className="h-3.5 w-3.5" aria-hidden />
                     )}
-                    {top.is_active ? "Active" : "Inactive"}
+                    {top.is_active ? t("dashboard.active", "Active") : t("dashboard.inactive", "Inactive")}
                   </span>
                   <span className="inline-flex items-center rounded-lg bg-muted px-2.5 py-1 text-xs font-semibold text-muted-fg">
-                    Currency: {top.currency}
+                    {t("dashboard.currency", "Currency:")} {top.currency}
                   </span>
                 </div>
               </motion.div>
             ) : (
               <div className="surface-card p-6 text-center">
-                <p className="text-sm text-muted-fg">No top performing product yet.</p>
+                <p className="text-sm text-muted-fg">{t("dashboard.noTopProduct", "No top performing product yet.")}</p>
                 <Link
                   href="/seller/add-product"
                   className="mt-2 inline-block text-sm font-semibold text-primary"
                 >
-                  Add a product
+                  {t("dashboard.addProduct", "Add a product")}
                 </Link>
               </div>
             )}

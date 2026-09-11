@@ -12,6 +12,7 @@ import { Button } from "@/components/common/Button";
 import { fetchMyProducts } from "@/services/catalogService";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useLoadMoreList } from "@/hooks/useLoadMoreList";
+import { useLanguage } from "@/context/LanguageContext";
 import { sellerCatalogProductLinks } from "@/utils/productDetailLinks";
 import {
   approvalTabToApiStatus,
@@ -22,6 +23,7 @@ import {
 import { portalFilterChipClass } from "@/components/portal/portalLayout";
 
 export default function SellerCatalogPage() {
+  const { t } = useLanguage();
   const links = sellerCatalogProductLinks();
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState<SellerProductApprovalTab>("all");
@@ -61,19 +63,36 @@ export default function SellerCatalogPage() {
     [setItems]
   );
 
+  const getTabLabel = (tab: SellerProductApprovalTab) => {
+    switch (tab) {
+      case "all":
+        return t("catalog.tabs.all", "All");
+      case "in_review":
+        return t("catalog.tabs.in_review", "In Review");
+      case "revision_required":
+        return t("catalog.tabs.revision_required", "Revision Required");
+      case "approved":
+        return t("catalog.tabs.approved", "Approved");
+      case "rejected":
+        return t("catalog.tabs.rejected", "Rejected");
+      default:
+        return formatApprovalStatusTabLabel(tab);
+    }
+  };
+
   const hasSearch = debouncedSearch.trim().length > 0;
-  const tabLabel = formatApprovalStatusTabLabel(activeTab).toLowerCase();
+  const tabLabel = getTabLabel(activeTab).toLowerCase();
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
       <PortalPageHeader
-        title="My Catalog"
-        subtitle="Manage your product listings"
+        title={t("catalog.title", "My Catalog")}
+        subtitle={t("catalog.subtitle", "Manage your product listings")}
         action={
           <Link href="/seller/add-product">
             <Button>
               <Plus className="h-4 w-4" aria-hidden />
-              Add Product
+              {t("catalog.addProduct", "Add Product")}
             </Button>
           </Link>
         }
@@ -87,7 +106,7 @@ export default function SellerCatalogPage() {
             onClick={() => setActiveTab(tab)}
             className={portalFilterChipClass(activeTab === tab)}
           >
-            {formatApprovalStatusTabLabel(tab)}
+            {getTabLabel(tab)}
           </button>
         ))}
       </div>
@@ -96,13 +115,13 @@ export default function SellerCatalogPage() {
         <PortalSearchBar
           value={search}
           onChange={setSearch}
-          placeholder="Search your products by name..."
+          placeholder={t("catalog.searchPlaceholder", "Search your products by name...")}
         />
         {!loading && (hasSearch || activeTab !== "all") ? (
           <p className="mt-2 text-xs text-muted-fg">
             {pagination.total === 0
-              ? "No matches"
-              : `${pagination.total} product${pagination.total === 1 ? "" : "s"} found`}
+              ? t("catalog.noMatches", "No matches")
+              : `${pagination.total} ${pagination.total === 1 ? t("catalog.productFound", "product found") : t("catalog.productsFound", "products found")}`}
           </p>
         ) : null}
       </div>
@@ -116,24 +135,24 @@ export default function SellerCatalogPage() {
       {loading ? (
         <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-fg">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
-          {hasSearch ? "Searching..." : "Loading catalog..."}
+          {hasSearch ? t("catalog.searching", "Searching...") : t("catalog.loading", "Loading catalog...")}
         </div>
       ) : products.length === 0 ? (
         <PortalEmptyState
           icon={Search}
           title={
             hasSearch
-              ? "No products found"
+              ? t("catalog.noProductsFound", "No products found")
               : activeTab === "all"
-                ? "No products yet"
-                : `No ${tabLabel} products`
+                ? t("catalog.noProductsYet", "No products yet")
+                : `${t("catalog.noStatusProducts", `No ${tabLabel} products`).replace("{status}", tabLabel)}`
           }
           description={
             hasSearch
-              ? "Try a different search term or clear the search to see all listings."
+              ? t("catalog.searchEmptyDesc", "Try a different search term or clear the search to see all listings.")
               : activeTab === "all"
-                ? "Add your first product to start receiving buyer inquiries."
-                : `No listings are currently ${tabLabel}.`
+                ? t("catalog.noProductsYetDesc", "Add your first product to start receiving buyer inquiries.")
+                : `${t("catalog.noStatusDesc", `No listings are currently ${tabLabel}.`).replace("{status}", tabLabel)}`
           }
           action={
             hasSearch || activeTab !== "all" ? (
@@ -144,11 +163,11 @@ export default function SellerCatalogPage() {
                   setActiveTab("all");
                 }}
               >
-                Clear filters
+                {t("catalog.clearFilters", "Clear filters")}
               </Button>
             ) : (
               <Link href="/seller/add-product">
-                <Button>Add Product</Button>
+                <Button>{t("catalog.addProduct", "Add Product")}</Button>
               </Link>
             )
           }

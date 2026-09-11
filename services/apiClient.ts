@@ -183,6 +183,21 @@ apiClient.interceptors.request.use(
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+
+      // Attach current active language
+      const language = localStorage.getItem("tradenexa_language") || "en";
+      if (config.headers) {
+        config.headers["Accept-Language"] = language;
+        config.headers["x-language"] = language;
+      }
+      // For GET requests, ensure lang param is set if not already specified
+      const method = (config.method ?? "get").toLowerCase();
+      if (method === "get") {
+        config.params = config.params || {};
+        if (!config.params.lang && !config.params.language && language !== "en") {
+          config.params.lang = language;
+        }
+      }
     }
 
     // Axios shorthand methods (`get`, `head`) bypass an instance-level

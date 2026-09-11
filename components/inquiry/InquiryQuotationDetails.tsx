@@ -4,6 +4,7 @@ import React from "react";
 import { Paperclip } from "lucide-react";
 import InquiryQuotationStatusBadge from "@/components/inquiry/InquiryQuotationStatusBadge";
 import type { ApiInquiryQuotation } from "@/types/inquiry";
+import { useLanguage } from "@/context/LanguageContext";
 import { formatPrice, resolveImageUrl } from "@/utils/catalogHelpers";
 import { formatInquiryDate } from "@/utils/inquiryHelpers";
 
@@ -43,6 +44,7 @@ export default function InquiryQuotationDetails({
   showSeller?: boolean;
   actions?: React.ReactNode;
 }) {
+  const { t } = useLanguage();
   const cur = currency || "INR";
   const attachmentUrl = quote.attachment ? resolveImageUrl(quote.attachment) : null;
   const sellerLabel =
@@ -64,7 +66,7 @@ export default function InquiryQuotationDetails({
 
       {showSeller && sellerLabel ? (
         <p className="mt-2 text-sm text-muted-fg">
-          From <span className="font-semibold text-foreground">{sellerLabel}</span>
+          {t("inquiries.fromSeller", "From")} <span className="font-semibold text-foreground">{sellerLabel}</span>
           {quote.seller_name && quote.company_name ? (
             <span className="text-muted-fg"> · {quote.seller_name}</span>
           ) : null}
@@ -79,14 +81,14 @@ export default function InquiryQuotationDetails({
       </p>
       {quote.total_amount != null ? (
         <p className="mt-1 text-sm font-semibold text-foreground">
-          Total {formatPrice(quote.total_amount, cur)}
+          {t("inquiries.totalPrice", "Total")} {formatPrice(quote.total_amount, cur)}
         </p>
       ) : null}
 
       <dl className="mt-4 grid gap-3 sm:grid-cols-2 text-sm">
-        <Detail label="Unit price" value={formatPrice(quote.price ?? 0, cur)} />
+        <Detail label={t("inquiries.unitPrice", "Unit price")} value={formatPrice(quote.price ?? 0, cur)} />
         <Detail
-          label="Quantity"
+          label={t("inquiries.quantity", "Quantity")}
           value={
             quote.quantity != null
               ? `${quote.quantity}${quote.unit ? ` ${quote.unit}` : ""}`
@@ -94,17 +96,17 @@ export default function InquiryQuotationDetails({
           }
         />
         <Detail
-          label="GST %"
+          label={t("inquiries.gstPercentage", "GST %")}
           value={quote.gst_percentage != null ? `${quote.gst_percentage}%` : null}
         />
         <Detail
-          label="GST amount"
+          label={t("inquiries.gstAmount", "GST amount")}
           value={
             quote.gst_amount != null ? formatPrice(quote.gst_amount, cur) : null
           }
         />
         <Detail
-          label="Transportation"
+          label={t("inquiries.transportation", "Transportation")}
           value={
             quote.transportation_charge != null
               ? formatPrice(quote.transportation_charge, cur)
@@ -112,28 +114,28 @@ export default function InquiryQuotationDetails({
           }
         />
         <Detail
-          label="Delivery"
+          label={t("inquiries.delivery", "Delivery")}
           value={
-            quote.delivery_days != null ? `${quote.delivery_days} days` : null
+            quote.delivery_days != null ? `${quote.delivery_days} ${t("inquiries.days", "days")}` : null
           }
         />
         <Detail
-          label="Payment terms"
+          label={t("inquiries.paymentTerms", "Payment terms")}
           value={quote.payment_terms?.trim() || null}
         />
         <Detail
-          label="Validity"
+          label={t("inquiries.validity", "Validity")}
           value={
-            quote.validity_days != null ? `${quote.validity_days} days` : null
+            quote.validity_days != null ? `${quote.validity_days} ${t("inquiries.days", "days")}` : null
           }
         />
-        <Detail label="Created" value={formatInquiryDate(quote.created_at)} />
-        <Detail label="Updated" value={formatInquiryDate(quote.updated_at)} />
+        <Detail label={t("inquiries.created", "Created")} value={formatInquiryDate(quote.created_at)} />
+        <Detail label={t("inquiries.updated", "Updated")} value={formatInquiryDate(quote.updated_at)} />
       </dl>
 
       {quote.remarks?.trim() ? (
         <div className="mt-4">
-          <p className="text-xs font-medium text-muted-fg">Remarks</p>
+          <p className="text-xs font-medium text-muted-fg">{t("inquiries.remarks", "Remarks")}</p>
           <p className="mt-1 text-sm leading-relaxed text-foreground">
             {quote.remarks.trim()}
           </p>
@@ -148,7 +150,7 @@ export default function InquiryQuotationDetails({
           className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
         >
           <Paperclip className="h-4 w-4" aria-hidden />
-          View attachment
+          {t("inquiries.viewAttachment", "View attachment")}
         </a>
       ) : null}
 

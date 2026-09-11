@@ -7,12 +7,14 @@ import PortalProductCard from "@/components/portal/PortalProductCard";
 import { portalProductGridClass } from "@/components/portal/portalLayout";
 import { ProductGridSkeleton } from "@/components/catalog/CatalogSkeleton";
 import { fetchTrendingProductItems } from "@/services/catalogService";
+import { useLanguage } from "@/context/LanguageContext";
 import type { ApiProductListItem } from "@/types/catalog";
 import { ArrowRight } from "lucide-react";
 
 export default function TrendingProducts() {
   const [products, setProducts] = useState<ApiProductListItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const { currentLanguage, t } = useLanguage();
 
   useEffect(() => {
     let cancelled = false;
@@ -32,7 +34,7 @@ export default function TrendingProducts() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [currentLanguage]);
 
   return (
     <section className="border-y border-border bg-background py-12 lg:py-16">
@@ -40,9 +42,9 @@ export default function TrendingProducts() {
         <div className="mb-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="max-w-2xl">
             <SectionHeading
-              badge="Popular Now"
-              title="Trending Products"
-              subtitle="High-demand B2B listings getting the most buyer interest on TradeNexa."
+              badge={t("products.trendingTitle", "Popular Now")}
+              title={t("products.trendingTitle", "Trending Products")}
+              subtitle={t("products.trendingSubtitle", "Popular industrial products in high demand today")}
               centered={false}
             />
           </div>
@@ -50,7 +52,7 @@ export default function TrendingProducts() {
             href="/products?trending=true"
             className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border border-primary/25 bg-transparent px-4 text-sm font-semibold text-primary transition-colors hover:border-primary/40 hover:bg-primary-soft"
           >
-            View All Products
+            {t("common.viewAll", "View All Products")}
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>

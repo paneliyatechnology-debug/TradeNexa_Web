@@ -11,11 +11,13 @@ import { fetchCategoryBySlug, fetchProducts, fetchSubcategories } from "@/servic
 import { useCityFilter } from "@/hooks/useCityFilter";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useLoadMoreList } from "@/hooks/useLoadMoreList";
+import { useLanguage } from "@/context/LanguageContext";
 import type { ApiCategoryDetail } from "@/types/catalog";
 
 export default function CategoryDetailPage() {
   const params = useParams();
   const slug = String(params.slug ?? "");
+  const { t, currentLanguage } = useLanguage();
 
   const [category, setCategory] = useState<ApiCategoryDetail | null>(null);
   const [metaLoading, setMetaLoading] = useState(true);
@@ -44,7 +46,7 @@ export default function CategoryDetailPage() {
       try {
         const detail = await fetchCategoryBySlug(slug);
         if (!detail) {
-          if (!cancelled) setMetaError("Category not found");
+          if (!cancelled) setMetaError(t("categories.categoryNotFound", "Category not found"));
           return;
         }
         if (!cancelled) setCategory(detail);
@@ -61,7 +63,7 @@ export default function CategoryDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [slug]);
+  }, [slug, currentLanguage, t]);
 
   const fetchSubPage = useCallback(
     (page: number) => {
@@ -91,7 +93,7 @@ export default function CategoryDetailPage() {
     error: subError,
   } = useLoadMoreList({
     fetchPage: fetchSubPage,
-    resetDeps: [category?.id],
+    resetDeps: [category?.id, currentLanguage],
     enabled: !!category,
   });
 
@@ -131,7 +133,7 @@ export default function CategoryDetailPage() {
     loadMore: loadMoreProducts,
   } = useLoadMoreList({
     fetchPage: fetchProductPage,
-    resetDeps: [category?.id, selectedSubId, debouncedSearch, cityId],
+    resetDeps: [category?.id, selectedSubId, debouncedSearch, cityId, currentLanguage],
     enabled: !!category,
   });
 
@@ -142,8 +144,8 @@ export default function CategoryDetailPage() {
   }
 
   const productCountLabel = metaLoading
-    ? "Loading..."
-    : `${(category?.product_count ?? pagination.total).toLocaleString()} products available`;
+    ? t("common.loading", "Loading...")
+    : `${(category?.product_count ?? pagination.total).toLocaleString()} ${t("categories.productsAvailable", "products available")}`;
 
   const totalSubcategoryCount = subPagination.total || category?.subcategory_count || 0;
 
@@ -151,10 +153,10 @@ export default function CategoryDetailPage() {
     return (
       <div className={`${MARKETPLACE_CONTAINER} py-20`}>
         <CatalogEmptyState
-          title="Category not found"
+          title={t("categories.categoryNotFound", "Category not found")}
           description={metaError}
           onReset={() => window.location.assign("/categories")}
-          resetLabel="Back to categories"
+          resetLabel={t("categories.backToCategories", "Back to categories")}
         />
       </div>
     );
@@ -165,15 +167,15 @@ export default function CategoryDetailPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <MarketplaceDetailHeader
-        title={category?.name ?? "Category"}
+        title={category?.name ?? t("categories.title", "Category")}
         backHref="/categories"
-        backLabel="All categories"
+        backLabel={t("categories.allCategories", "All categories")}
         iconSrc={category?.icon || category?.image}
         slug={category?.slug ?? slug}
         subtitle={productCountLabel}
         breadcrumbs={[
-          { label: "Categories", href: "/categories" },
-          { label: category?.name ?? "Category" },
+          { label: t("categories.title", "Categories"), href: "/categories" },
+          { label: category?.name ?? t("categories.title", "Category") },
         ]}
         subcategoryCount={totalSubcategoryCount}
         productCount={category?.product_count}
@@ -200,7 +202,7 @@ export default function CategoryDetailPage() {
           onLoadMoreSubs={loadMoreSubs}
           search={search}
           onSearchChange={setSearch}
-          searchPlaceholder={`Search within ${category.name}...`}
+          searchPlaceholder={`${t("categories.searchWithin", "Search within")} ${category.name}...`}
           stateId={stateId}
           cityId={cityId}
           stateLabel={stateLabel}
@@ -215,14 +217,14 @@ export default function CategoryDetailPage() {
           loading={metaLoading || loadingProducts}
           loadingMore={loadingMoreProducts}
           onLoadMore={loadMoreProducts}
-          resultsLabel={`${pagination.total.toLocaleString()} products`}
+          resultsLabel={`${pagination.total.toLocaleString()} ${t("products.productsCount", "products")}`}
           emptyDescription={
             selectedSubId
-              ? "Try another subcategory or clear your search."
-              : "Try a different search term or browse other categories."
+              ? t("categories.emptySubDesc", "Try another subcategory or clear your search.")
+              : t("categories.emptyCatDesc", "Try a different search term or browse other categories.")
           }
           onEmptyReset={clearFilters}
-          emptyResetLabel="Clear filters"
+          emptyResetLabel={t("categories.clearFilters", "Clear filters")}
         />
       )}
 

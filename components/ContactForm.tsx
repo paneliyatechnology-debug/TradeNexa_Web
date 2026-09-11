@@ -9,9 +9,11 @@ import { Input } from "@/components/common/Input";
 import { Textarea } from "@/components/common/Textarea";
 import { RoleSelector } from "@/components/common/RoleSelector";
 import { scrollToFirstFormError } from "@/utils/scrollToFormError";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function ContactForm() {
   const { addInquiry } = useApp();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -32,23 +34,27 @@ export default function ContactForm() {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
 
-    if (!formData.role) newErrors.role = "Please select your role on the platform.";
-    if (!formData.name.trim()) newErrors.name = "Full name is required.";
+    if (!formData.role)
+      newErrors.role = t("contact.roleRequired", "Please select your role on the platform.");
+    if (!formData.name.trim())
+      newErrors.name = t("contact.nameRequired", "Full name is required.");
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim()) {
-      newErrors.email = "Email address is required.";
+      newErrors.email = t("contact.emailRequired", "Email address is required.");
     } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address.";
+      newErrors.email = t("contact.emailInvalid", "Please enter a valid email address.");
     }
     if (!formData.phone.trim()) {
-      newErrors.phone = "Phone number is required.";
+      newErrors.phone = t("contact.phoneRequired", "Phone number is required.");
     } else if (!/^\d+$/.test(formData.phone)) {
-      newErrors.phone = "Phone number must contain digits only.";
+      newErrors.phone = t("contact.phoneDigitsOnly", "Phone number must contain digits only.");
     } else if (formData.phone.length !== 10) {
-      newErrors.phone = "Phone number must be exactly 10 digits.";
+      newErrors.phone = t("contact.phoneLength", "Phone number must be exactly 10 digits.");
     }
-    if (!formData.company.trim()) newErrors.company = "Company name is required.";
-    if (!formData.message.trim()) newErrors.message = "Message details are required.";
+    if (!formData.company.trim())
+      newErrors.company = t("contact.companyRequired", "Company name is required.");
+    if (!formData.message.trim())
+      newErrors.message = t("contact.messageRequired", "Message details are required.");
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -88,21 +94,37 @@ export default function ContactForm() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
             <CheckCircle2 className="h-10 w-10" />
           </div>
-          <h3 className="text-xl font-bold text-foreground">Inquiry Sent Successfully!</h3>
+          <h3 className="text-xl font-bold text-foreground">
+            {t("contact.successTitle", "Inquiry Sent Successfully!")}
+          </h3>
           <p className="mt-2 text-sm text-muted-fg">
-            Thank you for reaching out. A platform representative will contact you within 24 hours.
+            {t(
+              "contact.successSubtitle",
+              "Thank you for reaching out. A platform representative will contact you within 24 hours."
+            )}
           </p>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-5" noValidate>
           <div>
-          <h3 className="text-lg font-semibold tracking-tight text-foreground">Send a direct message</h3>
+            <h3 className="text-lg font-semibold tracking-tight text-foreground">
+              {t("contact.directMessageTitle", "Send a direct message")}
+            </h3>
             <p className="mt-1 text-sm text-muted-fg">
-              Tell us about your business and how we can help you connect.
+              {t(
+                "contact.directMessageSubtitle",
+                "Tell us about your business and how we can help you connect."
+              )}
             </p>
           </div>
 
-          <FormField label="Your Role" htmlFor="contact-role" fieldKey="role" required error={errors.role}>
+          <FormField
+            label={t("contact.yourRole", "Your Role")}
+            htmlFor="contact-role"
+            fieldKey="role"
+            required
+            error={errors.role}
+          >
             <RoleSelector
               value={formData.role}
               onChange={(role) => {
@@ -114,7 +136,12 @@ export default function ContactForm() {
             />
           </FormField>
 
-          <FormField label="Full Name" htmlFor="contact-name" required error={errors.name}>
+          <FormField
+            label={t("contact.fullName", "Full Name")}
+            htmlFor="contact-name"
+            required
+            error={errors.name}
+          >
             <Input
               id="contact-name"
               value={formData.name}
@@ -122,13 +149,18 @@ export default function ContactForm() {
                 setFormData({ ...formData, name: e.target.value });
                 clearError("name");
               }}
-              placeholder="Your name"
+              placeholder={t("contact.namePlaceholder", "Your name")}
               error={!!errors.name}
             />
           </FormField>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormField label="Email Address" htmlFor="contact-email" required error={errors.email}>
+            <FormField
+              label={t("contact.emailAddress", "Email Address")}
+              htmlFor="contact-email"
+              required
+              error={errors.email}
+            >
               <Input
                 id="contact-email"
                 type="email"
@@ -141,7 +173,12 @@ export default function ContactForm() {
                 error={!!errors.email}
               />
             </FormField>
-            <FormField label="Phone Number" htmlFor="contact-phone" required error={errors.phone}>
+            <FormField
+              label={t("contact.phone", "Phone Number")}
+              htmlFor="contact-phone"
+              required
+              error={errors.phone}
+            >
               <Input
                 id="contact-phone"
                 value={formData.phone}
@@ -149,13 +186,18 @@ export default function ContactForm() {
                   setFormData({ ...formData, phone: e.target.value });
                   clearError("phone");
                 }}
-                placeholder="10-digit phone number"
+                placeholder={t("contact.phonePlaceholder", "10-digit phone number")}
                 error={!!errors.phone}
               />
             </FormField>
           </div>
 
-          <FormField label="Company Name" htmlFor="contact-company" required error={errors.company}>
+          <FormField
+            label={t("contact.companyName", "Company Name")}
+            htmlFor="contact-company"
+            required
+            error={errors.company}
+          >
             <Input
               id="contact-company"
               value={formData.company}
@@ -163,12 +205,17 @@ export default function ContactForm() {
                 setFormData({ ...formData, company: e.target.value });
                 clearError("company");
               }}
-              placeholder="Business name"
+              placeholder={t("contact.companyPlaceholder", "Business name")}
               error={!!errors.company}
             />
           </FormField>
 
-          <FormField label="Message" htmlFor="contact-message" required error={errors.message}>
+          <FormField
+            label={t("contact.message", "Message")}
+            htmlFor="contact-message"
+            required
+            error={errors.message}
+          >
             <Textarea
               id="contact-message"
               rows={4}
@@ -177,14 +224,19 @@ export default function ContactForm() {
                 setFormData({ ...formData, message: e.target.value });
                 clearError("message");
               }}
-              placeholder="How can we assist your business today?"
+              placeholder={t("contact.messagePlaceholder", "How can we assist your business today?")}
               error={!!errors.message}
             />
           </FormField>
 
-          <Button type="submit" fullWidth loading={isSubmitting} loadingText="Sending message...">
+          <Button
+            type="submit"
+            fullWidth
+            loading={isSubmitting}
+            loadingText={t("contact.sendingMessage", "Sending message...")}
+          >
             <Send className="h-4 w-4" />
-            Send Inquiry
+            {t("contact.sendInquiry", "Send Inquiry")}
           </Button>
         </form>
       )}

@@ -145,6 +145,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("token");
       localStorage.removeItem("refresh_token");
       localStorage.removeItem("user");
+      // Reset language to default English ('en') on logout
+      localStorage.setItem("tradenexa_language", "en");
+      window.dispatchEvent(
+        new CustomEvent("tradenexa_language_change", { detail: "en" })
+      );
     }
     setUser(null);
     setIsAuthenticated(false);
@@ -204,9 +209,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Do not auto-open login modal — only open on user action (Join, etc.)
     };
 
+    const handleLanguageChange = async () => {
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) return;
+      try {
+        const res = await apiClient.get(API_ENDPOINTS.PROFILE);
+        const profile = unwrapApiPayload<ApiUserProfile>(res.data);
+        const updated = mapApiProfileToUser(profile);
+        setUser(updated);
+        localStorage.setItem("user", JSON.stringify(updated));
+      } catch {
+        // ignore
+      }
+    };
+
     window.addEventListener("auth_unauthorized", handleUnauthorized);
+    window.addEventListener("tradenexa_language_change", handleLanguageChange);
     return () => {
       window.removeEventListener("auth_unauthorized", handleUnauthorized);
+      window.removeEventListener("tradenexa_language_change", handleLanguageChange);
       if (closeModalTimerRef.current) window.clearTimeout(closeModalTimerRef.current);
       if (skipProfileTimerRef.current) window.clearTimeout(skipProfileTimerRef.current);
     };

@@ -23,10 +23,12 @@ import {
 import { useCityFilter } from "@/hooks/useCityFilter";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useLoadMoreList } from "@/hooks/useLoadMoreList";
+import { useLanguage } from "@/context/LanguageContext";
 
 function ProductsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t, currentLanguage } = useLanguage();
   const categoryId = searchParams.get("category_id");
   const subcategoryId = searchParams.get("subcategory_id");
   const trendingOnly = searchParams.get("trending") === "true";
@@ -113,7 +115,7 @@ function ProductsPageContent() {
   const { items: products, pagination, loading, loadingMore, error, loadMore } =
     useLoadMoreList({
       fetchPage,
-      resetDeps: [debouncedSearch, categoryId, subcategoryId, trendingOnly, cityId],
+      resetDeps: [debouncedSearch, categoryId, subcategoryId, trendingOnly, cityId, currentLanguage],
       enabled: !redirecting,
     });
 
@@ -122,19 +124,24 @@ function ProductsPageContent() {
     clearLocationFilters();
   }
 
-  const pageTitle = trendingOnly ? "Trending Products" : "All Products";
+  const pageTitle = trendingOnly
+    ? t("products.trendingTitle", "Trending Products")
+    : t("products.allProducts", "All Products");
 
   const breadcrumbs = trendingOnly
     ? [
-        { label: "Categories", href: "/categories" },
-        { label: "Products", href: "/products" },
+        { label: t("categories.title", "Categories"), href: "/categories" },
+        { label: t("products.allProducts", "Products"), href: "/products" },
         { label: pageTitle },
       ]
-    : [{ label: "Categories", href: "/categories" }, { label: pageTitle }];
+    : [
+        { label: t("categories.title", "Categories"), href: "/categories" },
+        { label: pageTitle },
+      ];
 
   if (redirecting) {
     return (
-        <div className="flex min-h-[50vh] flex-col bg-background">
+      <div className="flex min-h-[50vh] flex-col bg-background">
         <div className={MARKETPLACE_CONTAINER}>
           <MarketplaceProductGridSkeleton count={8} />
         </div>
@@ -154,19 +161,21 @@ function ProductsPageContent() {
           <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/55">
-                Marketplace
+                {t("products.eyebrow", "Marketplace")}
               </p>
               <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
                 {pageTitle}
               </h1>
               <p className="mt-3 hidden text-base text-white/70 lg:block">
-                Discover verified B2B listings from sellers across India.
+                {t("products.subtitle", "Discover verified B2B listings from sellers across India.")}
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:w-[280px] lg:shrink-0">
               <div className="rounded-xl border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-sm lg:col-span-2 lg:py-5">
-                <p className="text-xs font-medium text-white/55">Products Listed</p>
+                <p className="text-xs font-medium text-white/55">
+                  {t("products.productsListed", "Products Listed")}
+                </p>
                 <p className="mt-1 text-3xl font-semibold tracking-tight text-white">
                   {loading && products.length === 0 ? "—" : pagination.total.toLocaleString()}
                 </p>
@@ -179,7 +188,7 @@ function ProductsPageContent() {
               size="sm"
               value={search}
               onChange={setSearch}
-              placeholder="Search products by name..."
+              placeholder={t("products.searchPlaceholder", "Search products by name...")}
             />
           </div>
         </div>
@@ -205,9 +214,11 @@ function ProductsPageContent() {
             />
             {!loading && products.length > 0 ? (
               <p className="shrink-0 text-sm font-medium text-muted-fg sm:text-right">
-                Showing{" "}
-                <span className="font-semibold text-foreground">{products.length}</span> of{" "}
-                <span className="font-semibold text-foreground">{pagination.total}</span> products
+                {t("products.showing", "Showing")}{" "}
+                <span className="font-semibold text-foreground">{products.length}</span>{" "}
+                {t("products.of", "of")}{" "}
+                <span className="font-semibold text-foreground">{pagination.total}</span>{" "}
+                {t("products.productsCount", "products")}
               </p>
             ) : null}
           </div>
@@ -244,15 +255,15 @@ function ProductsPageContent() {
                 loadingMore={loadingMore}
                 onLoadMore={loadMore}
                 autoLoad
-                itemLabel="products"
+                itemLabel={t("products.productsCount", "products")}
               />
             </>
           ) : (
             <CatalogEmptyState
-              title="No products found"
-              description="Try adjusting your search or browse categories."
+              title={t("products.noProducts", "No products found")}
+              description={t("products.noProductsDesc", "Try adjusting your search or browse categories.")}
               onReset={clearFilters}
-              resetLabel="Clear filters"
+              resetLabel={t("products.clearFilters", "Clear filters")}
             />
           )}
         </div>
