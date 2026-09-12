@@ -736,7 +736,9 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
     const payload: CreateRfqPayload = {
       title: form.title.trim(),
       category_id: Number(form.categoryId),
-      subcategory_id: Number(form.subcategoryId),
+      ...(form.subcategoryId && Number(form.subcategoryId) > 0
+        ? { subcategory_id: Number(form.subcategoryId) }
+        : {}),
       description: form.description.trim(),
       quantity: Math.floor(Number(form.quantity)),
       unit: form.unit.trim(),
@@ -752,7 +754,7 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
       ...(form.visibility === "PRIVATE" ? { seller_ids: sellerIds } : {}),
       ...(form.paymentTerms.trim() ? { payment_terms: form.paymentTerms.trim() } : {}),
       ...(form.requiredBefore ? { required_before: dateInputToApi(form.requiredBefore) } : {}),
-      ...(form.productId ? { product_id: Number(form.productId) } : {}),
+      ...(form.productId && Number(form.productId) > 0 ? { product_id: Number(form.productId) } : {}),
       ...(form.expectedPrice ? { expected_price: Number(form.expectedPrice) } : {}),
       ...(form.budget ? { budget: Number(form.budget) } : {}),
     };

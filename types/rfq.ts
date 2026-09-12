@@ -126,7 +126,7 @@ export interface ApiQuotation {
 export interface CreateRfqPayload {
   title: string;
   category_id: number;
-  subcategory_id: number;
+  subcategory_id?: number;
   description: string;
   quantity: number;
   unit: string;
@@ -148,7 +148,29 @@ export interface CreateRfqPayload {
   seller_ids?: number[];
 }
 
-export type UpdateRfqPayload = Partial<CreateRfqPayload>;
+export interface UpdateRfqPayload {
+  title?: string;
+  category_id?: number;
+  subcategory_id?: number;
+  description?: string;
+  quantity?: number;
+  unit?: string;
+  quotation_deadline?: string;
+  address_line_1?: string;
+  address_line_2?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  pincode?: string;
+  product_id?: number;
+  expected_price?: number;
+  budget?: number;
+  currency?: string;
+  payment_terms?: string;
+  required_before?: string;
+  visibility?: RfqVisibility;
+  seller_ids?: number[];
+}
 
 export interface CreateQuotationPayload {
   price: number;
