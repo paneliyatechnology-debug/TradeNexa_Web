@@ -173,7 +173,8 @@ export function GeoLocationProvider({ children }: { children: React.ReactNode })
 
       if (!cancelled) setReady(true);
 
-      if (!cached || !isGeoCacheFresh(cached) || browserPermission === "granted") {
+      // Only perform geolocation network lookup if cache is missing or stale
+      if ((!cached || !isGeoCacheFresh(cached)) && browserPermission === "granted") {
         await runLocate();
       }
     }

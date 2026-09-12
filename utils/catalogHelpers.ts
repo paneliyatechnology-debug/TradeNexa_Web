@@ -480,3 +480,94 @@ export function whatsAppHref(phone: string, message?: string): string {
   const text = message ? `?text=${encodeURIComponent(message)}` : "";
   return `https://wa.me/${digits}${text}`;
 }
+
+const UNIT_MAP: Record<string, { en: string; hi: string; gu: string }> = {
+  pcs: { en: "pcs", hi: "पीसी", gu: "પીસ" },
+  piece: { en: "piece", hi: "पीसी", gu: "પીસ" },
+  pieces: { en: "pieces", hi: "पीसी", gu: "પીસ" },
+  pc: { en: "pc", hi: "पीसी", gu: "પીસ" },
+  "पीसी": { en: "pcs", hi: "पीसी", gu: "પીસ" },
+  "पीस": { en: "pcs", hi: "पीसी", gu: "પીસ" },
+  "પીસ": { en: "pcs", hi: "પીસ", gu: "પીસ" },
+  "નંગ": { en: "pcs", hi: "पीसी", gu: "નંગ" },
+  "ટુકડા": { en: "pcs", hi: "पीसी", gu: "ટુકડા" },
+
+  kg: { en: "kg", hi: "किलो", gu: "કિલો" },
+  kgs: { en: "kg", hi: "किलो", gu: "કિલો" },
+  kilogram: { en: "kilogram", hi: "किलोग्राम", gu: "કિલોગ્રામ" },
+  kilograms: { en: "kilograms", hi: "किलोग्राम", gu: "કિલોગ્રામ" },
+  "किलो": { en: "kg", hi: "किलो", gu: "કિલો" },
+  "किलोग्राम": { en: "kg", hi: "किलोग्राम", gu: "કિલોગ્રામ" },
+  "કિલો": { en: "kg", hi: "किलો", gu: "કિલો" },
+  "કિલોગ્રામ": { en: "kg", hi: "किलोग्राम", gu: "કિલોગ્રામ" },
+  g: { en: "g", hi: "ग्राम", gu: "ગ્રામ" },
+  gram: { en: "gram", hi: "ग्राम", gu: "ગ્રામ" },
+  grams: { en: "grams", hi: "ग्राम", gu: "ગ્રામ" },
+  "ग्राम": { en: "gram", hi: "ग्राम", gu: "ગ્રામ" },
+  "ગ્રામ": { en: "gram", hi: "ग्राम", gu: "ગ્રામ" },
+
+  ton: { en: "ton", hi: "टन", gu: "ટન" },
+  tons: { en: "tons", hi: "टन", gu: "ટન" },
+  tonne: { en: "tonne", hi: "टन", gu: "ટન" },
+  "टन": { en: "ton", hi: "टन", gu: "ટન" },
+  "ટન": { en: "ton", hi: "टन", gu: "ટન" },
+
+  meter: { en: "meter", hi: "मीटर", gu: "મીટર" },
+  meters: { en: "meters", hi: "मीटर", gu: "મીટર" },
+  mtr: { en: "meter", hi: "मीटर", gu: "મીટર" },
+  m: { en: "m", hi: "मीटर", gu: "મીટર" },
+  "मीटर": { en: "meter", hi: "मीटर", gu: "મીટર" },
+  "મીટર": { en: "meter", hi: "मीटर", gu: "મીટર" },
+  feet: { en: "feet", hi: "फीट", gu: "ફીટ" },
+  foot: { en: "foot", hi: "फुट", gu: "ફૂટ" },
+  ft: { en: "ft", hi: "फीट", gu: "ફીટ" },
+  "फीट": { en: "feet", hi: "फीट", gu: "ફીટ" },
+  "ફીટ": { en: "feet", hi: "फीट", gu: "ફીટ" },
+
+  liter: { en: "liter", hi: "लीटर", gu: "લીટર" },
+  liters: { en: "liters", hi: "लीटर", gu: "લીટર" },
+  ltr: { en: "ltr", hi: "लीटर", gu: "લીટર" },
+  l: { en: "l", hi: "लीटर", gu: "લીટર" },
+  "लीटर": { en: "liter", hi: "लीटर", gu: "લીટર" },
+  "લીટર": { en: "liter", hi: "लीटर", gu: "લીટર" },
+
+  box: { en: "box", hi: "बॉक्स", gu: "બોક્સ" },
+  boxes: { en: "boxes", hi: "बॉक्स", gu: "બોક્સ" },
+  "बॉक्स": { en: "box", hi: "बॉक्स", gu: "બોક્સ" },
+  "બોક્સ": { en: "box", hi: "બોક્સ", gu: "બોક્સ" },
+  pack: { en: "pack", hi: "पैक", gu: "પેક" },
+  packet: { en: "packet", hi: "पैकेट", gu: "પેકેટ" },
+  packets: { en: "packets", hi: "पैकेट", gu: "પેકેટ" },
+  "पैकेट": { en: "packet", hi: "पैकेट", gu: "પેકેટ" },
+  "પેકેટ": { en: "packet", hi: "પેકેટ", gu: "પેકેટ" },
+  set: { en: "set", hi: "सेट", gu: "સેટ" },
+  sets: { en: "sets", hi: "सेट", gu: "સેટ" },
+  "सेट": { en: "set", hi: "सेट", gu: "સેટ" },
+  "સેટ": { en: "set", hi: "સેટ", gu: "સેટ" },
+  roll: { en: "roll", hi: "रोल", gu: "રોલ" },
+  rolls: { en: "rolls", hi: "रोल", gu: "રોલ" },
+  "रोल": { en: "roll", hi: "रोल", gu: "રોલ" },
+  "રોલ": { en: "roll", hi: "રોલ", gu: "રોલ" },
+  pair: { en: "pair", hi: "जोड़ी", gu: "જોડી" },
+  pairs: { en: "pairs", hi: "जोड़ी", gu: "જોડી" },
+  "जोड़ी": { en: "pair", hi: "जोड़ी", gu: "જોડી" },
+  "જોડી": { en: "pair", hi: "जोड़ी", gu: "જોડી" },
+  dozen: { en: "dozen", hi: "दर्जन", gu: "ડઝન" },
+  dozens: { en: "dozens", hi: "दर्जन", gu: "ડઝન" },
+  "दर्जन": { en: "dozen", hi: "दर्जन", gu: "ડઝન" },
+  "ડઝન": { en: "dozen", hi: "ડઝન", gu: "ડઝન" },
+  bag: { en: "bag", hi: "बोरी", gu: "થેલી" },
+  bags: { en: "bags", hi: "बोरी", gu: "થેલી" },
+};
+
+export function localizeUnit(unit: string | null | undefined, lang: string = "en"): string {
+  if (!unit || typeof unit !== "string") return "";
+  const key = unit.trim().toLowerCase();
+  const match = UNIT_MAP[key] || UNIT_MAP[unit.trim()];
+  if (match) {
+    const targetLang = (lang || "en").toLowerCase() as "en" | "hi" | "gu";
+    return match[targetLang] || match.en || unit;
+  }
+  return unit;
+}
+

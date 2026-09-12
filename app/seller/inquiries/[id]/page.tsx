@@ -21,6 +21,7 @@ import InquiryStatusBadge from "@/components/inquiry/InquiryStatusBadge";
 import InquiryQuotationDetails from "@/components/inquiry/InquiryQuotationDetails";
 import { SubmitInquiryQuotationModal } from "@/components/inquiry/SubmitInquiryQuotationForm";
 import { RejectInquiryModal } from "@/components/inquiry/RejectInquiryModal";
+import TranslatableText from "@/components/common/TranslatableText";
 import {
   fetchInquiryById,
   getInquiryErrorMessage,
@@ -261,18 +262,21 @@ export default function SellerInquiryDetailPage() {
         </motion.div>
 
         {/* Buyer message */}
-        {inquiry.message ? (
+        {inquiry.message || inquiry.original_message ? (
           <div className="surface-card flex gap-3 p-4 sm:p-5">
             <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-fg">
               <MessageSquare className="h-4 w-4" aria-hidden />
             </span>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-fg">
                 Buyer message
               </p>
-              <p className="mt-1.5 text-sm leading-relaxed text-foreground/90">
-                {inquiry.message}
-              </p>
+              <div className="mt-1.5">
+                <TranslatableText
+                  originalText={inquiry.original_message}
+                  translatedText={inquiry.message}
+                />
+              </div>
             </div>
           </div>
         ) : null}

@@ -20,6 +20,7 @@ import {
 import PortalSection from "@/components/portal/PortalSection";
 import RoleSwitcher from "@/components/portal/RoleSwitcher";
 import PortalLanguageSetting from "@/components/portal/PortalLanguageSetting";
+import { LanguageSelector } from "@/components/common/LanguageSelector";
 import DeleteAccountButton from "@/components/portal/DeleteAccountButton";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/context/LanguageContext";
@@ -174,7 +175,7 @@ export default function PortalProfileView({ variant }: PortalProfileViewProps) {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.08 }}
-        className={`mb-8 overflow-hidden rounded-xl border border-navy/20 ${theme.heroGradient} p-6 text-white sm:p-8`}
+        className={`mb-8 relative z-20 rounded-xl border border-navy/20 ${theme.heroGradient} p-6 text-white sm:p-8`}
       >
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4 sm:gap-5">
@@ -192,18 +193,24 @@ export default function PortalProfileView({ variant }: PortalProfileViewProps) {
               {user?.phone ? <p className="mt-1 text-xs text-white/70">{formatMobile(user)}</p> : null}
             </div>
           </div>
-          <Link
-            href={theme.editHref}
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-card px-4 text-sm font-semibold text-primary transition hover:bg-card/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
-          >
-            {t("profile.editProfile", "Edit Profile")}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+          <div className="relative z-30 flex flex-wrap items-center gap-3">
+            <LanguageSelector
+              align="auto"
+              className="[&>button]:h-10 [&>button]:rounded-lg [&>button]:border-white/20 [&>button]:bg-white/10 [&>button]:text-white [&>button]:backdrop-blur-sm hover:[&>button]:bg-white/20 [&>button_span]:text-white [&>button_svg]:text-white/80"
+            />
+            <Link
+              href={theme.editHref}
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-card px-4 text-sm font-semibold text-primary transition hover:bg-card/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+            >
+              {t("profile.editProfile", "Edit Profile")}
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
       </motion.div>
 
       <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
-        <div className="lg:col-span-2">
+        <div className="space-y-6 lg:col-span-2">
           <PortalSection
             title={t("profile.accountDetails", "Account Details")}
             subtitle={
@@ -269,12 +276,12 @@ export default function PortalProfileView({ variant }: PortalProfileViewProps) {
               </div>
             )}
           </PortalSection>
+
+          <PortalLanguageSetting />
         </div>
 
         <div className="space-y-6">
           <RoleSwitcher />
-
-          <PortalLanguageSetting />
 
           <div className="surface-card p-5">
             <p className="text-sm font-semibold text-foreground">{t("settings.loginDevices", "Login Devices")}</p>

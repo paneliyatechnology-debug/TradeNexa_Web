@@ -649,6 +649,9 @@
     "title": "મારો કૅટેલોગ",
     "subtitle": "તમારી પ્રોડક્ટ લિસ્ટિંગ મેનેજ કરો",
     "addProduct": "પ્રોડક્ટ ઉમેરો",
+    "yourProduct": "તમારી પ્રોડક્ટ",
+    "ourProduct": "અમારી પ્રોડક્ટ",
+    "ownProductInquiryBlocked": "આ તમારી પોતાની પ્રોડક્ટ છે. તમે તમારી જાતને પૂછપરછ મોકલી શકતા નથી.",
     "searchPlaceholder": "નામ દ્વારા તમારી પ્રોડક્ટ્સ શોધો...",
     "searchByProductCategory": "પ્રોડક્ટ, કેટેગરી અથવા સપ્લાયર દ્વારા શોધો...",
     "findSuppliersProducts": "સમગ્ર ભારતમાં સપ્લાયર્સ અને પ્રોડક્ટ્સ શોધો",
@@ -752,6 +755,9 @@
     "days": "દિવસ",
     "paymentTerms": "ચુકવણીની શરતો",
     "validity": "માન્યતા",
+    "validFor": "માન્યતા",
+    "viewRfq": "RFQ જુઓ",
+    "gst": "GST",
     "created": "બનાવ્યું",
     "updated": "અપડેટ કર્યું",
     "remarks": "નોંધ",
@@ -803,6 +809,12 @@
     "yesterday": "ગઈકાલે",
     "sharedProduct": "પ્રોડક્ટ શેર કરી",
     "sharedQuotation": "ક્વોટેશન શેર કર્યું",
+    "inquiryCreatedByYou": "તમારા દ્વારા પૂછપરછ બનાવવામાં આવી",
+    "inquiryCreatedBy": "પૂછપરછ બનાવવામાં આવી દ્વારા",
+    "quotationSubmittedBy": "ક્વોટેશન સબમિટ કર્યું દ્વારા",
+    "quotationUpdatedBy": "ક્વોટેશન અપડેટ કર્યું દ્વારા",
+    "quotationAcceptedBy": "ક્વોટેશન સ્વીકાર્યું દ્વારા",
+    "quotationRejectedBy": "ક્વોટેશન અસ્વીકાર્યું દ્વારા",
     "photo": "ફોટો",
     "document": "દસ્તાવેજ",
     "update": "અપડેટ",
@@ -854,5 +866,11 @@
     "toastLogoutAllFailed": "અન્ય ઉપકરણોમાંથી લૉગ આઉટ કરવામાં નિષ્ફળ.",
     "confirmCurrentSession": "તમારું વર્તમાન સત્ર લૉગ આઉટ કરવાથી તમે આ બ્રાઉઝર પર TradeNexa માંથી સાઇન આઉટ થઈ જશો. આગળ વધવું?",
     "toastFailedSignOut": "સાઇન આઉટ કરવામાં નિષ્ફળ."
+  },
+  "translation": {
+    "originalText": "મૂળ લખાણ",
+    "autoTranslated": "સ્વચાલિત અનુવાદ",
+    "showOriginal": "મૂળ જુઓ",
+    "showTranslated": "અનુવાદ જુઓ"
   }
 }

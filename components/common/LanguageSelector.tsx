@@ -8,9 +8,14 @@ import { useLanguage } from "@/context/LanguageContext";
 interface LanguageSelectorProps {
   className?: string;
   isMobile?: boolean;
+  align?: "left" | "right" | "auto";
 }
 
-export function LanguageSelector({ className = "", isMobile = false }: LanguageSelectorProps) {
+export function LanguageSelector({
+  className = "",
+  isMobile = false,
+  align = "auto",
+}: LanguageSelectorProps) {
   const { currentLanguage, activeLanguageOption, setLanguage, languages } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -33,6 +38,13 @@ export function LanguageSelector({ className = "", isMobile = false }: LanguageS
     setLanguage(code);
     setIsOpen(false);
   };
+
+  const alignClasses =
+    align === "left"
+      ? "left-0"
+      : align === "right"
+      ? "right-0"
+      : "left-0 sm:left-auto sm:right-0";
 
   if (isMobile) {
     return (
@@ -94,38 +106,40 @@ export function LanguageSelector({ className = "", isMobile = false }: LanguageS
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -4 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute right-0 mt-1.5 w-44 rounded-xl bg-popover/95 backdrop-blur-md border border-border shadow-lg py-1.5 z-50 focus:outline-none"
+            className={`absolute ${alignClasses} mt-2 w-48 max-w-[calc(100vw-2rem)] rounded-xl bg-card border border-border shadow-2xl p-1.5 z-[999] focus:outline-none`}
           >
-            <div className="px-3 py-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 border-b border-border/50 mb-1">
-              <Globe className="w-3 h-3 text-primary" />
+            <div className="px-3 py-1.5 text-[11px] font-semibold text-muted-fg uppercase tracking-wider flex items-center gap-1.5 border-b border-border/60 mb-1">
+              <Globe className="w-3.5 h-3.5 text-primary" />
               <span>Select Language</span>
             </div>
-            {languages.map((lang) => {
-              const isSelected = currentLanguage === lang.code;
-              return (
-                <button
-                  key={lang.code}
-                  type="button"
-                  onClick={() => handleSelect(lang.code)}
-                  className={`w-full flex items-center justify-between px-3 py-2 text-xs transition-colors text-left ${
-                    isSelected
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-base leading-none">{lang.flag}</span>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-xs leading-tight">{lang.nativeName}</span>
-                      <span className="text-[10px] text-muted-foreground leading-tight">
-                        {lang.name}
-                      </span>
+            <div className="space-y-0.5">
+              {languages.map((lang) => {
+                const isSelected = currentLanguage === lang.code;
+                return (
+                  <button
+                    key={lang.code}
+                    type="button"
+                    onClick={() => handleSelect(lang.code)}
+                    className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-lg transition-all text-left ${
+                      isSelected
+                        ? "bg-primary-soft text-primary font-semibold shadow-xs"
+                        : "text-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="text-base leading-none shrink-0">{lang.flag}</span>
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-semibold text-xs leading-tight truncate">{lang.nativeName}</span>
+                        <span className="text-[10px] text-muted-fg leading-tight truncate">
+                          {lang.name}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  {isSelected && <Check className="w-3.5 h-3.5 text-primary shrink-0 ml-1" />}
-                </button>
-              );
-            })}
+                    {isSelected && <Check className="w-3.5 h-3.5 text-primary shrink-0 ml-1.5 stroke-[2.5]" />}
+                  </button>
+                );
+              })}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

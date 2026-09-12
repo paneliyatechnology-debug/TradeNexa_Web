@@ -14,12 +14,14 @@ import {
 import PortalBackLink from "@/components/portal/PortalBackLink";
 import { Button } from "@/components/common/Button";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/context/LanguageContext";
 import { fetchProductById } from "@/services/catalogService";
 import {
   createInquiry,
   getInquiryErrorMessage,
 } from "@/services/inquiryService";
 import { formatApiValidationSummary, getApiFieldErrors } from "@/utils/apiErrors";
+import { isUserProductOwner } from "@/utils/productDetailHelpers";
 import {
   formatPrice,
   getInitials,
@@ -78,7 +80,8 @@ function LoadingSkeleton() {
 export default function SendInquiryPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, openAuthModal } = useAuth();
+  const { t } = useLanguage();
   const productId = Number(searchParams.get("product"));
 
   const [product, setProduct] = useState<ApiProductDetail | null>(null);
@@ -90,6 +93,8 @@ export default function SendInquiryPage() {
   const [requiredBefore, setRequiredBefore] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
+
+  const isOwnProduct = isUserProductOwner(product, user);
 
   useEffect(() => {
     if (!productId || Number.isNaN(productId)) {
@@ -137,9 +142,17 @@ export default function SendInquiryPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
+    if (isOwnProduct) {
+      showErrorToast(
+        t(
+          "catalog.ownProductInquiryBlocked",
+          "This is your own product. You cannot send an inquiry to yourself."
+        )
+      );
+      return;
+    }
     if (!isAuthenticated) {
-      showErrorToast("Please sign in to send an inquiry.");
-      router.push("/");
+      openAuthModal("login", "buyer");
       return;
     }
     if (!productId || Number.isNaN(productId)) {
@@ -317,7 +330,29 @@ export default function SendInquiryPage() {
               </div>
             </div>
 
-            <form
+            {isOwnProduct ? (
+              <div className="rounded-2xl border border-warning/30 bg-warning-soft p-6 text-center shadow-[var(--shadow-card)]">
+                <Package className="mx-auto h-10 w-10 text-accent" />
+                <h2 className="mt-3 text-lg font-bold text-foreground">
+                  {t("catalog.yourProduct", "Your Product")}
+                </h2>
+                <p className="mt-2 text-sm text-muted-fg">
+                  {t(
+                    "catalog.ownProductInquiryBlocked",
+                    "This is your own product. You cannot send an inquiry to yourself."
+                  )}
+                </p>
+                <div className="mt-5 flex flex-wrap justify-center gap-3">
+                  <Link href={`/seller/product/${product.id}`}>
+                    <Button variant="primary">Manage in Seller Portal</Button>
+                  </Link>
+                  <Link href={backHref}>
+                    <Button variant="secondary">Back to Product</Button>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <form
                 onSubmit={handleSubmit}
                 className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)] sm:p-6"
               >
@@ -470,6 +505,7 @@ export default function SendInquiryPage() {
                   </Link>
                 </div>
               </form>
+            )}
           </motion.div>
         )}
       </div>

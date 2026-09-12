@@ -6,6 +6,7 @@ import InquiryQuotationStatusBadge from "@/components/inquiry/InquiryQuotationSt
 import type { ApiInquiryQuotation } from "@/types/inquiry";
 import { useLanguage } from "@/context/LanguageContext";
 import { formatPrice, resolveImageUrl } from "@/utils/catalogHelpers";
+import TranslatableText from "@/components/common/TranslatableText";
 import { formatInquiryDate } from "@/utils/inquiryHelpers";
 
 function Detail({
@@ -133,12 +134,15 @@ export default function InquiryQuotationDetails({
         <Detail label={t("inquiries.updated", "Updated")} value={formatInquiryDate(quote.updated_at)} />
       </dl>
 
-      {quote.remarks?.trim() ? (
+      {quote.remarks?.trim() || quote.original_remarks?.trim() ? (
         <div className="mt-4">
           <p className="text-xs font-medium text-muted-fg">{t("inquiries.remarks", "Remarks")}</p>
-          <p className="mt-1 text-sm leading-relaxed text-foreground">
-            {quote.remarks.trim()}
-          </p>
+          <div className="mt-1">
+            <TranslatableText
+              originalText={quote.original_remarks}
+              translatedText={quote.remarks}
+            />
+          </div>
         </div>
       ) : null}
 

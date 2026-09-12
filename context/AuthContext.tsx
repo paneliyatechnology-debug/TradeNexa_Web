@@ -170,14 +170,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Hydrate from cache immediately so portal deep-links (e.g. 2nd FCM click)
-      // don't race PortalAuthGuard into router.replace("/").
+      // Hydrate from cache immediately
       if (cachedUser) {
         try {
-          setUser(JSON.parse(cachedUser) as User);
+          const parsedUser = JSON.parse(cachedUser) as User;
+          setUser(parsedUser);
           setIsAuthenticated(true);
+          setLoading(false);
+          return;
         } catch {
-          // ignore bad cache; profile fetch below will decide
+          // Bad cache, proceed to fetch profile from API below
         }
       }
 
@@ -186,23 +188,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const profile = unwrapApiPayload<ApiUserProfile>(res.data);
         persistSession(token, mapApiProfileToUser(profile));
       } catch {
-        if (cachedUser) {
-          try {
-            setUser(JSON.parse(cachedUser) as User);
-            setIsAuthenticated(true);
-          } catch {
-            clearSession();
-          }
-        } else {
-          clearSession();
-        }
+        clearSession();
       } finally {
         setLoading(false);
       }
     };
 
     initAuth();
-    void ensureRolesLoaded();
 
     const handleUnauthorized = () => {
       clearSession();

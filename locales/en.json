@@ -649,6 +649,9 @@
     "title": "My Catalog",
     "subtitle": "Manage your product listings",
     "addProduct": "Add Product",
+    "yourProduct": "Your Product",
+    "ourProduct": "Our Product",
+    "ownProductInquiryBlocked": "This is your own product. You cannot send an inquiry to yourself.",
     "searchPlaceholder": "Search your products by name...",
     "searchByProductCategory": "Search by product, category, or supplier...",
     "findSuppliersProducts": "Find suppliers and products across India",
@@ -752,6 +755,9 @@
     "days": "days",
     "paymentTerms": "Payment terms",
     "validity": "Validity",
+    "validFor": "Valid for",
+    "viewRfq": "View RFQ",
+    "gst": "GST",
     "created": "Created",
     "updated": "Updated",
     "remarks": "Remarks",
@@ -803,6 +809,12 @@
     "yesterday": "Yesterday",
     "sharedProduct": "Shared a product",
     "sharedQuotation": "Shared a quotation",
+    "inquiryCreatedByYou": "Inquiry created by you",
+    "inquiryCreatedBy": "Inquiry created by",
+    "quotationSubmittedBy": "Quotation submitted by",
+    "quotationUpdatedBy": "Quotation updated by",
+    "quotationAcceptedBy": "Quotation accepted by",
+    "quotationRejectedBy": "Quotation rejected by",
     "photo": "Photo",
     "document": "Document",
     "update": "Update",
@@ -854,5 +866,11 @@
     "toastLogoutAllFailed": "Failed to log out from other devices.",
     "confirmCurrentSession": "Logging out your current session will sign you out of TradeNexa on this browser. Continue?",
     "toastFailedSignOut": "Failed to sign out."
+  },
+  "translation": {
+    "originalText": "Original text",
+    "autoTranslated": "Auto-translated",
+    "showOriginal": "Show original",
+    "showTranslated": "Show translation"
   }
 }

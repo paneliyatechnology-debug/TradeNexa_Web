@@ -38,8 +38,8 @@ export interface ApiCountry {
 
 export type CountriesPageResult = PaginatedResult<ApiCountry>;
 
-/** India — default country ID. */
-export const INDIA_COUNTRY_ID = 1;
+/** India — default country ID in database. */
+export const INDIA_COUNTRY_ID = 4;
 
 /** Result of resolving browser coordinates to platform state/city IDs. */
 export interface ResolvedGeoLocation {

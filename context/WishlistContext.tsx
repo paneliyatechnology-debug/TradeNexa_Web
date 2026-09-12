@@ -9,6 +9,7 @@ import React, {
   useState,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import {
   useGetWishlistQuery,
@@ -37,13 +38,27 @@ const WishlistContext = createContext<WishlistContextValue | undefined>(undefine
  * source of truth after invalidation settles.
  */
 export function WishlistProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [overlay, setOverlay] = useState<Record<number, boolean>>({});
   const [overlayTotalDelta, setOverlayTotalDelta] = useState(0);
 
+  const isWishlistRoute = useMemo(() => {
+    if (!pathname) return false;
+    return (
+      pathname === "/" ||
+      pathname.startsWith("/products") ||
+      pathname.startsWith("/categories") ||
+      pathname.startsWith("/buyer/wishlist") ||
+      pathname.startsWith("/buyer/home") ||
+      pathname.startsWith("/buyer/products") ||
+      pathname.startsWith("/buyer/categories")
+    );
+  }, [pathname]);
+
   const { data, refetch } = useGetWishlistQuery(
     { page: 1, limit: 100 },
-    { skip: authLoading || !isAuthenticated }
+    { skip: authLoading || !isAuthenticated || !isWishlistRoute }
   );
   const [toggleWishlistMutation] = useToggleWishlistMutation();
 

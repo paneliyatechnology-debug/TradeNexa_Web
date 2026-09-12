@@ -27,7 +27,7 @@ export default function PortalLanguageSetting({ compact = false }: PortalLanguag
         </div>
       </div>
 
-      <div className={`mt-4 grid gap-2.5 ${compact ? "grid-cols-3" : "grid-cols-1 sm:grid-cols-3"}`}>
+      <div className={`mt-4 grid gap-3 ${compact ? "grid-cols-3" : "grid-cols-1 sm:grid-cols-3"}`}>
         {languages.map((lang) => {
           const isSelected = currentLanguage === lang.code;
           return (
@@ -35,17 +35,17 @@ export default function PortalLanguageSetting({ compact = false }: PortalLanguag
               key={lang.code}
               type="button"
               onClick={() => setLanguage(lang.code)}
-              className={`flex items-center justify-between rounded-xl border p-3 text-left transition-all ${
+              className={`flex items-center justify-between rounded-xl border p-3.5 text-left transition-all ${
                 isSelected
                   ? "border-primary bg-primary-soft text-primary ring-2 ring-primary/20 shadow-sm"
                   : "border-border bg-card text-foreground hover:border-primary/40 hover:bg-muted/50"
               }`}
             >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <span className="text-lg leading-none shrink-0">{lang.flag}</span>
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="text-xl leading-none shrink-0">{lang.flag}</span>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold leading-tight truncate">{lang.nativeName}</p>
-                  <p className="text-[11px] text-muted-fg leading-tight truncate">{lang.name}</p>
+                  <p className="text-sm font-semibold leading-tight truncate">{lang.nativeName}</p>
+                  <p className="text-xs text-muted-fg leading-tight truncate">{lang.name}</p>
                 </div>
               </div>
 

@@ -1,5 +1,46 @@
-import type { ApiProductDetail } from "@/types/catalog";
+import type { User } from "@/types/auth";
+import type { ApiProductDetail, ApiProductListItem } from "@/types/catalog";
 import { formatListedAgo } from "@/utils/catalogHelpers";
+
+export function isUserProductOwner(
+  product: ApiProductDetail | ApiProductListItem | null | undefined,
+  user: User | null | undefined
+): boolean {
+  if (!product || !user) return false;
+
+  const rawUserNumeric = user.user_id != null ? Number(user.user_id) : Number(user.id);
+  const userNumericId = Number.isFinite(rawUserNumeric) ? rawUserNumeric : null;
+  const userStrId = String(user.id || user.user_id || "").trim();
+
+  const p = product as any;
+  const sellerObj = p.seller;
+
+  if (sellerObj) {
+    const sellerUserId = sellerObj.user_id != null ? Number(sellerObj.user_id) : null;
+    const sellerId = sellerObj.id != null ? Number(sellerObj.id) : null;
+
+    if (userNumericId != null) {
+      if (sellerUserId != null && sellerUserId === userNumericId) return true;
+      if (sellerId != null && sellerId === userNumericId) return true;
+    }
+    if (userStrId) {
+      if (sellerObj.user_id != null && String(sellerObj.user_id) === userStrId) return true;
+      if (sellerObj.id != null && String(sellerObj.id) === userStrId) return true;
+    }
+  }
+
+  if (p.seller_id != null) {
+    if (userNumericId != null && Number(p.seller_id) === userNumericId) return true;
+    if (userStrId && String(p.seller_id) === userStrId) return true;
+  }
+
+  if (p.user_id != null) {
+    if (userNumericId != null && Number(p.user_id) === userNumericId) return true;
+    if (userStrId && String(p.user_id) === userStrId) return true;
+  }
+
+  return false;
+}
 
 export interface ProductSpecRow {
   label: string;

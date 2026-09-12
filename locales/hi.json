@@ -649,6 +649,9 @@
     "title": "मेरा कैटलॉग",
     "subtitle": "अपनी उत्पाद लिस्टिंग प्रबंधित करें",
     "addProduct": "उत्पाद जोड़ें",
+    "yourProduct": "आपका उत्पाद",
+    "ourProduct": "हमारा उत्पाद",
+    "ownProductInquiryBlocked": "यह आपका अपना उत्पाद है। आप स्वयं को पूछताछ नहीं भेज सकते।",
     "searchPlaceholder": "नाम से अपने उत्पाद खोजें...",
     "searchByProductCategory": "उत्पाद, श्रेणी या आपूर्तिकर्ता से खोजें...",
     "findSuppliersProducts": "पूरे भारत में आपूर्तिकर्ता और उत्पाद खोजें",
@@ -752,6 +755,9 @@
     "days": "दिन",
     "paymentTerms": "भुगतान शर्तें",
     "validity": "वैधता",
+    "validFor": "वैधता",
+    "viewRfq": "RFQ देखें",
+    "gst": "जीएसटी",
     "created": "बनाया गया",
     "updated": "अपडेट किया गया",
     "remarks": "टिप्पणी",
@@ -803,6 +809,12 @@
     "yesterday": "कल",
     "sharedProduct": "उत्पाद साझा किया",
     "sharedQuotation": "कोटेशन साझा किया",
+    "inquiryCreatedByYou": "आपके द्वारा पूछताछ बनाई गई",
+    "inquiryCreatedBy": "पूछताछ बनाई गई द्वारा",
+    "quotationSubmittedBy": "कोटेशन प्रस्तुत किया गया द्वारा",
+    "quotationUpdatedBy": "कोटेशन अपडेट किया गया द्वारा",
+    "quotationAcceptedBy": "कोटेशन स्वीकृत किया गया द्वारा",
+    "quotationRejectedBy": "कोटेशन अस्वीकृत किया गया द्वारा",
     "photo": "फ़ोटो",
     "document": "दस्तावेज़",
     "update": "अपडेट",
@@ -854,5 +866,11 @@
     "toastLogoutAllFailed": "अन्य डिवाइस से लॉग आउट करने में विफल।",
     "confirmCurrentSession": "अपने वर्तमान सत्र को लॉग आउट करने से आप इस ब्राउज़र पर TradeNexa से साइन आउट हो जाएंगे। जारी रखें?",
     "toastFailedSignOut": "साइन आउट करने में विफल।"
+  },
+  "translation": {
+    "originalText": "मूल पाठ",
+    "autoTranslated": "स्वतः अनूदित",
+    "showOriginal": "मूल देखें",
+    "showTranslated": "अनुवाद देखें"
   }
 }

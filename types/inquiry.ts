@@ -52,6 +52,10 @@ export interface ApiInquiryQuotation {
   payment_terms?: string | null;
   validity_days?: number | null;
   remarks?: string | null;
+  original_remarks?: string | null;
+  original_payment_terms?: string | null;
+  translated_language?: string | null;
+  language_name?: string | null;
   attachment?: string | null;
   status?: InquiryQuotationStatus | null;
   seller_name?: string | null;
@@ -76,11 +80,15 @@ export interface ApiInquiry {
   quantity: number;
   unit?: string | null;
   message?: string | null;
+  original_message?: string | null;
   expected_price?: number | null;
   currency?: string | null;
   required_before?: string | null;
   status: InquiryStatus;
   reject_reason?: string | null;
+  original_reject_reason?: string | null;
+  translated_language?: string | null;
+  language_name?: string | null;
   viewed_at?: string | null;
   responded_at?: string | null;
   is_active?: boolean | null;
