@@ -28,6 +28,8 @@ interface PortalProductCardProps {
   showApprovalStatus?: boolean;
 }
 
+const GLOBAL_LOADED_IMAGES = new Set<string>();
+
 export default React.memo(function PortalProductCard({
   product,
   href,
@@ -57,10 +59,19 @@ export default React.memo(function PortalProductCard({
   const resolvedEditHref = editHref && canEdit ? editHref : undefined;
   const showActionsMenu = Boolean(resolvedEditHref || showDelete);
 
+  const resolvedThumb = resolveImageUrl(product.thumbnail) || "";
+  const isAlreadyCached = Boolean(resolvedThumb && GLOBAL_LOADED_IMAGES.has(resolvedThumb));
+  const [imageLoaded, setImageLoaded] = useState(isAlreadyCached);
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuId = useId();
+
+  useEffect(() => {
+    if (resolvedThumb && GLOBAL_LOADED_IMAGES.has(resolvedThumb)) {
+      setImageLoaded(true);
+    }
+  }, [resolvedThumb]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -89,16 +100,28 @@ export default React.memo(function PortalProductCard({
     <div className="h-full transition-transform duration-200 hover:-translate-y-0.5">
       <div className="group surface-card-hover relative flex h-full flex-col overflow-hidden">
         <Link href={link} className="flex flex-1 flex-col hover:cursor-pointer">
-          <div className="relative aspect-[4/3] overflow-hidden">
+          <div className="relative aspect-[4/3] overflow-hidden bg-muted">
             <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />
-            {product.thumbnail ? (
-              <Image
-                src={resolveImageUrl(product.thumbnail) || ""}
-                alt={product.name}
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-                unoptimized
-              />
+            {resolvedThumb ? (
+              <>
+                {!imageLoaded && (
+                  <div className="absolute inset-0 animate-pulse bg-muted" />
+                )}
+                <Image
+                  src={resolvedThumb}
+                  alt={product.name}
+                  fill
+                  loading="lazy"
+                  onLoad={() => {
+                    if (resolvedThumb) GLOBAL_LOADED_IMAGES.add(resolvedThumb);
+                    setImageLoaded(true);
+                  }}
+                  className={`object-cover transition-transform duration-500 group-hover:scale-105 ${
+                    imageLoaded ? "opacity-100" : "opacity-0"
+                  }`}
+                  unoptimized
+                />
+              </>
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-4xl font-black text-white/25">{getInitials(product.name)}</span>

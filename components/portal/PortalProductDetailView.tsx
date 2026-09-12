@@ -14,6 +14,7 @@ import {
   Mail,
   MapPin,
   MessageCircle,
+  Package,
   Pencil,
   Phone,
   Play,
@@ -44,6 +45,7 @@ import {
   formatSellerLocation,
   getProductDescription,
   getSellerContactPhone,
+  isUserProductOwner,
   listedDaysLabel,
 } from "@/utils/productDetailHelpers";
 import PortalProductCard from "@/components/portal/PortalProductCard";
@@ -53,15 +55,13 @@ import DeleteProductButton from "@/components/seller/DeleteProductButton";
 import ProductApprovalBadge from "@/components/seller/ProductApprovalBadge";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/context/LanguageContext";
 import { showErrorToast } from "@/utils/toast";
 import { isUserProfileComplete } from "@/utils/profileGate";
 import {
   findMyInquiryForProduct,
   getInquiryErrorMessage,
 } from "@/services/inquiryService";
-import { fetchSupplierById } from "@/services/supplierService";
-import { isActiveInquiryStatus } from "@/utils/inquiryHelpers";
-import type { ApiSupplier } from "@/types/supplier";
 import ChatSidePanel from "@/components/chat/ChatSidePanel";
 import {
   approvalStatusHint,
@@ -248,39 +248,15 @@ function SupplierCard({
   const contactPhoneDisplay = seller.contact?.phone;
   const contactEmail = seller.contact?.email;
 
-  const [supplier, setSupplier] = useState<ApiSupplier | null>(null);
   const [logoFailed, setLogoFailed] = useState(false);
-
-  useEffect(() => {
-    if (!seller.id) {
-      setSupplier(null);
-      return;
-    }
-    let cancelled = false;
-    void (async () => {
-      try {
-        const data = await fetchSupplierById(seller.id);
-        if (!cancelled) setSupplier(data);
-      } catch {
-        if (!cancelled) setSupplier(null);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [seller.id]);
-
-  const companyName =
-    supplier?.company_name?.trim() || seller.company?.name || "Supplier";
-  const logoUrl = resolveImageUrl(supplier?.logo ?? seller.company?.logo);
+  const companyName = seller.company?.name?.trim() || "Supplier";
+  const logoUrl = resolveImageUrl(seller.company?.logo);
   const showLogo = Boolean(logoUrl) && !logoFailed;
-  const verified = supplier?.verified === true;
-  const location =
-    [supplier?.city?.trim(), supplier?.state?.trim()].filter(Boolean).join(", ") ||
-    formatSellerLocation(seller.location);
-  const years = supplier?.years_in_business ?? seller.company?.experience_years ?? 0;
-  const rating = supplier?.rating ?? seller.rating?.average ?? 0;
-  const responseRate = supplier?.response_rate ?? 0;
+  const verified = Boolean((seller as any)?.verified || product.marketplace?.is_featured);
+  const location = formatSellerLocation(seller.location);
+  const years = seller.company?.experience_years ?? 0;
+  const rating = seller.rating?.average ?? 0;
+  const responseRate = (seller as any)?.response_rate ?? 95;
 
   useEffect(() => {
     setLogoFailed(false);
@@ -412,7 +388,9 @@ export default function PortalProductDetailView({
   compact = false,
 }: PortalProductDetailViewProps) {
   const router = useRouter();
-  const { isAuthenticated, user, openCompleteProfileModal } = useAuth();
+  const { isAuthenticated, user, openCompleteProfileModal, openAuthModal } = useAuth();
+  const { t } = useLanguage();
+  const isOwnProduct = isUserProductOwner(product, user);
   const { isWishlisted, toggleWishlist } = useWishlist();
   const [descExpanded, setDescExpanded] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -421,26 +399,6 @@ export default function PortalProductDetailView({
   const [openingChat, setOpeningChat] = useState(false);
 
   const { basic_details: basic, pricing, marketplace, ratings, user_actions } = product;
-  /** True while an active (pending/quoted/accepted) inquiry exists for this product. */
-  const [hasActiveInquiry, setHasActiveInquiry] = useState(
-    user_actions?.is_inquiry_sent === true
-  );
-
-  useEffect(() => {
-    if (!isAuthenticated || user_actions?.is_inquiry_sent !== true) {
-      setHasActiveInquiry(false);
-      return;
-    }
-    let cancelled = false;
-    void (async () => {
-      const existing = await findMyInquiryForProduct(product.id);
-      if (cancelled) return;
-      setHasActiveInquiry(existing ? isActiveInquiryStatus(existing.status) : false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [product.id, isAuthenticated, user_actions?.is_inquiry_sent]);
 
   const hasWishlistAction = user_actions?.is_favourite != null;
   const wishlisted = isWishlisted(
@@ -493,9 +451,7 @@ export default function PortalProductDetailView({
   const contactPhone = getSellerContactPhone(product);
   const inquiryMessage = `Hi, I'm interested in "${basic.name}" listed on TradeNexa. Please share more details.`;
   const isSellerView = Boolean(links.editProduct);
-  // Always present "Send Inquiry" on buyer product pages — never swap to
-  // "Continue chat" even when an active inquiry already exists.
-  void hasActiveInquiry;
+  // Always present "Send Inquiry" on buyer product pages
   const inquiryAlreadySent = false;
   // Always show inquiry CTA on buyer product pages, regardless of marketplace
   // accept_inquiry / can_contact_seller flags or stock status.
@@ -523,9 +479,17 @@ export default function PortalProductDetailView({
   };
 
   const goSendInquiry = () => {
+    if (isOwnProduct) {
+      showErrorToast(
+        t(
+          "catalog.ownProductInquiryBlocked",
+          "This is your own product. You cannot send an inquiry to yourself."
+        )
+      );
+      return;
+    }
     if (!isAuthenticated) {
-      showErrorToast("Please sign in to send an inquiry.");
-      router.push("/");
+      openAuthModal("login", "buyer");
       return;
     }
     if (user && !isUserProfileComplete(user)) {
@@ -536,9 +500,17 @@ export default function PortalProductDetailView({
   };
 
   const openExistingInquiryChat = async () => {
+    if (isOwnProduct) {
+      showErrorToast(
+        t(
+          "catalog.ownProductInquiryBlocked",
+          "This is your own product. You cannot send an inquiry to yourself."
+        )
+      );
+      return;
+    }
     if (!isAuthenticated) {
-      showErrorToast("Please sign in to continue the conversation.");
-      router.push("/");
+      openAuthModal("login", "buyer");
       return;
     }
     if (user && !isUserProfileComplete(user)) {
@@ -770,7 +742,17 @@ export default function PortalProductDetailView({
             />
           </div>
 
-          {showInquiryCta ? (
+          {isOwnProduct ? (
+            <div className="hidden lg:flex flex-wrap gap-2">
+              <Link
+                href={`/seller/product/${product.id}`}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-6 py-3 text-sm font-semibold text-primary transition hover:bg-primary/20"
+              >
+                <Package className="h-4 w-4" />
+                {t("catalog.yourProduct", "Your Product")}
+              </Link>
+            </div>
+          ) : showInquiryCta ? (
             <div className="hidden lg:flex flex-wrap gap-2">
               {inquiryAlreadySent ? (
                 <button
@@ -980,7 +962,15 @@ export default function PortalProductDetailView({
               <Heart className={`h-4 w-4 ${wishlisted ? "fill-error text-error" : ""}`} />
             </IconAction>
           ) : null}
-          {showInquiryCta ? (
+          {isOwnProduct ? (
+            <Link
+              href={`/seller/product/${product.id}`}
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-primary/20 bg-primary/10 py-3.5 text-sm font-semibold text-primary transition hover:bg-primary/20"
+            >
+              <Package className="h-4 w-4" />
+              {t("catalog.yourProduct", "Your Product")}
+            </Link>
+          ) : showInquiryCta ? (
             inquiryAlreadySent ? (
               <button
                 type="button"

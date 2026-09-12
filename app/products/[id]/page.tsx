@@ -15,12 +15,14 @@ import {
 } from "@/services/catalogService";
 import type { ApiProductDetail, ApiProductListItem } from "@/types/catalog";
 import { useWishlist } from "@/hooks/useWishlist";
+import { useLanguage } from "@/context/LanguageContext";
 import { websiteProductLinks } from "@/utils/productDetailLinks";
 
 export default function ProductDetailPage() {
   const params = useParams();
   const productId = Number(params.id);
   const invalidId = !productId || Number.isNaN(productId);
+  const { t, currentLanguage } = useLanguage();
 
   const [product, setProduct] = useState<ApiProductDetail | null>(null);
   const [categorySlug, setCategorySlug] = useState<string | undefined>();
@@ -44,7 +46,7 @@ export default function ProductDetailPage() {
 
         if (!data) {
           setProduct(null);
-          setError("Product not found");
+          setError(t("products.productNotFound", "Product not found"));
           return;
         }
 
@@ -91,7 +93,7 @@ export default function ProductDetailPage() {
           const message =
             err && typeof err === "object" && "message" in err
               ? String((err as { message: string }).message)
-              : "Failed to load product";
+              : t("products.productNotFound", "Failed to load product");
           setError(message);
           setProduct(null);
         }
@@ -104,7 +106,7 @@ export default function ProductDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [productId, invalidId, addToWishlist]);
+  }, [productId, invalidId, addToWishlist, currentLanguage, t]);
 
   const links = useMemo(() => websiteProductLinks(categorySlug), [categorySlug]);
 
@@ -114,11 +116,11 @@ export default function ProductDetailPage() {
         <div className="mx-auto max-w-xl px-4 py-12">
           <PortalEmptyState
             icon={Package}
-            title="Invalid product"
-            description="The product link is not valid."
+            title={t("products.invalidProduct", "Invalid product")}
+            description={t("products.invalidProductDesc", "The product link is not valid.")}
             action={
               <Link href="/products">
-                <Button>Browse Products</Button>
+                <Button>{t("products.browseProducts", "Browse Products")}</Button>
               </Link>
             }
           />
@@ -131,7 +133,7 @@ export default function ProductDetailPage() {
     return (
       <div className="flex min-h-screen items-center justify-center gap-2 bg-background py-20 text-sm text-muted-fg">
         <Loader2 className="h-5 w-5 animate-spin text-primary" />
-        Loading product...
+        {t("products.loadingProduct", "Loading product...")}
       </div>
     );
   }
@@ -142,11 +144,11 @@ export default function ProductDetailPage() {
         <div className="mx-auto max-w-xl px-4 py-12">
           <PortalEmptyState
             icon={Package}
-            title="Product not found"
-            description={error || "This product may have been removed or is unavailable."}
+            title={t("products.productNotFound", "Product not found")}
+            description={error || t("products.productNotFoundDesc", "This product may have been removed or is unavailable.")}
             action={
               <Link href="/products">
-                <Button>Browse Products</Button>
+                <Button>{t("products.browseProducts", "Browse Products")}</Button>
               </Link>
             }
           />

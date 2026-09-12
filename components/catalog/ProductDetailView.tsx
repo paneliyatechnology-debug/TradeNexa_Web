@@ -31,6 +31,10 @@ import {
   Sparkles,
   Star,
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useWishlist } from "@/hooks/useWishlist";
+import { useLanguage } from "@/context/LanguageContext";
+import { isUserProductOwner } from "@/utils/productDetailHelpers";
 import { showErrorToast } from "@/utils/toast";
 
 interface ProductDetailViewProps {
@@ -150,6 +154,11 @@ function SellerProfileCard({
 }
 
 export default function ProductDetailView({ product }: ProductDetailViewProps) {
+  const { user } = useAuth();
+  const { isWishlisted, toggleWishlist } = useWishlist();
+  const wishlisted = isWishlisted(product.id);
+  const { t } = useLanguage();
+  const isOwnProduct = isUserProductOwner(product, user);
   const { basic_details: basic, pricing, seller, marketplace, ratings } = product;
   const theme = getMarketplaceTheme(product.id);
 
@@ -287,10 +296,13 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
           </button>
           <button
             type="button"
-            className="flex h-10 w-10 items-center justify-center rounded-full text-primary"
+            onClick={() => void toggleWishlist(product.id, wishlisted)}
+            className={`flex h-10 w-10 items-center justify-center rounded-full transition ${
+              wishlisted ? "bg-error-soft text-error" : "text-primary"
+            }`}
             aria-label="Wishlist"
           >
-            <Heart className="h-5 w-5" />
+            <Heart className={`h-5 w-5 ${wishlisted ? "fill-error text-error" : ""}`} />
           </button>
         </div>
       </div>
@@ -379,10 +391,13 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
                 </button>
                 <button
                   type="button"
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-primary shadow-sm transition hover:bg-muted"
+                  onClick={() => void toggleWishlist(product.id, wishlisted)}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full border shadow-sm transition hover:bg-muted ${
+                    wishlisted ? "border-error/20 bg-error-soft text-error" : "border-border bg-card text-primary"
+                  }`}
                   aria-label="Wishlist"
                 >
-                  <Heart className="h-4 w-4" />
+                  <Heart className={`h-4 w-4 ${wishlisted ? "fill-error text-error" : ""}`} />
                 </button>
               </div>
             </div>
@@ -454,32 +469,44 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
             )}
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row lg:mt-10">
-              <Link
-                href={contactHref}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:bg-primary-hover"
-              >
-                <MessageCircle className="h-4 w-4" />
-                Send Inquiry
-              </Link>
-              {whatsapp && (
-                <a
-                  href={whatsAppHref(whatsapp, inquiryMessage)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted px-6 py-3.5 text-sm font-bold text-foreground transition hover:border-primary/30 hover:bg-card"
+              {isOwnProduct ? (
+                <Link
+                  href={`/seller/product/${product.id}`}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-primary/20 bg-primary/10 px-6 py-3.5 text-sm font-bold text-primary transition hover:bg-primary/20"
                 >
-                  <MessageCircle className="h-4 w-4" />
-                  WhatsApp
-                </a>
-              )}
-              {phone && (
-                <a
-                  href={`tel:${phone}`}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-6 py-3.5 text-sm font-bold text-foreground transition hover:bg-muted"
-                >
-                  <Phone className="h-4 w-4" />
-                  Call
-                </a>
+                  <Package className="h-4 w-4" />
+                  {t("catalog.yourProduct", "Your Product")}
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href={contactHref}
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-primary/20 transition hover:bg-primary-hover"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Send Inquiry
+                  </Link>
+                  {whatsapp && (
+                    <a
+                      href={whatsAppHref(whatsapp, inquiryMessage)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted px-6 py-3.5 text-sm font-bold text-foreground transition hover:border-primary/30 hover:bg-card"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      WhatsApp
+                    </a>
+                  )}
+                  {phone && (
+                    <a
+                      href={`tel:${phone}`}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-6 py-3.5 text-sm font-bold text-foreground transition hover:bg-muted"
+                    >
+                      <Phone className="h-4 w-4" />
+                      Call
+                    </a>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -554,10 +581,13 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
       <div className="sticky bottom-0 border-t border-border bg-card px-4 py-3 lg:hidden">
         <button
           type="button"
-          className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-primary"
+          onClick={() => void toggleWishlist(product.id, wishlisted)}
+          className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition ${
+            wishlisted ? "bg-error-soft text-error" : "text-primary"
+          }`}
         >
-          <Heart className="h-5 w-5" />
-          Wishlist
+          <Heart className={`h-5 w-5 ${wishlisted ? "fill-error text-error" : ""}`} />
+          {wishlisted ? "In Wishlist" : "Wishlist"}
         </button>
       </div>
     </div>

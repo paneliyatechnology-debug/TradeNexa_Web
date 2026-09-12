@@ -2,12 +2,12 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import SectionHeading from "@/components/SectionHeading";
 import CTABanner from "@/components/CTABanner";
 import MarketplacePageHero from "@/components/catalog/marketplace/MarketplacePageHero";
 import { MARKETPLACE_CONTAINER } from "@/components/catalog/marketplace/marketplaceLayout";
 import { useApp } from "@/app/context/AppContext";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/context/LanguageContext";
 import { Button } from "@/components/common/Button";
 import { motion } from "framer-motion";
 import {
@@ -32,59 +32,120 @@ type TabRole = "sellers" | "buyers" | "both";
 export default function HowItWorks() {
   const { openRegisterModal } = useApp();
   const { isAuthenticated } = useAuth();
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<TabRole>("sellers");
 
   const sellerSteps = [
-    { title: "Create Account", desc: "Sign up in 30 seconds using your mobile number and business details.", icon: UserPlus },
-    { title: "Create Business Profile", desc: "Add GST credentials, office addresses, and categories to build trust.", icon: Building },
-    { title: "Upload Products", desc: "List bulk supplies, upload catalogs, and define flexible pricing terms.", icon: Upload },
-    { title: "Receive Buyer Inquiries", desc: "Interested procurers send purchase requirements. You get alerts instantly.", icon: MessageSquare },
-    { title: "Grow Business", desc: "Respond via WhatsApp, call, or email to finalize bulk sales nationwide.", icon: TrendingUp },
+    {
+      title: t("howItWorks.sellerStep1Title", "Create Account"),
+      desc: t("howItWorks.sellerStep1Desc", "Sign up in 30 seconds using your mobile number and business details."),
+      icon: UserPlus,
+    },
+    {
+      title: t("howItWorks.sellerStep2Title", "Create Business Profile"),
+      desc: t("howItWorks.sellerStep2Desc", "Add GST credentials, office addresses, and categories to build trust."),
+      icon: Building,
+    },
+    {
+      title: t("howItWorks.sellerStep3Title", "Upload Products"),
+      desc: t("howItWorks.sellerStep3Desc", "List bulk supplies, upload catalogs, and define flexible pricing terms."),
+      icon: Upload,
+    },
+    {
+      title: t("howItWorks.sellerStep4Title", "Receive Buyer Inquiries"),
+      desc: t("howItWorks.sellerStep4Desc", "Interested procurers send purchase requirements. You get alerts instantly."),
+      icon: MessageSquare,
+    },
+    {
+      title: t("howItWorks.sellerStep5Title", "Grow Business"),
+      desc: t("howItWorks.sellerStep5Desc", "Respond via WhatsApp, call, or email to finalize bulk sales nationwide."),
+      icon: TrendingUp,
+    },
   ];
 
   const buyerSteps = [
-    { title: "Search Products", desc: "Use keyword search or filters to locate products, supplies, and manufacturers.", icon: Search },
-    { title: "Compare Sellers", desc: "Review verification badges, catalogs, and filter by logistics capability.", icon: CheckCircle },
-    { title: "Send Inquiry", desc: "Fill in the RFQ form specifying quantities and specifications.", icon: MailQuestion },
-    { title: "Connect Directly", desc: "Communicate with sellers via phone, email, or chat — no platform fees.", icon: Users2 },
-    { title: "Purchase with Confidence", desc: "Finalize payment and delivery conditions with your verified partner.", icon: ShieldCheck },
+    {
+      title: t("howItWorks.buyerStep1Title", "Search Products"),
+      desc: t("howItWorks.buyerStep1Desc", "Use keyword search or filters to locate products, supplies, and manufacturers."),
+      icon: Search,
+    },
+    {
+      title: t("howItWorks.buyerStep2Title", "Compare Sellers"),
+      desc: t("howItWorks.buyerStep2Desc", "Review verification badges, catalogs, and filter by logistics capability."),
+      icon: CheckCircle,
+    },
+    {
+      title: t("howItWorks.buyerStep3Title", "Send Inquiry"),
+      desc: t("howItWorks.buyerStep3Desc", "Fill in the RFQ form specifying quantities and specifications."),
+      icon: MailQuestion,
+    },
+    {
+      title: t("howItWorks.buyerStep4Title", "Connect Directly"),
+      desc: t("howItWorks.buyerStep4Desc", "Communicate with sellers via phone, email, or chat — no platform fees."),
+      icon: Users2,
+    },
+    {
+      title: t("howItWorks.buyerStep5Title", "Purchase with Confidence"),
+      desc: t("howItWorks.buyerStep5Desc", "Finalize payment and delivery conditions with your verified partner."),
+      icon: ShieldCheck,
+    },
   ];
 
   const bothSteps = [
-    { title: "Register Once", desc: "Choose 'Both' during signup to enable buyer and seller capabilities in one account.", icon: ArrowLeftRight },
-    { title: "Set Up Dual Profile", desc: "Configure your buying needs and selling catalog from a unified dashboard.", icon: Building },
-    { title: "Source & Supply", desc: "Procure raw materials from other sellers while listing your own products.", icon: Store },
-    { title: "Manage Both Flows", desc: "Track incoming RFQs and outgoing purchase inquiries in one place.", icon: ShoppingCart },
-    { title: "Scale Both Sides", desc: "Expand sourcing networks and customer base simultaneously across India.", icon: TrendingUp },
+    {
+      title: t("howItWorks.bothStep1Title", "Register Once"),
+      desc: t("howItWorks.bothStep1Desc", "Choose 'Both' during signup to enable buyer and seller capabilities in one account."),
+      icon: ArrowLeftRight,
+    },
+    {
+      title: t("howItWorks.bothStep2Title", "Set Up Dual Profile"),
+      desc: t("howItWorks.bothStep2Desc", "Configure your buying needs and selling catalog from a unified dashboard."),
+      icon: Building,
+    },
+    {
+      title: t("howItWorks.bothStep3Title", "Source & Supply"),
+      desc: t("howItWorks.bothStep3Desc", "Procure raw materials from other sellers while listing your own products."),
+      icon: Store,
+    },
+    {
+      title: t("howItWorks.bothStep4Title", "Manage Both Flows"),
+      desc: t("howItWorks.bothStep4Desc", "Track incoming RFQs and outgoing purchase inquiries in one place."),
+      icon: ShoppingCart,
+    },
+    {
+      title: t("howItWorks.bothStep5Title", "Scale Both Sides"),
+      desc: t("howItWorks.bothStep5Desc", "Expand sourcing networks and customer base simultaneously across India."),
+      icon: TrendingUp,
+    },
   ];
 
   const tabs: { id: TabRole; label: string }[] = [
-    { id: "sellers", label: "For Sellers" },
-    { id: "buyers", label: "For Buyers" },
-    { id: "both", label: "For Both" },
+    { id: "sellers", label: t("howItWorks.tabSellers", "For Sellers") },
+    { id: "buyers", label: t("howItWorks.tabBuyers", "For Buyers") },
+    { id: "both", label: t("howItWorks.tabBoth", "For Both") },
   ];
 
   const tabConfig = {
     sellers: {
-      badge: "Seller Journey",
-      title: "List, Discover, and Scale",
-      subtitle: "Five simple steps to take your offline manufacturing or wholesale trade digital.",
+      badge: t("howItWorks.sellerBadge", "Seller Journey"),
+      title: t("howItWorks.sellerTitle", "List, Discover, and Scale"),
+      subtitle: t("howItWorks.sellerSubtitle", "Five simple steps to take your offline manufacturing or wholesale trade digital."),
       steps: sellerSteps,
-      cta: { label: "Start Listing Your Products", role: "seller" as const },
+      cta: { label: t("howItWorks.sellerCta", "Start Listing Your Products"), role: "seller" as const },
     },
     buyers: {
-      badge: "Buyer Journey",
-      title: "Locate, Request, and Negotiate",
-      subtitle: "Five straightforward milestones for sourcing bulk materials safely and quickly.",
+      badge: t("howItWorks.buyerBadge", "Buyer Journey"),
+      title: t("howItWorks.buyerTitle", "Locate, Request, and Negotiate"),
+      subtitle: t("howItWorks.buyerSubtitle", "Five straightforward milestones for sourcing bulk materials safely and quickly."),
       steps: buyerSteps,
-      cta: { label: "Browse Product Catalog", href: "/categories" },
+      cta: { label: t("howItWorks.buyerCta", "Browse Product Catalog"), href: "/categories" },
     },
     both: {
-      badge: "Dual-Role Journey",
-      title: "Buy, Sell, and Grow Together",
-      subtitle: "One account for businesses that source materials and sell finished goods.",
+      badge: t("howItWorks.bothBadge", "Dual-Role Journey"),
+      title: t("howItWorks.bothTitle", "Buy, Sell, and Grow Together"),
+      subtitle: t("howItWorks.bothSubtitle", "One account for businesses that source materials and sell finished goods."),
       steps: bothSteps,
-      cta: { label: "Register as Buyer & Seller", role: "both" as const },
+      cta: { label: t("howItWorks.bothCta", "Register as Buyer & Seller"), role: "both" as const },
     },
   };
 
@@ -95,7 +156,7 @@ export default function HowItWorks() {
       return (
         <Link href="/categories">
           <Button>
-            Browse Product Catalog
+            {t("howItWorks.buyerCta", "Browse Product Catalog")}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </Link>
@@ -116,9 +177,12 @@ export default function HowItWorks() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <MarketplacePageHero
-        eyebrow="Ecosystem"
-        title="How Our Marketplace Connects Businesses"
-        subtitle="Whether you sell, buy, or do both — here is how TradeNexa works for your business."
+        eyebrow={t("howItWorks.eyebrow", "Ecosystem")}
+        title={t("howItWorks.heroTitle", "How Our Marketplace Connects Businesses")}
+        subtitle={t(
+          "howItWorks.heroSubtitle",
+          "Whether you sell, buy, or do both — here is how TradeNexa works for your business."
+        )}
       >
         <div className="inline-flex rounded-xl border border-white/20 bg-white/10 p-1.5 backdrop-blur-sm">
           {tabs.map((tab) => (

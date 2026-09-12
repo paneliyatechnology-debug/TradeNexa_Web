@@ -9,6 +9,7 @@ import { useWishlist } from "@/hooks/useWishlist";
 import { useActiveRole } from "@/context/ActiveRoleContext";
 import { useNotifications } from "@/context/NotificationContext";
 import { Logo } from "@/components/common/Logo";
+import { LanguageSelector } from "@/components/common/LanguageSelector";
 import PortalTooltip from "@/components/portal/PortalTooltip";
 
 interface PortalTopBarProps {
@@ -58,6 +59,10 @@ export default function PortalTopBar({
         </div>
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+          <div className="hidden sm:block">
+            <LanguageSelector align="right" className="[&>button]:h-9 [&>button]:border-portal-border [&>button]:bg-transparent [&>button]:text-xs hover:[&>button]:bg-muted" />
+          </div>
+
           <PortalTooltip label="Back to Website">
             <Link
               href="/"

@@ -10,9 +10,12 @@ import { WishlistProvider } from "@/context/WishlistContext";
 import { ChatProvider } from "@/context/ChatContext";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { GeoLocationProvider } from "@/context/GeoLocationContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 import AppChrome from "@/components/layout/AppChrome";
 import { FcmListener } from "@/components/fcm/FcmListener";
 import { ClientToaster } from "@/components/common/ClientToaster";
+import PwaInstallPrompt from "@/components/common/PwaInstallPrompt";
+import RouteNavigationWatcher from "@/components/layout/RouteNavigationWatcher";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,6 +32,11 @@ export const metadata: Metadata = {
   description:
     "Connect buyers with verified sellers across India. Grow your business through a powerful digital marketplace.",
   manifest: "/site.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "TradeNexa",
+  },
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -71,6 +79,14 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
     >
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#1a56db" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="TradeNexa" />
+      </head>
       <body suppressHydrationWarning className="flex min-h-dvh min-w-0 flex-col bg-background text-foreground">
         <Script
           id="fcm-root-recover"
@@ -80,18 +96,22 @@ export default function RootLayout({
         <ReduxProvider>
           <AuthProvider>
             <ActiveRoleProvider>
-              <WishlistProvider>
-                <ChatProvider>
-                  <NotificationProvider>
-                    <GeoLocationProvider>
-                      <AppProvider>
-                        <AppChrome>{children}</AppChrome>
-                        <FcmListener />
-                      </AppProvider>
-                    </GeoLocationProvider>
-                  </NotificationProvider>
-                </ChatProvider>
-              </WishlistProvider>
+              <LanguageProvider>
+                <WishlistProvider>
+                  <ChatProvider>
+                    <NotificationProvider>
+                      <GeoLocationProvider>
+                        <AppProvider>
+                          <AppChrome>{children}</AppChrome>
+                          <RouteNavigationWatcher />
+                          <FcmListener />
+                          <PwaInstallPrompt />
+                        </AppProvider>
+                      </GeoLocationProvider>
+                    </NotificationProvider>
+                  </ChatProvider>
+                </WishlistProvider>
+              </LanguageProvider>
             </ActiveRoleProvider>
             <ClientToaster />
           </AuthProvider>

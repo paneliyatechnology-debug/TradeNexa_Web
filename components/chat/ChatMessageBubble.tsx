@@ -32,8 +32,9 @@ import {
   personalizeSystemMessageContent,
   resolveAuthNumericUserId,
 } from "@/utils/chatHelpers";
-import { formatPrice, getInitials, resolveImageUrl } from "@/utils/catalogHelpers";
+import { formatPrice, getInitials, resolveImageUrl, localizeUnit } from "@/utils/catalogHelpers";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/context/LanguageContext";
 
 function formatTime(value?: string | null) {
   if (!value) return "";
@@ -194,6 +195,7 @@ export default function ChatMessageBubble({
   const [imageMenuStyle, setImageMenuStyle] = useState<React.CSSProperties>({});
   const imageMenuRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  const { currentLanguage, t } = useLanguage();
   const currentUserId = resolveAuthNumericUserId(user);
   const isSystem = isSystemChatMessage(message);
   const mine = message.is_mine === true;
@@ -205,6 +207,7 @@ export default function ChatMessageBubble({
   const imageUrl = resolveImageUrl(rawBackendSrc);
   const imageFileName = getChatFileDisplayName(message);
   const quote = message.quotation;
+  const localizedQuoteUnit = localizeUnit(quote?.unit, currentLanguage);
   const quoteCurrency = quote?.currency || "INR";
   const quoteBase =
     quote?.price != null && quote?.quantity != null
@@ -345,11 +348,31 @@ export default function ChatMessageBubble({
   }
 
   if (isSystem) {
-    const label = personalizeSystemMessageContent(
+    const rawLabel = personalizeSystemMessageContent(
       message.content,
       message,
       currentUserId
     );
+    let label = rawLabel;
+    if (/inquiry created by you/i.test(rawLabel)) {
+      label = t("chats.inquiryCreatedByYou", "Inquiry created by you");
+    } else if (/inquiry created by/i.test(rawLabel)) {
+      const actor = rawLabel.replace(/inquiry created by\s*/i, "");
+      label = `${t("chats.inquiryCreatedBy", "Inquiry created by")} ${actor}`;
+    } else if (/quotation submitted by/i.test(rawLabel)) {
+      const actor = rawLabel.replace(/quotation submitted by\s*/i, "");
+      label = `${t("chats.quotationSubmittedBy", "Quotation submitted by")} ${actor}`;
+    } else if (/quotation updated by/i.test(rawLabel)) {
+      const actor = rawLabel.replace(/quotation updated by\s*/i, "");
+      label = `${t("chats.quotationUpdatedBy", "Quotation updated by")} ${actor}`;
+    } else if (/quotation accepted by/i.test(rawLabel)) {
+      const actor = rawLabel.replace(/quotation accepted by\s*/i, "");
+      label = `${t("chats.quotationAcceptedBy", "Quotation accepted by")} ${actor}`;
+    } else if (/quotation rejected by/i.test(rawLabel)) {
+      const actor = rawLabel.replace(/quotation rejected by\s*/i, "");
+      label = `${t("chats.quotationRejectedBy", "Quotation rejected by")} ${actor}`;
+    }
+
     const contextLabel = getSystemContextLabel(message);
     const contextHref = getSystemContextHref(message, role);
     const labelHasContext =
@@ -471,7 +494,7 @@ export default function ChatMessageBubble({
                     {message.product.unit ? (
                       <span className="text-xs font-medium text-muted-fg">
                         {" "}
-                        / {message.product.unit}
+                        / {localizeUnit(message.product.unit, currentLanguage)}
                       </span>
                     ) : null}
                   </p>
@@ -480,7 +503,7 @@ export default function ChatMessageBubble({
                   href={`/buyer/product/${message.product.id}`}
                   className="mt-1.5 inline-flex items-center gap-0.5 text-xs font-semibold text-primary hover:underline"
                 >
-                  View Product
+                  {t("inquiries.viewProduct", "View product")}
                   <ChevronRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
@@ -496,27 +519,29 @@ export default function ChatMessageBubble({
               ) : null}
               <div className="grid grid-cols-2 gap-2.5">
                 <MetaCell
-                  label="Unit price"
+                  label={t("inquiries.unitPrice", "Unit price")}
                   value={
                     quote.price != null ? formatPrice(quote.price, quoteCurrency) : "—"
                   }
                 />
                 <MetaCell
-                  label="Quantity"
+                  label={t("inquiries.quantity", "Quantity")}
                   value={
                     quote.quantity != null
-                      ? `${quote.quantity}${quote.unit ? ` ${quote.unit}` : ""}`
+                      ? `${quote.quantity}${localizedQuoteUnit ? ` ${localizedQuoteUnit}` : ""}`
                       : "—"
                   }
                 />
                 <MetaCell
-                  label="Delivery"
+                  label={t("inquiries.delivery", "Delivery")}
                   value={
-                    quote.delivery_days != null ? `${quote.delivery_days} days` : "—"
+                    quote.delivery_days != null
+                      ? `${quote.delivery_days} ${t("inquiries.days", "days")}`
+                      : "—"
                   }
                 />
                 <MetaCell
-                  label="GST"
+                  label={t("inquiries.gst", "GST")}
                   value={
                     quote.gst_percentage != null
                       ? `${quote.gst_percentage}%${
@@ -532,7 +557,7 @@ export default function ChatMessageBubble({
               {quoteTotal != null ? (
                 <div className="mt-2.5 rounded-lg border border-primary/15 bg-primary-soft/40 px-2.5 py-2">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-fg">
-                    Total
+                    {t("inquiries.totalPrice", "Total")}
                   </p>
                   <p className="mt-0.5 text-sm font-bold text-primary">
                     {formatPrice(quoteTotal, quoteCurrency)}
@@ -552,7 +577,7 @@ export default function ChatMessageBubble({
 
               {quote.validity_days != null ? (
                 <p className="mt-2 text-[11px] text-muted-fg">
-                  Valid for {quote.validity_days} days
+                  {t("inquiries.validFor", "Valid for")} {quote.validity_days} {t("inquiries.days", "days")}
                 </p>
               ) : null}
 
@@ -561,7 +586,7 @@ export default function ChatMessageBubble({
                   href={rfqHref}
                   className="mt-2.5 inline-flex items-center gap-0.5 text-xs font-semibold text-primary hover:underline"
                 >
-                  View RFQ
+                  {t("inquiries.viewRfq", "View RFQ")}
                   <ChevronRight className="h-3.5 w-3.5" />
                 </Link>
               ) : null}

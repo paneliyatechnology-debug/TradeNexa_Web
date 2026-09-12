@@ -14,6 +14,7 @@ import { useChat } from "@/context/ChatContext";
 import { fetchMyRfqs } from "@/services/rfqService";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   BUYER_RFQ_STATUS_TABS,
   formatRfqStatusTabLabel,
@@ -27,6 +28,7 @@ const tabs = BUYER_RFQ_STATUS_TABS;
 const PAGE_SIZE = 6;
 
 export default function BuyerInquiriesPage() {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("all");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
@@ -67,34 +69,34 @@ export default function BuyerInquiriesPage() {
   const hasSearch = debouncedSearch.trim().length > 0;
   const tabLabel = formatRfqStatusTabLabel(activeTab).toLowerCase();
   const emptyTitle = hasSearch
-    ? "No RFQs match your search"
+    ? t("inquiries.buyerNoRfqsFound", "No RFQs match your search")
     : activeTab === "all"
-      ? "No RFQs yet"
-      : `No ${tabLabel} RFQs`;
+      ? t("inquiries.buyerNoRfqsYet", "No RFQs yet")
+      : `${t("inquiries.buyerNoStatusRfqs", `No ${tabLabel} RFQs`).replace("{status}", tabLabel)}`;
   const emptyDescription = hasSearch
-    ? `No results for "${debouncedSearch.trim()}". Try a different keyword or clear the search.`
+    ? t("leads.noMatchesDesc", `No results for "${debouncedSearch.trim()}". Try a different keyword or clear the search.`).replace("{search}", debouncedSearch.trim())
     : activeTab === "all"
-      ? "Post a requirement to receive quotes from verified sellers."
-      : `You don't have any RFQs in the ${tabLabel} state.`;
+      ? t("inquiries.buyerNoRfqsDesc", "Post a requirement to receive quotes from verified sellers.")
+      : `${t("inquiries.buyerNoStatusDesc", `You don't have any RFQs in the ${tabLabel} state.`).replace("{status}", tabLabel)}`;
 
   const showPostPrompt = !loading && pagination.total > 0 && pagination.total <= PAGE_SIZE;
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
       <PortalPageHeader
-        title="My RFQs"
-        subtitle="Track your requirements and seller quotes"
+        title={t("inquiries.buyerTitle", "My RFQs")}
+        subtitle={t("inquiries.buyerSubtitle", "Track your requirements and seller quotes")}
         action={
           <div className="flex flex-wrap items-center gap-2">
             {newTodayCount > 0 ? (
               <span className="inline-flex items-center rounded-lg bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
-                {newTodayCount} new today
+                {newTodayCount} {t("leads.newToday", "new today")}
               </span>
             ) : null}
             <Link href="/buyer/post-requirement">
               <Button>
                 <Plus className="h-4 w-4" aria-hidden />
-                New RFQ
+                {t("inquiries.newRfq", "New RFQ")}
               </Button>
             </Link>
           </div>
@@ -103,11 +105,11 @@ export default function BuyerInquiriesPage() {
 
       <RfqListToolbar
         loading={loading}
-        countLabel={`${pagination.total} RFQ${pagination.total === 1 ? "" : "s"}`}
+        countLabel={`${pagination.total} ${pagination.total === 1 ? t("inquiries.rfqCount", "RFQ") : t("inquiries.rfqsCount", "RFQs")}`}
         search={{
           value: search,
           onChange: setSearch,
-          placeholder: "Search RFQs by title, category, or description...",
+          placeholder: t("inquiries.buyerSearchPlaceholder", "Search RFQs by title, category, or description..."),
         }}
         filters={
           <div className="flex gap-1.5 overflow-x-auto pb-0.5">
@@ -118,7 +120,7 @@ export default function BuyerInquiriesPage() {
                 onClick={() => setActiveTab(tab)}
                 className={portalFilterChipClass(activeTab === tab)}
               >
-                {formatRfqStatusTabLabel(tab)}
+                {tab === "all" ? t("catalog.tabs.all", "All") : formatRfqStatusTabLabel(tab)}
               </button>
             ))}
           </div>
@@ -134,7 +136,7 @@ export default function BuyerInquiriesPage() {
           {loading ? (
             <div className="flex items-center justify-center gap-2 py-20 text-sm text-muted-fg">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              Loading RFQs...
+              {t("leads.loading", "Loading RFQs...")}
             </div>
           ) : items.length === 0 ? (
             <PortalEmptyState
@@ -144,13 +146,13 @@ export default function BuyerInquiriesPage() {
               action={
                 hasSearch ? (
                   <Button variant="secondary" onClick={() => setSearch("")}>
-                    Clear search
+                    {t("leads.clearSearch", "Clear search")}
                   </Button>
                 ) : activeTab === "all" ? (
                   <Link href="/buyer/post-requirement">
                     <Button>
                       <Plus className="h-4 w-4" aria-hidden />
-                      Post Requirement
+                      {t("dashboard.postRequirement", "Post Requirement")}
                     </Button>
                   </Link>
                 ) : undefined
@@ -167,7 +169,7 @@ export default function BuyerInquiriesPage() {
                 pagination={pagination}
                 onPageChange={goToPage}
                 loading={loading}
-                itemLabel="RFQs"
+                itemLabel={t("inquiries.rfqsCount", "RFQs")}
                 compact
               />
             </>
@@ -181,7 +183,7 @@ export default function BuyerInquiriesPage() {
               </p>
               <Link href="/buyer/post-requirement" className="mt-3 inline-block">
                 <Button variant="secondary" size="sm">
-                  Post requirement
+                  {t("dashboard.postRequirement", "Post requirement")}
                 </Button>
               </Link>
             </div>
@@ -190,8 +192,8 @@ export default function BuyerInquiriesPage() {
 
         <RfqListSidebar
           stats={[
-            { label: "Total RFQs", value: loading ? "—" : pagination.total },
-            { label: "New today", value: loading ? "—" : newTodayCount, highlight: newTodayCount > 0 },
+            { label: t("inquiries.buyerTitle", "Total RFQs"), value: loading ? "—" : pagination.total },
+            { label: t("leads.newToday", "New today"), value: loading ? "—" : newTodayCount, highlight: newTodayCount > 0 },
             { label: "Quotes on this page", value: loading ? "—" : quotesOnPage, highlight: quotesOnPage > 0 },
           ]}
         />

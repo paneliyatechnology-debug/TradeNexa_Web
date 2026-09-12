@@ -13,7 +13,10 @@ import { useLoadMoreList } from "@/hooks/useLoadMoreList";
 import { getCategoryFallbackIcon } from "@/utils/categoryIcons";
 import CatalogImage from "@/components/catalog/CatalogImage";
 
+import { useLanguage } from "@/context/LanguageContext";
+
 export default function BuyerCategoriesPage() {
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
 
@@ -45,12 +48,15 @@ export default function BuyerCategoriesPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
-      <PortalPageHeader title="Categories" subtitle="Browse products by industry" />
+      <PortalPageHeader
+        title={t("catalog.browseCategories", "Categories")}
+        subtitle={t("catalog.browseCategoriesDesc", "Browse products by industry")}
+      />
 
       <PortalSearchBar
         value={search}
         onChange={setSearch}
-        placeholder="Search categories..."
+        placeholder={t("catalog.searchCategoriesPlaceholder", "Search categories...")}
         className="mb-4"
       />
 
@@ -60,18 +66,19 @@ export default function BuyerCategoriesPage() {
 
       {!loading && categories.length > 0 ? (
         <p className="mb-4 text-sm text-muted-fg">
-          Showing <span className="font-semibold text-foreground">{categories.length}</span>
+          {t("catalog.showing", "Showing")} <span className="font-semibold text-foreground">{categories.length}</span>
           {pagination.total > categories.length ? (
             <>
               {" "}
-              of <span className="font-semibold text-foreground">{pagination.total}</span>
+              {t("catalog.of", "of")}{" "}
+              <span className="font-semibold text-foreground">{pagination.total}</span>
             </>
           ) : null}{" "}
-          categories
+          {t("catalog.categories", "categories")}
           {debouncedSearch ? (
             <>
               {" "}
-              for &ldquo;<span className="font-semibold text-primary">{debouncedSearch}</span>&rdquo;
+              {t("catalog.forQuery", "for")} &ldquo;<span className="font-semibold text-primary">{debouncedSearch}</span>&rdquo;
             </>
           ) : null}
         </p>
@@ -80,16 +87,20 @@ export default function BuyerCategoriesPage() {
       {loading ? (
         <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-fg">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
-          Loading categories...
+          {t("catalog.loadingCategories", "Loading categories...")}
         </div>
       ) : categories.length === 0 ? (
         <PortalEmptyState
           icon={search.trim() ? Search : LayoutGrid}
-          title={search.trim() ? "No categories found" : "No categories available"}
+          title={
+            search.trim()
+              ? t("catalog.noCategoriesFound", "No categories found")
+              : t("catalog.noCategoriesAvailable", "No categories available")
+          }
           description={
             search.trim()
-              ? "Try a different search term or clear the search."
-              : "Categories will appear here when available."
+              ? t("leads.noMatchesDesc", `No results for "${search.trim()}". Try a different keyword or clear the search.`).replace("{search}", search.trim())
+              : t("catalog.categoriesAvailableDesc", "Categories will appear here when available.")
           }
         />
       ) : (
@@ -115,7 +126,12 @@ export default function BuyerCategoriesPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-foreground">{cat.name}</p>
-                    <p className="text-xs text-muted-fg">{cat.product_count ?? 0} products</p>
+                    <p className="text-xs text-muted-fg">
+                      {cat.product_count ?? 0}{" "}
+                      {(cat.product_count ?? 0) === 1
+                        ? t("catalog.productCount", "product")
+                        : t("catalog.productsCount", "products")}
+                    </p>
                   </div>
                 </Link>
               );

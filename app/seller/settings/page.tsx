@@ -8,7 +8,7 @@ import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalLanguageSetting from "@/components/portal/PortalLanguageSetting";
 import DeleteAccountButton from "@/components/portal/DeleteAccountButton";
 
-export default function BuyerSettingsPage() {
+export default function SellerSettingsPage() {
   return (
     <div className="mx-auto max-w-xl px-4 py-5 sm:px-6 lg:px-8">
       <PortalPageHeader title="Settings" />
@@ -18,9 +18,9 @@ export default function BuyerSettingsPage() {
       </div>
       <div className="space-y-4">
         {[
-          { label: "Push Notifications", desc: "Order updates and quotes", defaultOn: true },
-          { label: "Email Updates", desc: "Weekly marketplace digest", defaultOn: true },
-          { label: "Two-Factor Auth", desc: "Extra security for your account", defaultOn: false },
+          { label: "Push Notifications", desc: "Buyer inquiries and quotation requests", defaultOn: true },
+          { label: "Email Updates", desc: "Weekly seller analytics & leads digest", defaultOn: true },
+          { label: "Two-Factor Auth", desc: "Extra security for your seller account", defaultOn: false },
         ].map((item) => (
           <div key={item.label} className="flex items-center justify-between surface-card p-4">
             <div>
@@ -36,7 +36,7 @@ export default function BuyerSettingsPage() {
 
       <div className="mt-4">
         <Link
-          href="/buyer/settings/login-devices"
+          href="/seller/settings/login-devices"
           className="surface-card flex items-center justify-between p-4 transition hover:border-primary/40 hover:bg-muted/40"
         >
           <div className="flex items-center gap-3">
@@ -55,7 +55,7 @@ export default function BuyerSettingsPage() {
       <div className="mt-8">
         <DeleteAccountButton />
       </div>
-      <Link href="/buyer/profile" className="mt-6 flex items-center justify-center gap-1 text-sm font-semibold text-primary">
+      <Link href="/seller/profile" className="mt-6 flex items-center justify-center gap-1 text-sm font-semibold text-primary">
         <ChevronRight className="h-4 w-4 rotate-180" />
         Back to Profile
       </Link>

@@ -6,32 +6,10 @@ import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle2, Mail, MapPin } from "lucide-react";
 import { useApp } from "@/app/context/AppContext";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/context/LanguageContext";
 import { Logo } from "@/components/common/Logo";
 import { Button } from "@/components/common/Button";
 import { scrollToFirstFormError } from "@/utils/scrollToFormError";
-
-const productLinks = [
-  { name: "Browse Categories", href: "/categories" },
-  { name: "Products", href: "/products" },
-  { name: "How It Works", href: "/how-it-works" },
-  { name: "Seller Benefits", href: "/seller-benefits" },
-  { name: "Buyer Benefits", href: "/buyer-benefits" },
-];
-
-const companyLinks = [
-  { name: "About Us", href: "/about" },
-  { name: "Why Choose Us", href: "/why-choose-us" },
-  { name: "Contact", href: "/contact" },
-];
-
-const resourceLinks = [
-  { name: "FAQ", href: "/faq" },
-  { name: "Contact Support", href: "/contact" },
-];
-
-const legalLinks = [
-  { name: "Privacy Policy", href: "/privacy" },
-];
 
 function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -47,9 +25,33 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
 export default function Footer() {
   const { openRegisterModal } = useApp();
   const { isAuthenticated } = useAuth();
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+
+  const productLinks = [
+    { name: t("footer.browseCategories", "Browse Categories"), href: "/categories" },
+    { name: t("footer.products", "Products"), href: "/products" },
+    { name: t("footer.howItWorks", "How It Works"), href: "/how-it-works" },
+    { name: t("footer.sellerBenefits", "Seller Benefits"), href: "/seller-benefits" },
+    { name: t("footer.buyerBenefits", "Buyer Benefits"), href: "/buyer-benefits" },
+  ];
+
+  const companyLinks = [
+    { name: t("footer.aboutUs", "About Us"), href: "/about" },
+    { name: t("footer.whyChooseUs", "Why Choose Us"), href: "/why-choose-us" },
+    { name: t("footer.contact", "Contact"), href: "/contact" },
+  ];
+
+  const resourceLinks = [
+    { name: t("footer.faq", "FAQ"), href: "/faq" },
+    { name: t("footer.contactSupport", "Contact Support"), href: "/contact" },
+  ];
+
+  const legalLinks = [
+    { name: t("footer.privacyPolicy", "Privacy Policy"), href: "/privacy" },
+  ];
 
   const handleSubscribeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,8 +87,10 @@ export default function Footer() {
           <div className="lg:col-span-4">
             <Logo size="lg" className="mb-4" />
             <p className="mb-6 max-w-sm text-sm leading-relaxed text-muted-fg">
-              India&apos;s digital B2B marketplace connecting buyers with verified sellers.
-              Grow your business and expand your reach across the nation.
+              {t(
+                "footer.desc",
+                "India's digital B2B marketplace connecting buyers with verified sellers. Grow your business and expand your reach across the nation."
+              )}
             </p>
             <div className="mb-6 space-y-2 text-sm text-muted-fg">
               <p className="flex items-center gap-2">
@@ -97,11 +101,13 @@ export default function Footer() {
               </p>
               <p className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 shrink-0 text-primary mt-0.5" aria-hidden />
-                <span>Serving businesses across India</span>
+                <span>{t("footer.servingText", "Serving businesses across India")}</span>
               </p>
             </div>
             <div>
-              <h4 className="mb-3 text-sm font-semibold text-foreground">Newsletter</h4>
+              <h4 className="mb-3 text-sm font-semibold text-foreground">
+                {t("footer.newsletter", "Newsletter")}
+              </h4>
               {subscribed ? (
                 <motion.div
                   initial={{ opacity: 0, y: 4 }}
@@ -109,7 +115,7 @@ export default function Footer() {
                   className="flex items-center gap-2 text-sm font-medium text-primary"
                 >
                   <CheckCircle2 className="h-4 w-4" aria-hidden />
-                  Subscribed successfully!
+                  {t("footer.subscribed", "Subscribed successfully!")}
                 </motion.div>
               ) : (
                 <form onSubmit={handleSubscribeSubmit} className="flex max-w-md flex-col gap-2" noValidate>
@@ -122,7 +128,7 @@ export default function Footer() {
                         setEmail(e.target.value);
                         if (emailError) setEmailError("");
                       }}
-                      placeholder="Business email"
+                      placeholder={t("footer.emailPlaceholder", "Business email")}
                       className="input-base flex-1"
                       aria-invalid={!!emailError}
                       aria-describedby={emailError ? "footer-email-error" : undefined}
@@ -144,7 +150,7 @@ export default function Footer() {
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 lg:col-span-8">
             <div>
               <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-foreground">
-                Product
+                {t("footer.product", "Product")}
               </h3>
               <ul className="space-y-3">
                 {productLinks.map((link) => (
@@ -160,7 +166,7 @@ export default function Footer() {
                         onClick={() => openRegisterModal("seller")}
                         className="cursor-pointer text-left text-sm text-muted-fg transition-colors duration-200 hover:text-primary"
                       >
-                        Become a Seller
+                        {t("footer.becomeSeller", "Become a Seller")}
                       </button>
                     </li>
                     <li>
@@ -169,7 +175,7 @@ export default function Footer() {
                         onClick={() => openRegisterModal("buyer")}
                         className="cursor-pointer text-left text-sm text-muted-fg transition-colors duration-200 hover:text-primary"
                       >
-                        Register as Buyer
+                        {t("footer.registerBuyer", "Register as Buyer")}
                       </button>
                     </li>
                   </>
@@ -179,7 +185,7 @@ export default function Footer() {
 
             <div>
               <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-foreground">
-                Company
+                {t("footer.company", "Company")}
               </h3>
               <ul className="space-y-3">
                 {companyLinks.map((link) => (
@@ -192,7 +198,7 @@ export default function Footer() {
 
             <div>
               <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-foreground">
-                Resources
+                {t("footer.resources", "Resources")}
               </h3>
               <ul className="space-y-3">
                 {resourceLinks.map((link) => (
@@ -205,7 +211,7 @@ export default function Footer() {
 
             <div>
               <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-foreground">
-                Legal
+                {t("footer.legal", "Legal")}
               </h3>
               <ul className="space-y-3">
                 {legalLinks.map((link) => (
@@ -220,7 +226,7 @@ export default function Footer() {
 
         <div className="mt-12 flex flex-col-reverse items-center justify-between gap-4 border-t border-border pt-8 sm:flex-row">
           <p className="text-xs text-muted-fg">
-            Copyright © 2026 TradeNexa B2B Marketplace. All Rights Reserved.
+            {t("footer.copyright", "Copyright © 2026 TradeNexa B2B Marketplace. All Rights Reserved.")}
           </p>
           <div className="flex gap-2" aria-label="Social links">
             {[

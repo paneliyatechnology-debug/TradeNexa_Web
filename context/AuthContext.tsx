@@ -145,6 +145,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("token");
       localStorage.removeItem("refresh_token");
       localStorage.removeItem("user");
+      // Reset language to default English ('en') on logout
+      localStorage.setItem("tradenexa_language", "en");
+      window.dispatchEvent(
+        new CustomEvent("tradenexa_language_change", { detail: "en" })
+      );
     }
     setUser(null);
     setIsAuthenticated(false);
@@ -165,14 +170,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Hydrate from cache immediately so portal deep-links (e.g. 2nd FCM click)
-      // don't race PortalAuthGuard into router.replace("/").
+      // Hydrate from cache immediately
       if (cachedUser) {
         try {
-          setUser(JSON.parse(cachedUser) as User);
+          const parsedUser = JSON.parse(cachedUser) as User;
+          setUser(parsedUser);
           setIsAuthenticated(true);
+          setLoading(false);
+          return;
         } catch {
-          // ignore bad cache; profile fetch below will decide
+          // Bad cache, proceed to fetch profile from API below
         }
       }
 
@@ -181,32 +188,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const profile = unwrapApiPayload<ApiUserProfile>(res.data);
         persistSession(token, mapApiProfileToUser(profile));
       } catch {
-        if (cachedUser) {
-          try {
-            setUser(JSON.parse(cachedUser) as User);
-            setIsAuthenticated(true);
-          } catch {
-            clearSession();
-          }
-        } else {
-          clearSession();
-        }
+        clearSession();
       } finally {
         setLoading(false);
       }
     };
 
     initAuth();
-    void ensureRolesLoaded();
 
     const handleUnauthorized = () => {
       clearSession();
       // Do not auto-open login modal — only open on user action (Join, etc.)
     };
 
+    const handleLanguageChange = async () => {
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) return;
+      try {
+        const res = await apiClient.get(API_ENDPOINTS.PROFILE);
+        const profile = unwrapApiPayload<ApiUserProfile>(res.data);
+        const updated = mapApiProfileToUser(profile);
+        setUser(updated);
+        localStorage.setItem("user", JSON.stringify(updated));
+      } catch {
+        // ignore
+      }
+    };
+
     window.addEventListener("auth_unauthorized", handleUnauthorized);
+    window.addEventListener("tradenexa_language_change", handleLanguageChange);
     return () => {
       window.removeEventListener("auth_unauthorized", handleUnauthorized);
+      window.removeEventListener("tradenexa_language_change", handleLanguageChange);
       if (closeModalTimerRef.current) window.clearTimeout(closeModalTimerRef.current);
       if (skipProfileTimerRef.current) window.clearTimeout(skipProfileTimerRef.current);
     };

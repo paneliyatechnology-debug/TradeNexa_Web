@@ -23,48 +23,11 @@ import { fetchSuppliers } from "@/services/supplierService";
 import { useGetActiveBannersQuery, useGetCategoriesQuery } from "@/store/api/referenceApi";
 import type { ApiProductListItem } from "@/types/catalog";
 import type { ApiSupplier } from "@/types/supplier";
+import { useLanguage } from "@/context/LanguageContext";
 import { getCategoryFallbackIcon } from "@/utils/categoryIcons";
 import CatalogImage from "@/components/catalog/CatalogImage";
 
 const HOME_CATEGORY_COUNT = 8;
-
-const quickLinks = [
-  {
-    label: "Categories",
-    href: "/buyer/categories",
-    icon: LayoutGrid,
-    bg: "bg-primary-soft",
-    color: "text-primary",
-  },
-  {
-    label: "Trending",
-    href: "/buyer/trending-products",
-    icon: Flame,
-    bg: "bg-portal-seller-light",
-    color: "text-accent",
-  },
-  {
-    label: "RFQs",
-    href: "/buyer/inquiries",
-    icon: ClipboardList,
-    bg: "bg-warning-soft",
-    color: "text-warning",
-  },
-  {
-    label: "Inquiries",
-    href: "/buyer/product-inquiries",
-    icon: MessageSquare,
-    bg: "bg-muted",
-    color: "text-foreground",
-  },
-  {
-    label: "Post RFQ",
-    href: "/buyer/post-requirement",
-    icon: FileText,
-    bg: "bg-success-soft",
-    color: "text-success",
-  },
-];
 
 function SectionLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -79,10 +42,49 @@ function SectionLink({ href, children }: { href: string; children: React.ReactNo
 
 export default function BuyerHomePage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [suppliers, setSuppliers] = useState<ApiSupplier[]>([]);
   const [suppliersLoading, setSuppliersLoading] = useState(true);
   const [trending, setTrending] = useState<ApiProductListItem[]>([]);
   const [recent, setRecent] = useState<ApiProductListItem[]>([]);
+
+  const quickLinks = [
+    {
+      label: t("portalNav.categories", "Categories"),
+      href: "/buyer/categories",
+      icon: LayoutGrid,
+      bg: "bg-primary-soft",
+      color: "text-primary",
+    },
+    {
+      label: t("dashboard.trending", "Trending"),
+      href: "/buyer/trending-products",
+      icon: Flame,
+      bg: "bg-portal-seller-light",
+      color: "text-accent",
+    },
+    {
+      label: t("portalNav.rfqs", "RFQs"),
+      href: "/buyer/inquiries",
+      icon: ClipboardList,
+      bg: "bg-warning-soft",
+      color: "text-warning",
+    },
+    {
+      label: t("portalNav.inquiries", "Inquiries"),
+      href: "/buyer/product-inquiries",
+      icon: MessageSquare,
+      bg: "bg-muted",
+      color: "text-foreground",
+    },
+    {
+      label: t("dashboard.postRfq", "Post RFQ"),
+      href: "/buyer/post-requirement",
+      icon: FileText,
+      bg: "bg-success-soft",
+      color: "text-success",
+    },
+  ];
 
   // Cached across navigation and shared with the marketing pages.
   const { data: allCategories } = useGetCategoriesQuery();
@@ -148,7 +150,7 @@ export default function BuyerHomePage() {
           {initial}
         </div>
         <div className="min-w-0">
-          <p className="text-xs text-muted-fg sm:text-sm">Welcome back,</p>
+          <p className="text-xs text-muted-fg sm:text-sm">{t("dashboard.welcomeBack", "Welcome back,")}</p>
           <h2 className="truncate text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
             {displayName}
           </h2>
@@ -163,7 +165,7 @@ export default function BuyerHomePage() {
           <Search className="h-5 w-5 text-primary" aria-hidden />
         </div>
         <span className="text-sm text-muted-fg sm:text-base">
-          Search products, suppliers, categories...
+          {t("dashboard.searchBuyerPlaceholder", "Search products, suppliers, categories...")}
         </span>
       </Link>
 
@@ -199,21 +201,21 @@ export default function BuyerHomePage() {
           <p className="text-[10px] font-semibold uppercase tracking-wider text-white/75">
             TradeNexa B2B
           </p>
-          <h3 className="mt-0.5 text-base font-semibold sm:text-lg">Post Your Requirement</h3>
+          <h3 className="mt-0.5 text-base font-semibold sm:text-lg">{t("dashboard.postRequirement", "Post Your Requirement")}</h3>
           <p className="mt-1 max-w-md text-xs text-white/85 sm:text-sm">
-            Get quotes from multiple sellers in 24 hours
+            {t("dashboard.getQuotes24h", "Get quotes from multiple sellers in 24 hours")}
           </p>
           <span className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-card px-3 py-1.5 text-xs font-semibold text-primary sm:text-sm">
-            Post RFQ
+            {t("dashboard.postRfq", "Post RFQ")}
             <ArrowRight className="h-3.5 w-3.5" aria-hidden />
           </span>
         </Link>
       )}
 
       <PortalSection
-        title="Top Categories"
-        subtitle="Browse by industry"
-        action={<SectionLink href="/buyer/categories">View all</SectionLink>}
+        title={t("dashboard.topCategories", "Top Categories")}
+        subtitle={t("dashboard.browseByIndustry", "Browse by industry")}
+        action={<SectionLink href="/buyer/categories">{t("common.viewAll", "View all")}</SectionLink>}
       >
         <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 snap-x snap-mandatory md:mx-0 md:grid md:grid-cols-4 md:gap-3 md:overflow-visible md:px-0 md:pb-0">
           {categories.map((cat) => {
@@ -244,17 +246,17 @@ export default function BuyerHomePage() {
       </PortalSection>
 
       <PortalSection
-        title="Featured Suppliers"
-        subtitle="Verified & trusted businesses"
-        action={<SectionLink href="/buyer/suppliers">View all</SectionLink>}
+        title={t("dashboard.featuredSuppliers", "Featured Suppliers")}
+        subtitle={t("dashboard.verifiedTrusted", "Verified & trusted businesses")}
+        action={<SectionLink href="/buyer/suppliers">{t("common.viewAll", "View all")}</SectionLink>}
       >
         {suppliersLoading ? (
           <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-fg">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            Loading suppliers...
+            {t("dashboard.loadingSuppliers", "Loading suppliers...")}
           </div>
         ) : suppliers.length === 0 ? (
-          <p className="py-6 text-sm text-muted-fg">No suppliers available yet.</p>
+          <p className="py-6 text-sm text-muted-fg">{t("dashboard.noSuppliers", "No suppliers available yet.")}</p>
         ) : (
           <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 snap-x snap-mandatory md:mx-0 md:grid md:grid-cols-2 md:gap-4 md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-3">
             {suppliers.map((supplier) => (
@@ -269,9 +271,9 @@ export default function BuyerHomePage() {
       </PortalSection>
 
       <PortalSection
-        title="Trending"
-        subtitle="Most popular items this week"
-        action={<SectionLink href="/buyer/trending-products">View all</SectionLink>}
+        title={t("dashboard.trending", "Trending")}
+        subtitle={t("dashboard.popularItems", "Most popular items this week")}
+        action={<SectionLink href="/buyer/trending-products">{t("common.viewAll", "View all")}</SectionLink>}
       >
         <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 md:gap-4">
           {trending.map((p) => (
@@ -280,7 +282,7 @@ export default function BuyerHomePage() {
         </div>
       </PortalSection>
 
-      <PortalSection title="Recently Added" subtitle="Newest products on TradeNexa">
+      <PortalSection title={t("dashboard.recentlyAdded", "Recently Added")} subtitle={t("dashboard.newestProducts", "Newest products on TradeNexa")}>
         <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 snap-x snap-mandatory sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-3 sm:overflow-visible sm:px-0 sm:pb-0 md:grid-cols-3 lg:grid-cols-4">
           {recent.map((p) => (
             <div key={p.id} className="w-[44vw] min-w-[150px] shrink-0 snap-start sm:w-auto sm:min-w-0">

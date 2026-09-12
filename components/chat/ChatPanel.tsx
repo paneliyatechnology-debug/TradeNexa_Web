@@ -16,6 +16,7 @@ import {
 import ChatMessageBubble from "@/components/chat/ChatMessageBubble";
 import RfqStatusBadge from "@/components/rfq/RfqStatusBadge";
 import { useChat } from "@/context/ChatContext";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   ensureInquiryConversation,
   ensureRfqConversation,
@@ -103,6 +104,7 @@ export default function ChatPanel({
   embedded = false,
   hideHeader = false,
 }: ChatPanelProps) {
+  const { t } = useLanguage();
   const {
     socketStatus,
     setActiveConversationId,
@@ -588,7 +590,7 @@ export default function ChatPanel({
         disconnected && !chatUnavailable ? (
           <div className="border-b border-border px-4 py-2">
             <span className="inline-flex items-center rounded-full border border-warning/25 bg-warning-soft px-2 py-0.5 text-[10px] font-semibold text-warning">
-              Reconnecting...
+              {t("chats.reconnecting", "Reconnecting...")}
             </span>
           </div>
         ) : null
@@ -616,7 +618,7 @@ export default function ChatPanel({
               {disconnected && !chatUnavailable ? (
                 <div className="mt-0.5">
                   <span className="inline-flex items-center rounded-full border border-warning/25 bg-warning-soft px-2 py-0.5 text-[10px] font-semibold text-warning">
-                    Reconnecting...
+                    {t("chats.reconnecting", "Reconnecting...")}
                   </span>
                 </div>
               ) : null}
@@ -644,7 +646,7 @@ export default function ChatPanel({
             <div className="mr-auto h-14 w-3/5 animate-pulse rounded-2xl bg-border" />
             <div className="absolute inset-0 flex items-center justify-center gap-2 bg-muted/70 text-sm text-muted-fg">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              Opening chat...
+              {t("chats.openingChat", "Opening chat...")}
             </div>
           </div>
         ) : chatUnavailable ? (
@@ -653,7 +655,7 @@ export default function ChatPanel({
               <MessageSquare className="h-10 w-10 text-warning/80" strokeWidth={1.5} />
               <AlertCircle className="absolute -right-1.5 -top-1.5 h-5 w-5 fill-warning-soft text-warning" />
             </div>
-            <p className="mt-4 text-sm font-bold text-foreground">Chat unavailable</p>
+            <p className="mt-4 text-sm font-bold text-foreground">{t("chats.chatUnavailable", "Chat unavailable")}</p>
             <p className="mt-2 max-w-xs text-xs leading-relaxed text-muted-fg">{errorCopy}</p>
           </div>
         ) : messages.length === 0 ? (
@@ -661,9 +663,9 @@ export default function ChatPanel({
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-card ring-1 ring-border">
               <MessageSquare className="h-7 w-7 text-muted-fg" strokeWidth={1.5} />
             </div>
-            <p className="mt-3 text-sm font-bold text-foreground">No messages yet</p>
+            <p className="mt-3 text-sm font-bold text-foreground">{t("chats.noMessagesYet", "No messages yet")}</p>
             <p className="mt-1 text-xs text-muted-fg">
-              {role === "buyer" ? "Say hello to start the conversation." : "Start the conversation."}
+              {role === "buyer" ? t("chats.sayHello", "Say hello to start the conversation.") : t("chats.startConversation", "Start the conversation.")}
             </p>
           </div>
         ) : (
@@ -684,8 +686,10 @@ export default function ChatPanel({
                   >
                     <span className="h-px flex-1 bg-border" />
                     <span className="shrink-0 rounded-full bg-success px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
-                      {unreadBannerCount > 99 ? "99+" : unreadBannerCount} unread message
-                      {unreadBannerCount === 1 ? "" : "s"}
+                      {unreadBannerCount > 99 ? "99+" : unreadBannerCount}{" "}
+                      {unreadBannerCount === 1
+                        ? t("chats.unreadMessage", "unread message")
+                        : t("chats.unreadMessages", "unread messages")}
                     </span>
                     <span className="h-px flex-1 bg-border" />
                   </div>
@@ -718,7 +722,7 @@ export default function ChatPanel({
                   className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-foreground transition hover:bg-muted"
                 >
                   <ImageIcon className="h-5 w-5 shrink-0 text-muted-fg" />
-                  Photo
+                  {t("chats.photo", "Photo")}
                 </button>
                 <button
                   type="button"
@@ -726,7 +730,7 @@ export default function ChatPanel({
                   className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-foreground transition hover:bg-muted"
                 >
                   <FileText className="h-5 w-5 shrink-0 text-muted-fg" />
-                  Document
+                  {t("chats.document", "Document")}
                 </button>
                 {role === "buyer" && productId ? (
                   <button
@@ -735,7 +739,7 @@ export default function ChatPanel({
                     className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-foreground transition hover:bg-muted"
                   >
                     <Package className="h-5 w-5 shrink-0 text-muted-fg" />
-                    Attach Product
+                    {t("chats.attachProduct", "Attach Product")}
                   </button>
                 ) : null}
                 {role === "seller" && quotations.length === 1 ? (
@@ -745,7 +749,7 @@ export default function ChatPanel({
                     className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-foreground transition hover:bg-muted"
                   >
                     <MessageSquare className="h-5 w-5 shrink-0 text-muted-fg" />
-                    Attach Quote #{quotations[0].id}
+                    {t("chats.attachQuote", "Attach Quote")} #{quotations[0].id}
                   </button>
                 ) : null}
                 {role === "seller" && quotations.length > 1 ? (
@@ -756,7 +760,7 @@ export default function ChatPanel({
                       className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-foreground transition hover:bg-muted"
                     >
                       <MessageSquare className="h-5 w-5 shrink-0 text-muted-fg" />
-                      <span className="flex-1">Attach Quotation</span>
+                      <span className="flex-1">{t("chats.attachQuotation", "Attach Quotation")}</span>
                       <ChevronRight
                         className={`h-4 w-4 text-muted-fg transition ${quotePickerOpen ? "rotate-90" : ""}`}
                       />
@@ -770,7 +774,7 @@ export default function ChatPanel({
                             onClick={() => void handleAttachQuotation(q.id)}
                             className="flex w-full px-3 py-2 pl-11 text-left text-xs font-semibold text-muted-fg transition hover:bg-card hover:text-foreground"
                           >
-                            Quote #{q.id}
+                            {t("chats.attachQuote", "Quote")} #{q.id}
                             {q.price != null ? ` · ₹${q.price.toLocaleString("en-IN")}` : ""}
                           </button>
                         ))}
@@ -789,7 +793,7 @@ export default function ChatPanel({
                   ? "border-primary/40 bg-primary-soft text-primary"
                   : "border-border text-muted-fg hover:bg-muted"
               }`}
-              aria-label="Attach"
+              aria-label={t("chats.attach", "Attach")}
               aria-expanded={attachOpen}
             >
               <Paperclip className="h-4 w-4" />
@@ -808,7 +812,7 @@ export default function ChatPanel({
                 }
               }}
               rows={1}
-              placeholder={disconnected ? "Reconnecting..." : "Type a message..."}
+              placeholder={disconnected ? t("chats.reconnecting", "Reconnecting...") : t("chats.typeMessage", "Type a message...")}
               className="max-h-28 min-h-[44px] flex-1 resize-none rounded-lg border border-border bg-muted px-3.5 py-2.5 text-sm text-foreground outline-none transition-colors duration-200 focus:border-primary focus:ring-2 focus:ring-primary/25 disabled:opacity-50"
             />
             <button
@@ -820,7 +824,7 @@ export default function ChatPanel({
                   ? "bg-primary text-white hover:bg-primary-hover"
                   : "cursor-not-allowed bg-border text-muted-fg"
               }`}
-              aria-label="Send"
+              aria-label={t("chats.send", "Send")}
             >
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </button>

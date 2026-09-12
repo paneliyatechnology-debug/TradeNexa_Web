@@ -21,6 +21,7 @@ import ConversationBadge, {
 } from "@/components/chat/ConversationBadge";
 import PortalPagination from "@/components/portal/PortalPagination";
 import { useChat } from "@/context/ChatContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { fetchConversations } from "@/services/chatService";
@@ -28,22 +29,7 @@ import { conversationCounterpartyLogo, effectiveConversationUnread, mergeConvers
 import { getInitials, resolveImageUrl } from "@/utils/catalogHelpers";
 import type { ApiChatConversation, ChatRole } from "@/types/chat";
 
-function previewText(conversation: ApiChatConversation): string {
-  const last = conversation.last_message;
-  if (typeof last === "string" && last.trim()) return last.trim();
-  if (last && typeof last === "object") {
-    const content = last.content?.trim();
-    if (content) return content;
-    if (last.message_type === "PRODUCT") return "Shared a product";
-    if (last.message_type === "QUOTATION") return "Shared a quotation";
-    if (last.message_type === "IMAGE") return "Photo";
-    if (last.message_type === "DOCUMENT") return "Document";
-    if (last.message_type === "SYSTEM") return "Update";
-  }
-  return "No messages yet";
-}
-
-function formatWhen(value?: string | null): string {
+function formatWhen(value: string | null | undefined, yesterdayLabel: string): string {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
@@ -62,7 +48,7 @@ function formatWhen(value?: string | null): string {
     date.getMonth() === yesterday.getMonth() &&
     date.getDate() === yesterday.getDate()
   ) {
-    return "Yesterday";
+    return yesterdayLabel;
   }
   return date.toLocaleDateString(undefined, { day: "numeric", month: "short" });
 }
@@ -121,6 +107,7 @@ interface ChatsInboxProps {
 export default function ChatsInbox({ role }: ChatsInboxProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
   const { syncConversationsUnread, upsertConversationMeta, conversationsMeta, unreadSummary } =
     useChat();
   const chatRole = role;
@@ -131,6 +118,21 @@ export default function ChatsInbox({ role }: ChatsInboxProps) {
   const debouncedSearch = useDebouncedValue(search);
   const [selected, setSelected] = useState<ApiChatConversation | null>(null);
   const deepLinkConversationId = Number(searchParams.get("conversation") || "");
+
+  const getPreviewText = (conversation: ApiChatConversation): string => {
+    const last = conversation.last_message;
+    if (typeof last === "string" && last.trim()) return last.trim();
+    if (last && typeof last === "object") {
+      const content = last.content?.trim();
+      if (content) return content;
+      if (last.message_type === "PRODUCT") return t("chats.sharedProduct", "Shared a product");
+      if (last.message_type === "QUOTATION") return t("chats.sharedQuotation", "Shared a quotation");
+      if (last.message_type === "IMAGE") return t("chats.photo", "Photo");
+      if (last.message_type === "DOCUMENT") return t("chats.document", "Document");
+      if (last.message_type === "SYSTEM") return t("chats.update", "Update");
+    }
+    return t("chats.noMessagesYet", "No messages yet");
+  };
 
   useEffect(() => {
     void syncConversationsUnread();
@@ -246,7 +248,7 @@ export default function ChatsInbox({ role }: ChatsInboxProps) {
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h1 className="truncate text-[17px] font-semibold tracking-tight text-foreground">
-                    Chats
+                    {t("chats.title", "Chats")}
                   </h1>
                   {totalUnread > 0 ? (
                     <span className="inline-flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-md bg-primary px-1.5 text-[11px] font-bold leading-none text-white">
@@ -255,7 +257,7 @@ export default function ChatsInbox({ role }: ChatsInboxProps) {
                   ) : null}
                 </div>
                 <p className="truncate text-xs text-muted-fg">
-                  {isSeller ? "Buyers & leads" : "Sellers & suppliers"}
+                  {isSeller ? t("chats.subtitleSeller", "Buyers & leads") : t("chats.subtitleBuyer", "Sellers & suppliers")}
                 </p>
               </div>
               <button
@@ -271,7 +273,7 @@ export default function ChatsInbox({ role }: ChatsInboxProps) {
                     ? "border-primary/30 bg-primary-soft text-primary"
                     : "border-border text-muted-fg hover:border-primary/30 hover:bg-primary-soft hover:text-primary"
                 }`}
-                aria-label={searchOpen ? "Close search" : "Search chats"}
+                aria-label={searchOpen ? t("chats.closeSearch", "Close search") : t("chats.searchButton", "Search chats")}
               >
                 {searchOpen ? <X className="h-4 w-4" /> : <Search className="h-4 w-4" />}
               </button>
@@ -307,7 +309,7 @@ export default function ChatsInbox({ role }: ChatsInboxProps) {
                       autoFocus
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Search by name or company…"
+                      placeholder={t("chats.searchPlaceholder", "Search by name or company…")}
                       className="h-full w-full min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-placeholder"
                     />
                     <AnimatePresence initial={false}>
@@ -321,7 +323,7 @@ export default function ChatsInbox({ role }: ChatsInboxProps) {
                           transition={{ duration: 0.12 }}
                           onClick={() => setSearch("")}
                           className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-muted-fg transition-colors hover:bg-primary-soft hover:text-primary"
-                          aria-label="Clear search"
+                          aria-label={t("chats.clearSearch", "Clear search")}
                         >
                           <X className="h-3.5 w-3.5" />
                         </motion.button>
@@ -340,7 +342,7 @@ export default function ChatsInbox({ role }: ChatsInboxProps) {
               </div>
             ) : error ? (
               <div className="px-6 py-12 text-center">
-                <p className="text-sm font-semibold text-foreground">Could not load chats</p>
+                <p className="text-sm font-semibold text-foreground">{t("chats.couldNotLoad", "Could not load chats")}</p>
                 <p className="mt-1 text-xs text-muted-fg">{error}</p>
               </div>
             ) : rows.length === 0 ? (
@@ -349,14 +351,14 @@ export default function ChatsInbox({ role }: ChatsInboxProps) {
                   <MessagesSquare className="h-6 w-6" strokeWidth={1.5} />
                 </div>
                 <p className="mt-3 text-sm font-semibold text-foreground">
-                  {debouncedSearch.trim() ? "No chats found" : "No chats yet"}
+                  {debouncedSearch.trim() ? t("chats.noChatsFound", "No chats found") : t("chats.noChatsYet", "No chats yet")}
                 </p>
                 <p className="mt-1 text-xs leading-relaxed text-muted-fg">
                   {debouncedSearch.trim()
-                    ? `No results for "${debouncedSearch.trim()}".`
+                    ? t("chats.noChatsFoundDesc", `No results for "${debouncedSearch.trim()}".`).replace("{search}", debouncedSearch.trim())
                     : chatRole === "buyer"
-                      ? "Send a product inquiry or chat from an RFQ to start a thread."
-                      : "Buyer messages on RFQs and inquiries will show up here."}
+                      ? t("chats.noChatsDescBuyer", "Send a product inquiry or chat from an RFQ to start a thread.")
+                      : t("chats.noChatsDescSeller", "Buyer messages on RFQs and inquiries will show up here.")}
                 </p>
               </div>
             ) : (
@@ -365,9 +367,10 @@ export default function ChatsInbox({ role }: ChatsInboxProps) {
                   const name = counterpartyName(conversation, chatRole);
                   const unread = effectiveConversationUnread(conversation);
                   const when = formatWhen(
-                    conversation.last_message_at ?? conversation.updated_at
+                    conversation.last_message_at ?? conversation.updated_at,
+                    t("chats.yesterday", "Yesterday")
                   );
-                  const preview = previewText(conversation);
+                  const preview = getPreviewText(conversation);
                   const active = selected?.id === conversation.id;
 
                   return (
@@ -466,7 +469,7 @@ export default function ChatsInbox({ role }: ChatsInboxProps) {
                       type="button"
                       onClick={closeThread}
                       className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-fg transition-colors hover:bg-muted hover:text-primary md:hidden"
-                      aria-label="Back to chats"
+                      aria-label={t("chats.backToChats", "Back to chats")}
                     >
                       <ArrowLeft className="h-4 w-4" />
                     </button>
@@ -503,11 +506,10 @@ export default function ChatsInbox({ role }: ChatsInboxProps) {
                   <MessageCircle className="h-8 w-8" strokeWidth={1.5} />
                 </div>
                 <h2 className="mt-5 text-xl font-semibold tracking-tight text-foreground">
-                  Your conversations
+                  {t("chats.yourConversations", "Your conversations")}
                 </h2>
                 <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-fg">
-                  Select a chat to continue messaging. Product inquiries and RFQ discussions
-                  share one thread per buyer–seller pair.
+                  {t("chats.conversationsEmptyDesc", "Select a chat to continue messaging. Product inquiries and RFQ discussions share one thread per buyer–seller pair.")}
                 </p>
               </div>
             </motion.div>

@@ -14,8 +14,10 @@ import {
 import { fetchCategories } from "@/services/catalogService";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useLoadMoreList } from "@/hooks/useLoadMoreList";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function CategoriesPage() {
+  const { t, currentLanguage } = useLanguage();
   const [filterQuery, setFilterQuery] = useState("");
   const debouncedSearch = useDebouncedValue(filterQuery);
 
@@ -35,7 +37,7 @@ export default function CategoriesPage() {
   const { items: categories, pagination, loading, loadingMore, error, loadMore, hasMore } =
     useLoadMoreList({
       fetchPage,
-      resetDeps: [debouncedSearch],
+      resetDeps: [debouncedSearch, currentLanguage],
     });
 
   const totalProducts = useMemo(
@@ -49,32 +51,41 @@ export default function CategoriesPage() {
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_70%_-10%,rgb(21_101_192/0.3),transparent)]" />
         <div className={`${MARKETPLACE_CONTAINER} relative`}>
           <div className="mb-6 hidden lg:mb-8 lg:block">
-            <CatalogBreadcrumbs items={[{ label: "Categories" }]} variant="light" />
+            <CatalogBreadcrumbs
+              items={[{ label: t("categories.title", "Categories") }]}
+              variant="light"
+            />
           </div>
 
           <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/55">
-                Global Supply Marketplace
+                {t("categories.eyebrow", "Global Supply Marketplace")}
               </p>
               <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
-                Browse Categories
+                {t("categories.title", "Browse Categories")}
               </h1>
               <p className="mt-3 hidden text-base text-white/70 lg:block">
-                Explore industries, open subcategories, and discover verified B2B products from
-                sellers across India.
+                {t(
+                  "categories.subtitle",
+                  "Explore industries, open subcategories, and discover verified B2B products from sellers across India."
+                )}
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:w-[420px] lg:shrink-0">
               <div className="rounded-xl border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-sm lg:py-5">
-                <p className="text-xs font-medium text-white/55">Industries</p>
+                <p className="text-xs font-medium text-white/55">
+                  {t("categories.industries", "Industries")}
+                </p>
                 <p className="mt-1 text-3xl font-semibold tracking-tight text-white lg:text-4xl">
                   {loading && categories.length === 0 ? "—" : pagination.total}
                 </p>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/5 px-5 py-4 backdrop-blur-sm lg:py-5">
-                <p className="text-xs font-medium text-white/55">Total Products</p>
+                <p className="text-xs font-medium text-white/55">
+                  {t("categories.totalProducts", "Total Products")}
+                </p>
                 <p className="mt-1 text-3xl font-semibold tracking-tight text-white lg:text-4xl">
                   {loading && categories.length === 0 ? "—" : totalProducts.toLocaleString()}
                 </p>
@@ -87,7 +98,11 @@ export default function CategoriesPage() {
               size="sm"
               value={filterQuery}
               onChange={setFilterQuery}
-              placeholder={`Search across ${pagination.total || "all"} categories...`}
+              placeholder={
+                pagination.total
+                  ? `${t("common.searchButton", "Search")} across ${pagination.total} ${t("categories.categoriesCount", "categories")}...`
+                  : t("categories.searchPlaceholder", "Search across all categories...")
+              }
             />
           </div>
         </div>
@@ -103,9 +118,11 @@ export default function CategoriesPage() {
         {!loading && categories.length > 0 && (
           <div className="mb-6 flex items-center justify-between">
             <p className="text-sm font-medium text-muted-fg">
-              Showing{" "}
-              <span className="font-semibold text-foreground">{categories.length}</span> of{" "}
-              <span className="font-semibold text-foreground">{pagination.total}</span> categories
+              {t("categories.showing", "Showing")}{" "}
+              <span className="font-semibold text-foreground">{categories.length}</span>{" "}
+              {t("categories.of", "of")}{" "}
+              <span className="font-semibold text-foreground">{pagination.total}</span>{" "}
+              {t("categories.categoriesCount", "categories")}
             </p>
           </div>
         )}
@@ -139,10 +156,13 @@ export default function CategoriesPage() {
         ) : (
           <div className="surface-card">
             <CatalogEmptyState
-              title="No categories match your search"
-              description="Try a different keyword or clear the search to browse all categories."
+              title={t("categories.noMatchTitle", "No categories match your search")}
+              description={t(
+                "categories.noMatchDesc",
+                "Try a different keyword or clear the search to browse all categories."
+              )}
               onReset={() => setFilterQuery("")}
-              resetLabel="Clear search"
+              resetLabel={t("categories.clearSearch", "Clear search")}
             />
           </div>
         )}

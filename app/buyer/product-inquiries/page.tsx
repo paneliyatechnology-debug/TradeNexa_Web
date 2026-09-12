@@ -13,6 +13,7 @@ import { useChat } from "@/context/ChatContext";
 import { fetchMyInquiries } from "@/services/inquiryService";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   INQUIRY_STATUS_TABS,
   formatInquiryStatusLabel,
@@ -24,6 +25,7 @@ import { portalFilterChipClass } from "@/components/portal/portalLayout";
 const PAGE_SIZE = 6;
 
 export default function BuyerProductInquiriesPage() {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<InquiryStatusTab>("all");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
@@ -52,13 +54,13 @@ export default function BuyerProductInquiriesPage() {
   });
 
   const hasSearch = debouncedSearch.trim().length > 0;
-  const tabLabel = formatInquiryStatusLabel(activeTab).toLowerCase();
+  const tabLabel = t(`inquiries.tabs.${activeTab}`, formatInquiryStatusLabel(activeTab)).toLowerCase();
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 lg:px-8">
       <PortalPageHeader
-        title="Product inquiries"
-        subtitle="Direct conversations about specific products"
+        title={t("inquiries.title", "Product Inquiries")}
+        subtitle={t("inquiries.directConversations", "Direct conversations about specific products")}
       />
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -70,14 +72,14 @@ export default function BuyerProductInquiriesPage() {
               onClick={() => setActiveTab(tab)}
               className={portalFilterChipClass(activeTab === tab)}
             >
-              {formatInquiryStatusLabel(tab)}
+              {t(`inquiries.tabs.${tab}`, formatInquiryStatusLabel(tab))}
             </button>
           ))}
         </div>
         <PortalSearchBar
           value={search}
           onChange={setSearch}
-          placeholder="Search inquiries…"
+          placeholder={t("inquiries.searchPlaceholder", "Search inquiries…")}
           className="w-full max-w-xs"
         />
       </div>
@@ -89,7 +91,7 @@ export default function BuyerProductInquiriesPage() {
       ) : error ? (
         <PortalEmptyState
           icon={FileText}
-          title="Could not load inquiries"
+          title={t("inquiries.couldNotLoad", "Could not load inquiries")}
           description={error}
         />
       ) : items.length === 0 ? (
@@ -97,19 +99,19 @@ export default function BuyerProductInquiriesPage() {
           icon={Package}
           title={
             hasSearch
-              ? "No inquiries match your search"
+              ? t("inquiries.noInquiriesFound", "No inquiries match your search")
               : activeTab === "all"
-                ? "No product inquiries yet"
-                : `No ${tabLabel} inquiries`
+                ? t("inquiries.noInquiriesYet", "No product inquiries yet")
+                : t("inquiries.noStatusInquiries", `No ${tabLabel} inquiries`).replace("{status}", tabLabel)
           }
           description={
             hasSearch
-              ? `No results for "${debouncedSearch.trim()}".`
-              : "Open a product and send an inquiry to start chatting with the seller."
+              ? t("inquiries.noInquiriesMatchDesc", `No results for "${debouncedSearch.trim()}".`).replace("{search}", debouncedSearch.trim())
+              : t("inquiries.openProductToChat", "Open a product and send an inquiry to start chatting with the seller.")
           }
           action={
             <Link href="/buyer/search">
-              <Button variant="primary">Browse products</Button>
+              <Button variant="primary">{t("inquiries.browseProductsBtn", "Browse products")}</Button>
             </Link>
           }
         />

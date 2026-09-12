@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import ConversationBadge from "@/components/chat/ConversationBadge";
+import { useLanguage } from "@/context/LanguageContext";
 
 export interface PortalNavItem {
   label: string;
@@ -21,6 +22,7 @@ interface PortalBottomNavProps {
 
 export default function PortalBottomNav({ items, accent = "buyer" }: PortalBottomNavProps) {
   const pathname = usePathname();
+  const { t } = useLanguage();
   const isSeller = accent === "seller";
   const activeColor = isSeller ? "text-portal-seller" : "text-portal-buyer";
   const activeBg = isSeller ? "bg-portal-seller-light" : "bg-portal-buyer-light";
@@ -31,6 +33,7 @@ export default function PortalBottomNav({ items, accent = "buyer" }: PortalBotto
         {items.map((item) => {
           const active = item.match(pathname);
           const Icon = item.icon;
+          const translatedLabel = t(`portalNav.${item.label.toLowerCase()}`, item.label);
           return (
             <Link
               key={item.href}
@@ -52,7 +55,7 @@ export default function PortalBottomNav({ items, accent = "buyer" }: PortalBotto
                   />
                 ) : null}
               </span>
-              <span className="truncate">{item.label}</span>
+              <span className="truncate">{translatedLabel}</span>
             </Link>
           );
         })}

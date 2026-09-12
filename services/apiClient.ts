@@ -14,6 +14,50 @@ const apiClient = axios.create({
   },
 });
 
+declare module "axios" {
+  export interface AxiosRequestConfig {
+    skipRouteCancel?: boolean;
+  }
+}
+
+/** Global AbortController for in-flight requests bound to the current route/page. */
+let currentRouteAbortController: AbortController = new AbortController();
+
+/**
+ * Cancels all active in-flight page requests when user navigates to a different route.
+ * Essential background requests (notifications, auth lifecycle, FCM) are automatically exempted.
+ */
+export function cancelRouteInflightRequests(targetRoute?: string): void {
+  try {
+    currentRouteAbortController.abort(`Navigated away${targetRoute ? ` to ${targetRoute}` : ""}`);
+  } catch {
+    // Ignore abort errors
+  }
+  currentRouteAbortController = new AbortController();
+  // Clear safe request cache so canceled promises don't block subsequent calls
+  inflightSafeRequests.clear();
+}
+
+/**
+ * Endpoints that must never be canceled during route transitions (background & auth services).
+ */
+const ROUTE_CANCEL_EXEMPT_ENDPOINTS = [
+  API_ENDPOINTS.REFRESH_TOKEN,
+  API_ENDPOINTS.SEND_OTP,
+  API_ENDPOINTS.VERIFY_OTP,
+  API_ENDPOINTS.REGISTER,
+  API_ENDPOINTS.LOGOUT,
+  API_ENDPOINTS.PROFILE,
+  "/notifications",
+  "/fcm",
+  "/devices",
+];
+
+function isExemptFromRouteCancel(url?: string): boolean {
+  if (!url) return false;
+  return ROUTE_CANCEL_EXEMPT_ENDPOINTS.some((ep) => url.includes(ep));
+}
+
 /**
  * Deduplicate identical in-flight GET/HEAD requests.
  * React Strict Mode (and fast remounts after client redirects) often fire the
@@ -183,6 +227,32 @@ apiClient.interceptors.request.use(
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+
+      // Attach current active language
+      const language = localStorage.getItem("tradenexa_language") || "en";
+      if (config.headers) {
+        config.headers["Accept-Language"] = language;
+        config.headers["x-language"] = language;
+      }
+      // For GET requests, ensure lang param is set if not already specified
+      const method = (config.method ?? "get").toLowerCase();
+      if (method === "get") {
+        config.params = config.params || {};
+        if (!config.params.lang && !config.params.language && language) {
+          config.params.lang = language;
+        }
+      }
+    }
+
+    // Attach route-level AbortController signal to page-level GET/HEAD requests
+    const requestMethod = (config.method ?? "get").toLowerCase();
+    if (
+      (requestMethod === "get" || requestMethod === "head") &&
+      !config.signal &&
+      !config.skipRouteCancel &&
+      !isExemptFromRouteCancel(config.url)
+    ) {
+      config.signal = currentRouteAbortController.signal;
     }
 
     // Axios shorthand methods (`get`, `head`) bypass an instance-level
@@ -217,6 +287,16 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Silently reject aborted/canceled requests without triggering generic error toasts
+    if (
+      axios.isCancel(error) ||
+      error?.code === "ERR_CANCELED" ||
+      error?.name === "CanceledError" ||
+      (typeof error?.message === "string" && error.message.includes("Navigated away"))
+    ) {
+      return Promise.reject(error);
+    }
+
     const originalRequest = error.config as RetryableRequestConfig | undefined;
     const isUnauthorized = error.response?.status === 401;
     const isBrowser = typeof window !== "undefined";

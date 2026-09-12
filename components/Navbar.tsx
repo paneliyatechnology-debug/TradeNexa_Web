@@ -15,6 +15,7 @@ import {
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/context/LanguageContext";
 import { getDashboardPathForRole } from "@/utils/roleNavigation";
 import { Logo } from "@/components/common/Logo";
 import { Button } from "@/components/common/Button";
@@ -36,16 +37,17 @@ function formatVerifiedRoleLabel(role: UserRole | string): string {
 export default function Navbar() {
   const pathname = usePathname();
   const { isAuthenticated, user, logoutUser, openAuthModal } = useAuth();
+  const { t } = useLanguage();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const topLinks = [
-    { name: "Home", href: "/" },
-    { name: "About", href: "/about" },
-    { name: "Categories", href: "/categories" },
-    { name: "Products", href: "/products" },
-    { name: "Contact", href: "/contact" },
+    { name: t("nav.home", "Home"), href: "/" },
+    { name: t("nav.about", "About"), href: "/about" },
+    { name: t("nav.categories", "Categories"), href: "/categories" },
+    { name: t("nav.products", "Products"), href: "/products" },
+    { name: t("nav.contact", "Contact"), href: "/contact" },
   ];
 
   function isNavActive(href: string) {
@@ -56,24 +58,24 @@ export default function Navbar() {
   }
 
   const dropdownLinks = [
-    { name: "How It Works", href: "/how-it-works" },
-    { name: "Why Choose Us", href: "/why-choose-us" },
-    { name: "Seller Benefits", href: "/seller-benefits" },
-    { name: "Buyer Benefits", href: "/buyer-benefits" },
-    { name: "FAQ", href: "/faq" },
+    { name: t("nav.howItWorks", "How It Works"), href: "/how-it-works" },
+    { name: t("nav.whyChooseUs", "Why Choose Us"), href: "/why-choose-us" },
+    { name: t("nav.sellerBenefits", "Seller Benefits"), href: "/seller-benefits" },
+    { name: t("nav.buyerBenefits", "Buyer Benefits"), href: "/buyer-benefits" },
+    { name: t("nav.faq", "FAQ"), href: "/faq" },
   ];
 
   const navLinks = [
-    { name: "Home", href: "/" },
-    { name: "About", href: "/about" },
-    { name: "How It Works", href: "/how-it-works" },
-    { name: "Categories", href: "/categories" },
-    { name: "Products", href: "/products" },
-    { name: "Seller Benefits", href: "/seller-benefits" },
-    { name: "Buyer Benefits", href: "/buyer-benefits" },
-    { name: "Why Choose Us", href: "/why-choose-us" },
-    { name: "FAQ", href: "/faq" },
-    { name: "Contact", href: "/contact" },
+    { name: t("nav.home", "Home"), href: "/" },
+    { name: t("nav.about", "About"), href: "/about" },
+    { name: t("nav.howItWorks", "How It Works"), href: "/how-it-works" },
+    { name: t("nav.categories", "Categories"), href: "/categories" },
+    { name: t("nav.products", "Products"), href: "/products" },
+    { name: t("nav.sellerBenefits", "Seller Benefits"), href: "/seller-benefits" },
+    { name: t("nav.buyerBenefits", "Buyer Benefits"), href: "/buyer-benefits" },
+    { name: t("nav.whyChooseUs", "Why Choose Us"), href: "/why-choose-us" },
+    { name: t("nav.faq", "FAQ"), href: "/faq" },
+    { name: t("nav.contact", "Contact"), href: "/contact" },
   ];
 
   const dashboardHref = user ? getDashboardPathForRole(user.role) : "/buyer/home";
@@ -116,7 +118,7 @@ export default function Navbar() {
                   aria-expanded={isDropdownOpen}
                   aria-haspopup="true"
                 >
-                  Solutions
+                  {t("nav.solutions", "Solutions")}
                   <ChevronDown
                     className={`h-4 w-4 transition-transform duration-200 ${isDropdownOpen ? "rotate-180 text-primary" : ""}`}
                     aria-hidden
@@ -167,7 +169,7 @@ export default function Navbar() {
                   <Link href={dashboardHref} className="hidden sm:inline-flex">
                     <Button variant="outline" size="sm">
                       <LayoutDashboard className="h-4 w-4" aria-hidden />
-                      Dashboard
+                      {t("nav.dashboard", "Dashboard")}
                     </Button>
                   </Link>
                   <div className="relative hidden sm:block">
@@ -204,14 +206,14 @@ export default function Navbar() {
                           >
                             <div className="mb-1 border-b border-border px-3 pb-3 pt-1">
                               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-fg">
-                                Business catalog
+                                {t("nav.businessCatalog", "Business catalog")}
                               </p>
                               <p className="mt-1 truncate text-sm font-semibold text-foreground">
                                 {user.company}
                               </p>
                               <span className="mt-2 inline-flex items-center gap-1 rounded-md bg-primary-soft px-2 py-0.5 text-[10px] font-semibold text-primary">
                                 <CheckCircle2 className="h-3 w-3" aria-hidden />
-                                Verified {formatVerifiedRoleLabel(user.role)}
+                                {t("nav.verified", "Verified")} {formatVerifiedRoleLabel(user.role)}
                               </span>
                             </div>
                             <button
@@ -223,7 +225,7 @@ export default function Navbar() {
                               className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-error transition-colors duration-200 hover:bg-error-soft"
                             >
                               <LogOut className="h-4 w-4" aria-hidden />
-                              Sign Out
+                              {t("nav.signOut", "Sign Out")}
                             </button>
                           </motion.div>
                         </>
@@ -238,10 +240,10 @@ export default function Navbar() {
                     size="sm"
                     onClick={() => openAuthModal("login")}
                   >
-                    Sign in
+                    {t("nav.signIn", "Sign in")}
                   </Button>
                   <Button onClick={() => openAuthModal("login")} size="sm">
-                    Get started
+                    {t("nav.getStarted", "Get started")}
                     <ArrowRight className="h-4 w-4" aria-hidden />
                   </Button>
                 </div>
@@ -253,7 +255,7 @@ export default function Navbar() {
                   size="sm"
                   className="sm:hidden"
                 >
-                  Join
+                  {t("nav.join", "Join")}
                 </Button>
               )}
 
@@ -320,7 +322,7 @@ export default function Navbar() {
                       <Link href={dashboardHref} onClick={() => setIsMobileMenuOpen(false)}>
                         <Button variant="outline" fullWidth>
                           <LayoutDashboard className="h-4 w-4" aria-hidden />
-                          My Dashboard
+                          {t("nav.myDashboard", "My Dashboard")}
                         </Button>
                       </Link>
                       <Button
@@ -332,7 +334,7 @@ export default function Navbar() {
                         }}
                       >
                         <LogOut className="h-4 w-4" aria-hidden />
-                        Sign Out
+                        {t("nav.signOut", "Sign Out")}
                       </Button>
                     </div>
                   ) : (
@@ -344,7 +346,7 @@ export default function Navbar() {
                           openAuthModal("login");
                         }}
                       >
-                        Get started
+                        {t("nav.getStarted", "Get started")}
                         <ArrowRight className="h-4 w-4" aria-hidden />
                       </Button>
                       <Button
@@ -355,7 +357,7 @@ export default function Navbar() {
                           openAuthModal("login");
                         }}
                       >
-                        Sign in
+                        {t("nav.signIn", "Sign in")}
                       </Button>
                     </div>
                   )}

@@ -13,6 +13,7 @@ import RfqListToolbar from "@/components/rfq/RfqListToolbar";
 import { fetchSellerRfqFeed } from "@/services/rfqService";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   formatRfqStatusTabLabel,
   isRfqPostedToday,
@@ -26,6 +27,7 @@ const tabs = SELLER_RFQ_STATUS_TABS;
 const PAGE_SIZE = 6;
 
 export default function SellerLeadsPage() {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("all");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
@@ -56,27 +58,27 @@ export default function SellerLeadsPage() {
   const hasSearch = debouncedSearch.trim().length > 0;
   const tabLabel = formatRfqStatusTabLabel(activeTab).toLowerCase();
   const emptyTitle = hasSearch
-    ? "No RFQs match your search"
+    ? t("leads.noMatches", "No RFQs match your search")
     : activeTab === "all"
-      ? "No RFQs in your feed"
-      : `No ${tabLabel} RFQs`;
+      ? t("leads.noFeed", "No RFQs in your feed")
+      : `${t("leads.noStatusRfqs", `No ${tabLabel} RFQs`).replace("{status}", tabLabel)}`;
   const emptyDescription = hasSearch
-    ? `No results for "${debouncedSearch.trim()}". Try a different keyword or clear the search.`
+    ? t("leads.noMatchesDesc", `No results for "${debouncedSearch.trim()}". Try a different keyword or clear the search.`).replace("{search}", debouncedSearch.trim())
     : activeTab === "all"
-      ? "New buyer requirements matching your categories will appear here."
-      : `No buyer requirements are currently ${tabLabel}.`;
+      ? t("leads.noFeedDesc", "New buyer requirements matching your categories will appear here.")
+      : `${t("leads.noStatusDesc", `No buyer requirements are currently ${tabLabel}.`).replace("{status}", tabLabel)}`;
 
   const showCatalogPrompt = !loading && pagination.total > 0 && pagination.total <= PAGE_SIZE;
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
       <PortalPageHeader
-        title="RFQ Feed"
-        subtitle="Buyer requirements you can quote on"
+        title={t("leads.title", "RFQ Feed")}
+        subtitle={t("leads.subtitle", "Buyer requirements you can quote on")}
         action={
           newTodayCount > 0 ? (
             <span className="inline-flex items-center rounded-lg bg-primary-soft px-3 py-1 text-xs font-semibold text-primary">
-              {newTodayCount} new today
+              {newTodayCount} {t("leads.newToday", "new today")}
             </span>
           ) : null
         }
@@ -84,11 +86,11 @@ export default function SellerLeadsPage() {
 
       <RfqListToolbar
         loading={loading}
-        countLabel={`${pagination.total} RFQ${pagination.total === 1 ? "" : "s"} in feed`}
+        countLabel={`${pagination.total} ${pagination.total === 1 ? t("leads.rfqInFeed", "RFQ in feed") : t("leads.rfqsInFeed", "RFQs in feed")}`}
         search={{
           value: search,
           onChange: setSearch,
-          placeholder: "Search RFQs by title, buyer, or category...",
+          placeholder: t("leads.searchPlaceholder", "Search RFQs by title, buyer, or category..."),
         }}
         filters={
           <div className="flex gap-1.5 overflow-x-auto pb-0.5">
@@ -99,7 +101,7 @@ export default function SellerLeadsPage() {
                 onClick={() => setActiveTab(tab)}
                 className={portalFilterChipClass(activeTab === tab)}
               >
-                {formatRfqStatusTabLabel(tab)}
+                {tab === "all" ? t("catalog.tabs.all", "All") : formatRfqStatusTabLabel(tab)}
               </button>
             ))}
           </div>
@@ -115,7 +117,7 @@ export default function SellerLeadsPage() {
           {loading ? (
             <div className="flex items-center justify-center gap-2 py-20 text-sm text-muted-fg">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              Loading RFQs...
+              {t("leads.loading", "Loading RFQs...")}
             </div>
           ) : items.length === 0 ? (
             <PortalEmptyState
@@ -125,7 +127,7 @@ export default function SellerLeadsPage() {
               action={
                 hasSearch ? (
                   <Button type="button" variant="secondary" onClick={() => setSearch("")}>
-                    Clear search
+                    {t("leads.clearSearch", "Clear search")}
                   </Button>
                 ) : undefined
               }
@@ -147,7 +149,7 @@ export default function SellerLeadsPage() {
                 pagination={pagination}
                 onPageChange={goToPage}
                 loading={loading}
-                itemLabel="RFQs"
+                itemLabel={t("inquiries.rfqsCount", "RFQs")}
                 compact
               />
             </>
@@ -161,7 +163,7 @@ export default function SellerLeadsPage() {
               </p>
               <Link href="/seller/catalog" className="mt-3 inline-flex">
                 <Button variant="secondary" size="sm">
-                  Manage catalog
+                  {t("dashboard.myCatalog", "Manage catalog")}
                 </Button>
               </Link>
             </div>
@@ -170,9 +172,9 @@ export default function SellerLeadsPage() {
 
         <RfqListSidebar
           stats={[
-            { label: "Total in feed", value: loading ? "—" : pagination.total },
+            { label: t("leads.rfqsInFeed", "Total in feed"), value: loading ? "—" : pagination.total },
             {
-              label: "New today",
+              label: t("leads.newToday", "New today"),
               value: loading ? "—" : newTodayCount,
               highlight: newTodayCount > 0,
             },
