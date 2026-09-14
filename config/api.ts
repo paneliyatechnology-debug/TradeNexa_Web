@@ -26,7 +26,7 @@ export type AppEnvironment = keyof typeof URL_CONFIG;
 // ⚙️ MANUAL TOGGLE (Yahan change karke toggle karein):
 // Set to 'local' for localhost:5000, or 'live' for Railway Production
 // ==============================================================================
-export const ACTIVE_ENV: AppEnvironment = "local"; // 👈 Change to 'local' or 'live'
+export const ACTIVE_ENV: AppEnvironment = "live"; // 👈 Change to 'local' or 'live'
 
 // Check environment variables first (if NEXT_PUBLIC_ENV is provided)
 const envVar = process.env.NEXT_PUBLIC_ENV?.toLowerCase()?.trim();
