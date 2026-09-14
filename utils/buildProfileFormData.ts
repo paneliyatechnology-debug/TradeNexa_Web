@@ -44,6 +44,7 @@ export function buildProfileFormData(payload: CompleteProfileData): FormData {
     formData.append("company_name", d.companyName.trim());
     appendIfPresent(formData, "gst_number", d.gstNumber);
     formData.append("industry", d.industry.trim());
+    appendIfPresent(formData, "category_id", d.categoryId);
     formData.append("address_line_1", d.address.trim());
     appendLocationIds(formData, d.city, d.state);
     appendIfPresent(formData, "pincode", d.pincode);
