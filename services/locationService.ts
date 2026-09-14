@@ -71,12 +71,13 @@ export async function fetchStates(params?: StateListParams): Promise<StatesPageR
   return unwrapPaginatedResult<ApiState>(data);
 }
 
-export async function fetchCities(params: CityListParams): Promise<CitiesPageResult> {
+export async function fetchCities(params?: CityListParams): Promise<CitiesPageResult> {
+  const query = buildLocationParams(params);
+  if (params?.state_id) {
+    query.state_id = params.state_id;
+  }
   const response = await apiClient.get(API_ENDPOINTS.LOCATIONS_CITIES, {
-    params: {
-      ...buildLocationParams(params),
-      state_id: params.state_id,
-    },
+    params: query,
   });
   const data = unwrapApiPayload<unknown>(response.data);
   return unwrapPaginatedResult<ApiCity>(data);

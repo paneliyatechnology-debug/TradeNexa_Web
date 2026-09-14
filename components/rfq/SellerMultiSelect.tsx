@@ -5,6 +5,7 @@ import { Loader2, Search, X } from "lucide-react";
 import { fetchSuppliers } from "@/services/supplierService";
 import type { ApiSupplier } from "@/types/supplier";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface SellerMultiSelectProps {
   selectedIds: number[];
@@ -26,6 +27,7 @@ export default function SellerMultiSelect({
   error,
   disabled,
 }: SellerMultiSelectProps) {
+  const { t, currentLanguage } = useLanguage();
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebouncedValue(query, 300);
   const [results, setResults] = useState<ApiSupplier[]>([]);
@@ -65,7 +67,8 @@ export default function SellerMultiSelect({
         setLoadingMore(false);
       }
     },
-    [debouncedQuery]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [debouncedQuery, currentLanguage]
   );
 
   useEffect(() => {
@@ -132,7 +135,7 @@ export default function SellerMultiSelect({
             value={query}
             disabled={disabled}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search sellers by company name..."
+            placeholder={t("rfq.searchSellers", "Search sellers by company name...")}
             className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-fg disabled:opacity-50 [&::-webkit-search-cancel-button]:hidden"
           />
           {query.trim() ? (
@@ -152,7 +155,9 @@ export default function SellerMultiSelect({
         <ul className="max-h-56 overflow-y-auto py-1">
           {results.length === 0 && !loading ? (
             <li className="px-3 py-4 text-center text-xs text-muted-fg">
-              {debouncedQuery.trim() ? "No sellers found" : "No sellers available"}
+              {debouncedQuery.trim()
+                ? t("rfq.noSellersFound", "No sellers found")
+                : t("rfq.noSellersAvailable", "No sellers available")}
             </li>
           ) : (
             results.map((seller) => {
@@ -187,7 +192,7 @@ export default function SellerMultiSelect({
                       </span>
                       <span className="mt-0.5 block truncate text-[11px] text-muted-fg">
                         {sellerLabel(seller)}
-                        {seller.verified ? " · Verified" : ""}
+                        {seller.verified ? ` · ${t("nav.verified", "Verified")}` : ""}
                       </span>
                     </span>
                   </button>
@@ -203,7 +208,7 @@ export default function SellerMultiSelect({
                 onClick={() => void loadPage(page + 1, true)}
                 className="w-full rounded-lg py-1.5 text-xs font-semibold text-primary transition hover:bg-primary-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 disabled:opacity-50"
               >
-                {loadingMore ? "Loading..." : "Load more"}
+                {loadingMore ? t("common.loading", "Loading...") : t("common.more", "Load more")}
               </button>
             </li>
           ) : null}

@@ -33,7 +33,9 @@ import {
   inquiryCounterpartyLogo,
   inquiryCounterpartyName,
   inquiryProductTitle,
+  canResubmitInquiry,
 } from "@/utils/inquiryHelpers";
+import { useLanguage } from "@/context/LanguageContext";
 import { formatPrice, getInitials, resolveImageUrl } from "@/utils/catalogHelpers";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import type { ApiInquiry } from "@/types/inquiry";
@@ -62,6 +64,7 @@ function SnapshotStat({
 }
 
 export default function SellerInquiryDetailPage() {
+  const { currentLanguage } = useLanguage();
   const params = useParams();
   const inquiryId = Number(params.id);
   const [inquiry, setInquiry] = useState<ApiInquiry | null>(null);
@@ -90,7 +93,7 @@ export default function SellerInquiryDetailPage() {
     } finally {
       if (loadRequestRef.current === requestId) setLoading(false);
     }
-  }, [inquiryId]);
+  }, [inquiryId, currentLanguage]);
 
   useEffect(() => {
     void load();

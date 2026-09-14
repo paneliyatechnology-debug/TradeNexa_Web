@@ -34,6 +34,9 @@ function buildParams(params?: CatalogListParams | ProductListParams | MyProductL
   if (params && "brand_id" in params && params.brand_id) {
     query.brand_id = params.brand_id;
   }
+  if (params && "state_id" in params && params.state_id) {
+    query.state_id = params.state_id;
+  }
   if (params && "city_id" in params && params.city_id) {
     query.city_id = params.city_id;
   }
@@ -80,6 +83,17 @@ interface TaxonomyCacheEntry<T> {
 
 let allCategoriesCache: TaxonomyCacheEntry<ApiCategory[]> | null = null;
 const subcategoriesCache = new Map<number, TaxonomyCacheEntry<ApiSubcategory[]>>();
+
+export function clearTaxonomyCache(): void {
+  allCategoriesCache = null;
+  subcategoriesCache.clear();
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("tradenexa_language_change", () => {
+    clearTaxonomyCache();
+  });
+}
 
 function isFresh(entry: TaxonomyCacheEntry<unknown> | null | undefined): boolean {
   return Boolean(entry) && Date.now() - (entry as TaxonomyCacheEntry<unknown>).at < TAXONOMY_TTL_MS;

@@ -206,6 +206,7 @@ export interface ProductListParams extends CatalogListParams {
   category_id?: number;
   subcategory_id?: number;
   brand_id?: number;
+  state_id?: number;
   city_id?: number;
   is_trending?: boolean;
   /**

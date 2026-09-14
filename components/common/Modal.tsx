@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
@@ -14,6 +15,7 @@ interface ModalProps {
   hideHeader?: boolean;
   headerSlot?: React.ReactNode;
   bodyClassName?: string;
+  placement?: "center" | "bottom";
 }
 
 export function Modal({
@@ -26,9 +28,15 @@ export function Modal({
   hideHeader = false,
   headerSlot,
   bodyClassName = "px-6 py-6",
+  placement = "center",
 }: ModalProps) {
+  const [mounted, setMounted] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -67,25 +75,39 @@ export function Modal({
     xl: "max-w-4xl",
   };
 
-  return (
+  const isBottom = placement === "bottom";
+
+  const modalContent = (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4 md:p-8">
+        <div
+          className={`fixed inset-0 z-[99999] overflow-y-auto overscroll-contain ${
+            isBottom
+              ? "flex items-end justify-center p-0 sm:items-center sm:p-4 md:p-6"
+              : "flex min-h-full items-center justify-center p-2.5 sm:p-4 md:p-6"
+          }`}
+        >
+          {/* Backdrop overlay */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="absolute inset-0 bg-navy/50 backdrop-blur-sm"
+            className="fixed inset-0 bg-navy/60 backdrop-blur-sm"
           />
 
+          {/* Modal Dialog Card */}
           <motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.98 }}
+            initial={{ opacity: 0, y: isBottom ? 24 : 10, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 16, scale: 0.98 }}
-            transition={{ type: "spring", stiffness: 380, damping: 32 }}
-            className={`relative flex max-h-[92dvh] w-full sm:max-h-[88dvh] ${maxWidthClasses[maxWidth]} flex-col overflow-hidden rounded-t-xl border border-border bg-card shadow-[var(--shadow-elevated)] sm:rounded-xl`}
+            exit={{ opacity: 0, y: isBottom ? 16 : 8, scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 400, damping: 32 }}
+            className={`relative my-auto flex max-h-[calc(100dvh-1.25rem)] sm:max-h-[calc(100dvh-2rem)] w-full ${
+              maxWidthClasses[maxWidth]
+            } flex-col overflow-hidden ${
+              isBottom ? "rounded-t-2xl sm:rounded-2xl" : "rounded-2xl"
+            } border border-border bg-card shadow-[var(--shadow-elevated)]`}
             role="dialog"
             aria-modal="true"
           >
@@ -93,19 +115,19 @@ export function Modal({
 
             {!hideHeader && (
               <div
-                className={`flex shrink-0 items-center justify-between border-b px-5 py-3 transition-colors duration-200 ${
+                className={`flex shrink-0 items-center justify-between border-b px-4 py-2.5 sm:px-5 sm:py-3 transition-colors duration-200 ${
                   isScrolled
                     ? "z-10 border-border bg-card/95 backdrop-blur-md"
                     : "border-transparent bg-card"
                 }`}
               >
-                <div className="mr-4 min-w-0 flex-1 text-base font-semibold text-foreground">
+                <div className="mr-3 min-w-0 flex-1 text-sm sm:text-base font-semibold text-foreground">
                   {title}
                 </div>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-fg transition-colors duration-200 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                  className="flex h-7.5 w-7.5 sm:h-8 sm:w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted-fg transition-colors duration-200 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
                   aria-label="Close modal"
                 >
                   <X className="h-4 w-4" aria-hidden />
@@ -131,4 +153,7 @@ export function Modal({
       )}
     </AnimatePresence>
   );
+
+  if (!mounted) return null;
+  return createPortal(modalContent, document.body);
 }

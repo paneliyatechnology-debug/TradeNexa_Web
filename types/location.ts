@@ -12,6 +12,7 @@ export interface ApiState {
 export interface ApiCity {
   id: number;
   state_id: number;
+  state_name?: string;
   name: string;
   is_active: boolean | number;
   created_at?: string;
@@ -23,7 +24,7 @@ export interface StateListParams extends CatalogListParams {
 }
 
 export interface CityListParams extends CatalogListParams {
-  state_id: number;
+  state_id?: number;
 }
 
 export type StatesPageResult = PaginatedResult<ApiState>;

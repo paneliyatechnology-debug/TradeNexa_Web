@@ -20,11 +20,13 @@ import PortalInfiniteScroll from "@/components/portal/PortalInfiniteScroll";
 import PortalProductCard from "@/components/portal/PortalProductCard";
 import PortalSearchBar from "@/components/portal/PortalSearchBar";
 import { Button } from "@/components/common/Button";
+import { useLanguage } from "@/context/LanguageContext";
 import { fetchSellerProducts } from "@/services/catalogService";
 import { fetchSupplierById } from "@/services/supplierService";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useLoadMoreList } from "@/hooks/useLoadMoreList";
 import { getInitials, resolveImageUrl } from "@/utils/catalogHelpers";
+import { formatLocationLabel, translateLocationName } from "@/utils/locationTranslations";
 import { showErrorToast } from "@/utils/toast";
 import type { ApiSupplier } from "@/types/supplier";
 
@@ -56,6 +58,7 @@ function StatStripItem({
 export default function BuyerSupplierPage() {
   const params = useParams();
   const router = useRouter();
+  const { currentLanguage, t } = useLanguage();
   const supplierId = Number(params.id);
   const validSupplierId = Number.isFinite(supplierId) && supplierId > 0;
 
@@ -95,7 +98,7 @@ export default function BuyerSupplierPage() {
     return () => {
       cancelled = true;
     };
-  }, [supplierId, validSupplierId]);
+  }, [supplierId, validSupplierId, currentLanguage]);
 
   const fetchPage = useCallback(
     (page: number) => {
@@ -126,14 +129,14 @@ export default function BuyerSupplierPage() {
     loadMore,
   } = useLoadMoreList({
     fetchPage,
-    resetDeps: [debounced, supplierId],
+    resetDeps: [debounced, supplierId, currentLanguage],
     enabled: validSupplierId,
   });
 
   if (!validSupplierId) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
-        <PortalBackLink href="/buyer/suppliers" label="Back to suppliers" />
+        <PortalBackLink href="/buyer/suppliers" label={t("supplier.backToSuppliers", "Back to suppliers")} />
         <p className="mt-6 text-sm text-muted-fg">Invalid seller.</p>
       </div>
     );
@@ -150,7 +153,7 @@ export default function BuyerSupplierPage() {
   if (!supplier) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-5 sm:px-6 lg:px-8">
-        <PortalBackLink href="/buyer/suppliers" label="Back to suppliers" />
+        <PortalBackLink href="/buyer/suppliers" label={t("supplier.backToSuppliers", "Back to suppliers")} />
         <p className="mt-6 text-sm text-muted-fg">Seller profile not found.</p>
         <Button
           type="button"
@@ -158,7 +161,7 @@ export default function BuyerSupplierPage() {
           className="mt-4"
           onClick={() => router.back()}
         >
-          Go back
+          {t("common.back", "Go back")}
         </Button>
       </div>
     );
@@ -166,10 +169,11 @@ export default function BuyerSupplierPage() {
 
   const logoUrl = resolveImageUrl(supplier.logo);
   const showLogo = Boolean(logoUrl) && failedLogoUrl !== logoUrl;
-  const city = supplier.city?.trim() || "—";
-  const state = supplier.state?.trim() || "—";
-  const locationParts = [supplier.city?.trim(), supplier.state?.trim()].filter(Boolean);
-  const locationLabel = locationParts.length ? locationParts.join(" · ") : "Location not specified";
+  const rawCity = supplier.city?.trim() || "";
+  const rawState = supplier.state?.trim() || "";
+  const city = rawCity ? translateLocationName(rawCity, currentLanguage) : "—";
+  const state = rawState ? translateLocationName(rawState, currentLanguage) : "—";
+  const locationLabel = formatLocationLabel(rawCity, rawState, currentLanguage);
   const rating = supplier.rating ?? 0;
   const responseRate = supplier.response_rate ?? 0;
   const years = supplier.years_in_business ?? 0;
@@ -181,7 +185,7 @@ export default function BuyerSupplierPage() {
   const stats = [
     {
       icon: Star,
-      label: "Rating",
+      label: t("supplier.rating", "Rating"),
       value: (
         <span className="inline-flex items-center gap-1.5">
           <span className="tabular-nums">{rating.toFixed(1)}</span>
@@ -191,12 +195,12 @@ export default function BuyerSupplierPage() {
     },
     {
       icon: Clock3,
-      label: "Years in business",
+      label: t("supplier.yearsInBusiness", "Years in business"),
       value: <span className="tabular-nums">{years}</span>,
     },
     {
       icon: TrendingUp,
-      label: "Response rate",
+      label: t("supplier.responseRate", "Response rate"),
       value: (
         <span className="inline-flex items-center gap-2.5">
           <span className="tabular-nums">{responseRate}%</span>
@@ -211,7 +215,7 @@ export default function BuyerSupplierPage() {
     },
     {
       icon: Package,
-      label: "Products",
+      label: t("supplier.products", "Products"),
       value: <span className="tabular-nums">{productCountLabel}</span>,
       helper:
         supplier.product_count == null && productsLoading ? "Loading catalog count" : undefined,
@@ -219,8 +223,8 @@ export default function BuyerSupplierPage() {
   ];
 
   const productsLabel = productsLoading
-    ? "Loading products..."
-    : `${pagination.total.toLocaleString()} product${pagination.total === 1 ? "" : "s"}`;
+    ? t("common.loading", "Loading products...")
+    : `${pagination.total.toLocaleString()} ${t("portalNav.products", "Products")}`;
 
   return (
     <div className="relative mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
@@ -230,7 +234,7 @@ export default function BuyerSupplierPage() {
       />
 
       <div className="relative">
-        <PortalBackLink href="/buyer/suppliers" label="Back to suppliers" />
+        <PortalBackLink href="/buyer/suppliers" label={t("supplier.backToSuppliers", "Back to suppliers")} />
 
         <motion.div
           initial={{ opacity: 0, y: 14 }}
@@ -279,7 +283,7 @@ export default function BuyerSupplierPage() {
                     className="min-w-0 flex-1 pt-1"
                   >
                     <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
-                      Supplier profile
+                      {t("supplier.profile", "Supplier profile")}
                     </p>
                     <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                       {supplier.company_name}
@@ -295,7 +299,7 @@ export default function BuyerSupplierPage() {
                       {supplier.verified ? (
                         <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-2.5 py-1 text-xs font-semibold text-white">
                           <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
-                          Verified
+                          {t("supplier.verified", "Verified")}
                         </span>
                       ) : null}
                     </div>
@@ -309,11 +313,11 @@ export default function BuyerSupplierPage() {
                   className="grid grid-cols-2 gap-3 rounded-2xl border border-border/70 bg-card/80 p-3 text-sm md:w-64"
                 >
                   <div>
-                    <p className="text-xs font-medium text-muted-fg">City</p>
+                    <p className="text-xs font-medium text-muted-fg">{t("supplier.city", "City")}</p>
                     <p className="mt-1 font-semibold text-foreground">{city}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-muted-fg">State</p>
+                    <p className="text-xs font-medium text-muted-fg">{t("supplier.state", "State")}</p>
                     <p className="mt-1 font-semibold text-foreground">{state}</p>
                   </div>
                 </motion.div>
@@ -326,7 +330,7 @@ export default function BuyerSupplierPage() {
                     aria-hidden
                   />
                   <p className="text-xs font-medium leading-relaxed text-warning">
-                    This seller is currently inactive and may not respond to new inquiries.
+                    {t("supplier.inactiveAlert", "This seller is currently inactive and may not respond to new inquiries.")}
                   </p>
                 </div>
               ) : null}
@@ -355,10 +359,10 @@ export default function BuyerSupplierPage() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0">
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
-                Supplier catalog
+                {t("supplier.catalog", "Supplier catalog")}
               </p>
               <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
-                Products
+                {t("portalNav.products", "Products")}
               </h2>
               <p className="mt-1 text-sm text-muted-fg">{productsLabel}</p>
             </div>
@@ -366,7 +370,7 @@ export default function BuyerSupplierPage() {
             <PortalSearchBar
               value={query}
               onChange={setQuery}
-              placeholder="Search this seller's products..."
+              placeholder={t("supplier.searchSellerProducts", "Search this seller's products...")}
               className="w-full lg:max-w-md"
             />
           </div>
@@ -380,16 +384,16 @@ export default function BuyerSupplierPage() {
           {productsLoading ? (
             <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-fg">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              Loading products...
+              {t("common.loading", "Loading products...")}
             </div>
           ) : products.length === 0 ? (
             <PortalEmptyState
               icon={Package}
-              title={query.trim() ? "No matching products" : "No products yet"}
+              title={query.trim() ? "No matching products" : t("supplier.noProductsYet", "No products yet")}
               description={
                 query.trim()
                   ? "Try a different search term."
-                  : "This seller has not listed any products."
+                  : t("supplier.noProductsDesc", "This seller has not listed any products.")
               }
             />
           ) : (

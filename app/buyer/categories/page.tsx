@@ -16,7 +16,7 @@ import CatalogImage from "@/components/catalog/CatalogImage";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function BuyerCategoriesPage() {
-  const { t } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
 
@@ -43,7 +43,7 @@ export default function BuyerCategoriesPage() {
     error,
   } = useLoadMoreList({
     fetchPage,
-    resetDeps: [debouncedSearch],
+    resetDeps: [debouncedSearch, currentLanguage],
   });
 
   return (

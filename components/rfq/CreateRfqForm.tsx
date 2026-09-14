@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
@@ -15,6 +15,7 @@ import CitySelect from "@/components/location/CitySelect";
 import ProductWizardStepper from "@/components/seller/ProductWizardStepper";
 import { useAuth } from "@/hooks/useAuth";
 import { useOptionalGeoLocation } from "@/context/GeoLocationContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { fetchCategories, fetchSubcategories } from "@/services/catalogService";
 import { fetchCities, fetchStates } from "@/services/locationService";
 import { createRfq, fetchPublicRfqById, publishRfq, updateRfq } from "@/services/rfqService";
@@ -137,12 +138,6 @@ const FIELD_IDS: Partial<Record<keyof FormErrors, string>> = {
 
 type WizardStepKey = "details" | "quantity" | "delivery" | "settings";
 
-const WIZARD_STEPS: { key: WizardStepKey; label: string; shortLabel: string }[] = [
-  { key: "details", label: "Requirement Details", shortLabel: "Details" },
-  { key: "quantity", label: "Quantity & Budget", shortLabel: "Budget" },
-  { key: "delivery", label: "Delivery Address", shortLabel: "Delivery" },
-  { key: "settings", label: "Listing Settings", shortLabel: "Settings" },
-];
 
 const ERROR_KEYS_BY_STEP: Record<WizardStepKey, (keyof FormErrors)[]> = {
   details: ["title", "categoryId", "subcategoryId", "description"],
@@ -168,60 +163,64 @@ const STEP_INDEX_BY_FIELD: Partial<Record<keyof FormErrors, number>> = {
   sellerIds: 3,
 };
 
-function validateForm(form: FormState, sellerIds: number[]): FormErrors {
+function validateForm(
+  form: FormState,
+  sellerIds: number[],
+  t: (key: string, defaultVal?: string) => string = (_, d) => d || ""
+): FormErrors {
   const errors: FormErrors = {};
 
   const title = form.title.trim();
-  if (!title) errors.title = "RFQ title is required";
+  if (!title) errors.title = t("rfq.errors.titleRequired", "RFQ title is required");
   else if (title.length < 2 || title.length > 200) {
-    errors.title = "Title must be 2 to 200 characters";
+    errors.title = t("rfq.errors.titleLength", "Title must be 2 to 200 characters");
   }
 
   const categoryId = Number(form.categoryId);
   if (!form.categoryId || !Number.isInteger(categoryId) || categoryId < 1) {
-    errors.categoryId = "Category is required";
+    errors.categoryId = t("rfq.errors.categoryRequired", "Category is required");
   }
 
   const subcategoryId = Number(form.subcategoryId);
   if (!form.subcategoryId || !Number.isInteger(subcategoryId) || subcategoryId < 1) {
-    errors.subcategoryId = "Subcategory is required";
+    errors.subcategoryId = t("rfq.errors.subcategoryRequired", "Subcategory is required");
   }
 
   const description = form.description.trim();
-  if (!description) errors.description = "Description is required";
+  if (!description) errors.description = t("rfq.errors.descriptionRequired", "Description is required");
   else if (description.length < 10) {
-    errors.description = "Description must be at least 10 characters";
+    errors.description = t("rfq.errors.descriptionMinLength", "Description must be at least 10 characters");
   }
 
   const quantity = Number(form.quantity);
   if (!form.quantity || !Number.isFinite(quantity) || quantity < 1) {
-    errors.quantity = "Quantity is required and must be at least 1";
+    errors.quantity = t("rfq.errors.quantityRequired", "Quantity is required and must be at least 1");
   }
 
-  if (!form.unit.trim()) errors.unit = "Unit is required";
+  if (!form.unit.trim()) errors.unit = t("rfq.errors.unitRequired", "Unit is required");
 
   if (!form.quotationDeadline) {
-    errors.quotationDeadline = "Quotation deadline is required";
+    errors.quotationDeadline = t("rfq.errors.deadlineRequired", "Quotation deadline is required");
   } else if (form.quotationDeadline < todayInputDate()) {
-    errors.quotationDeadline = "Quotation deadline cannot be in the past";
+    errors.quotationDeadline = t("rfq.errors.deadlinePast", "Quotation deadline cannot be in the past");
   }
 
   if (form.requiredBefore && form.requiredBefore < todayInputDate()) {
-    errors.requiredBefore = "Required before date cannot be in the past";
+    errors.requiredBefore = t("rfq.errors.requiredBeforePast", "Required before date cannot be in the past");
   }
 
-  if (!form.addressLine1.trim()) errors.addressLine1 = "Address line 1 is required";
+  if (!form.addressLine1.trim()) errors.addressLine1 = t("rfq.errors.addressRequired", "Address line 1 is required");
 
-  if (!form.city.trim()) errors.city = "City is required";
-  if (!form.state.trim()) errors.state = "State is required";
-  if (!form.country.trim()) errors.country = "Country is required";
+  if (!form.city.trim()) errors.city = t("rfq.errors.cityRequired", "City is required");
+  if (!form.state.trim()) errors.state = t("rfq.errors.stateRequired", "State is required");
+  if (!form.country.trim()) errors.country = t("rfq.errors.countryRequired", "Country is required");
 
   const pincode = form.pincode.trim();
-  if (!pincode) errors.pincode = "Pincode is required";
-  else if (!/^\d{6}$/.test(pincode)) errors.pincode = "Enter a valid 6-digit pincode";
+  if (!pincode) errors.pincode = t("rfq.errors.pincodeRequired", "Pincode is required");
+  else if (!/^\d{6}$/.test(pincode)) errors.pincode = t("rfq.errors.pincodeValid", "Enter a valid 6-digit pincode");
 
   if (form.visibility === "PRIVATE" && sellerIds.length === 0) {
-    errors.sellerIds = "Select at least one seller for a private RFQ";
+    errors.sellerIds = t("rfq.errors.sellerRequired", "Select at least one seller for a private RFQ");
   }
 
   return errors;
@@ -241,10 +240,12 @@ function mapApiErrorsToForm(apiErrors: Record<string, string>): FormErrors {
 function Section({
   title,
   optional,
+  optionalText,
   children,
 }: {
   title: string;
   optional?: boolean;
+  optionalText?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -252,7 +253,7 @@ function Section({
       <h2 className="text-base font-semibold text-foreground">
         {title}
         {optional ? (
-          <span className="ml-3 text-sm font-normal text-muted-fg">(Optional)</span>
+          <span className="ml-3 text-sm font-normal text-muted-fg">({optionalText || "Optional"})</span>
         ) : null}
       </h2>
       <div className="space-y-5">{children}</div>
@@ -264,6 +265,7 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, openAuthModal } = useAuth();
+  const { t, currentLanguage } = useLanguage();
   const geo = useOptionalGeoLocation();
   const isEditMode = Boolean(rfqId);
   const [form, setForm] = useState<FormState>(initialForm);
@@ -289,7 +291,17 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [maxReachedStepIndex, setMaxReachedStepIndex] = useState(0);
 
-  const lastStepIndex = WIZARD_STEPS.length - 1;
+  const wizardSteps: { key: WizardStepKey; label: string; shortLabel: string }[] = useMemo(
+    () => [
+      { key: "details", label: t("rfq.stepDetails", "Requirement Details"), shortLabel: t("rfq.stepDetailsShort", "Details") },
+      { key: "quantity", label: t("rfq.stepBudget", "Quantity & Budget"), shortLabel: t("rfq.stepBudgetShort", "Budget") },
+      { key: "delivery", label: t("rfq.stepDelivery", "Delivery Address"), shortLabel: t("rfq.stepDeliveryShort", "Delivery") },
+      { key: "settings", label: t("rfq.stepSettings", "Listing Settings"), shortLabel: t("rfq.stepSettingsShort", "Settings") },
+    ],
+    [t]
+  );
+
+  const lastStepIndex = wizardSteps.length - 1;
 
   // New RFQ: preselect geo state/city when available.
   useEffect(() => {
@@ -533,7 +545,7 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [currentLanguage]);
 
   useEffect(() => {
     if (!form.categoryId) {
@@ -569,7 +581,7 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
     return () => {
       cancelled = true;
     };
-  }, [form.categoryId]);
+  }, [form.categoryId, currentLanguage]);
 
   const loadMoreCategories = useCallback(async () => {
     if (categoriesLoadingMore || !categoriesHasMore) return;
@@ -664,10 +676,10 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
   }
 
   function getStepErrors(stepIndex: number): FormErrors {
-    const stepKey = WIZARD_STEPS[stepIndex]?.key;
+    const stepKey = wizardSteps[stepIndex]?.key;
     if (!stepKey) return {};
 
-    const allErrors = validateForm(form, sellerIds);
+    const allErrors = validateForm(form, sellerIds, t);
     const relevantKeys = ERROR_KEYS_BY_STEP[stepKey];
     const stepErrors: FormErrors = {};
 
@@ -726,7 +738,7 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
   }
 
   async function submitRfq() {
-    const clientErrors = validateForm(form, sellerIds);
+    const clientErrors = validateForm(form, sellerIds, t);
     if (Object.keys(clientErrors).length > 0) {
       setFieldErrors(clientErrors);
       jumpToFieldError(clientErrors);
@@ -837,7 +849,7 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
     return (
       <div className="flex items-center justify-center gap-3 py-16 text-base text-muted-fg">
         <Loader2 className="h-5 w-5 animate-spin text-primary" />
-        Loading draft RFQ...
+        {t("rfq.loadingRfq", "Loading draft RFQ...")}
       </div>
     );
   }
@@ -853,7 +865,7 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
             variant="primary"
             size="md"
           >
-            Back to RFQ
+            {t("rfq.backToRfqs", "Back to RFQ")}
           </Button>
         ) : null}
       </div>
@@ -862,24 +874,26 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
 
   const submitLabel = isEditMode
     ? form.publishNow
-      ? "Update & Publish"
-      : "Update Draft"
+      ? t("rfq.updateAndPublish", "Update & Publish")
+      : t("rfq.updateDraft", "Update Draft")
     : form.publishNow
-      ? "Post Requirement"
-      : "Save Draft";
+      ? t("rfq.postRequirement", "Post Requirement")
+      : t("rfq.saveDraft", "Save Draft");
 
-  const submitLoadingText = isEditMode ? "Updating..." : "Posting...";
+  const submitLoadingText = isEditMode
+    ? t("rfq.updating", "Updating...")
+    : t("rfq.posting", "Posting...");
 
   return (
     <form onSubmit={(e) => void handleSubmit(e)} noValidate className="space-y-6">
       <div className="rounded-lg border border-primary-soft bg-primary-soft/30 px-4 py-3">
         <p className="text-sm text-muted-fg">
-          Fields marked with <span className="font-medium text-error">*</span> are required. Complete all steps to post your requirement.
+          {t("rfq.requiredBanner", "Fields marked with * are required. Complete all steps to post your requirement.")}
         </p>
       </div>
 
       <ProductWizardStepper
-        steps={WIZARD_STEPS}
+        steps={wizardSteps}
         activeIndex={activeStepIndex}
         maxReachedIndex={maxReachedStepIndex}
         onStepClick={goToStep}
@@ -894,13 +908,13 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
           transition={{ duration: 0.18, ease: "easeOut" }}
         >
           {activeStepIndex === 0 ? (
-      <Section title="Requirement Details">
+      <Section title={t("rfq.stepDetails", "Requirement Details")}>
         <div data-form-field="title">
-          <RequiredLabel>Requirement Title</RequiredLabel>
+          <RequiredLabel>{t("rfq.requirementTitle", "Requirement Title")}</RequiredLabel>
             <input
               value={form.title}
               onChange={(e) => updateField("title", e.target.value)}
-              placeholder="e.g. Bulk Industrial Steel Pipes for Construction"
+              placeholder={t("rfq.requirementTitlePlaceholder", "e.g. Bulk Industrial Steel Pipes for Construction")}
               className={inputClass("title")}
               minLength={2}
               maxLength={200}
@@ -910,7 +924,7 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
 
         <div className="grid gap-5 sm:grid-cols-2">
           <div data-form-field="categoryId">
-            <RequiredLabel>Category</RequiredLabel>
+            <RequiredLabel>{t("rfq.category", "Category")}</RequiredLabel>
             <Select
               id="rfq-category"
               className={selectClass}
@@ -920,7 +934,7 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
                 updateField("subcategoryId", "");
                 updateField("productId", "");
               }}
-              placeholder={loadingCategories ? "Loading..." : "Select category"}
+              placeholder={loadingCategories ? t("common.loading", "Loading...") : t("rfq.selectCategory", "Select category")}
               options={categories.map((cat) => ({ value: String(cat.id), label: cat.name }))}
               disabled={loadingCategories}
               hasMore={categoriesHasMore}
@@ -932,7 +946,7 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
             <FieldHint name="categoryId" />
           </div>
           <div data-form-field="subcategoryId">
-            <RequiredLabel>Subcategory</RequiredLabel>
+            <RequiredLabel>{t("rfq.selectSubcategory", "Subcategory")}</RequiredLabel>
             <Select
               id="rfq-subcategory"
               className={selectClass}
@@ -943,10 +957,10 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
               }}
               placeholder={
                 !form.categoryId
-                  ? "Select category first"
+                  ? t("rfq.selectCategoryFirst", "Select category first")
                   : loadingSubcategories
-                    ? "Loading..."
-                    : "Select subcategory"
+                    ? t("common.loading", "Loading...")
+                    : t("rfq.selectSubcategory", "Select subcategory")
               }
               options={subcategories.map((sub) => ({ value: String(sub.id), label: sub.name }))}
               disabled={!form.categoryId || loadingSubcategories}
@@ -961,12 +975,12 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
         </div>
 
         <div data-form-field="description">
-          <RequiredLabel>Description</RequiredLabel>
+          <RequiredLabel>{t("rfq.description", "Description")}</RequiredLabel>
           <textarea
             value={form.description}
             onChange={(e) => updateField("description", e.target.value)}
             rows={4}
-            placeholder="Detailed specifications, quality requirements, delivery timeline, and any specific preferences (minimum 10 characters)..."
+            placeholder={t("rfq.descriptionPlaceholder", "Detailed specifications, quality requirements, delivery timeline, and any specific preferences (minimum 10 characters)...")}
             className={textareaClass("description")}
             minLength={10}
           />
@@ -974,7 +988,7 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
         </div>
 
         <div data-form-field="productId">
-          <label className={labelClass}>Linked product</label>
+          <label className={labelClass}>{t("rfq.linkedProduct", "Linked product")}</label>
           <ProductSelect
             id="rfq-product"
             className={selectClass}
@@ -987,10 +1001,10 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
           ) : null}
 
           {activeStepIndex === 1 ? (
-      <Section title="Quantity & Budget">
+      <Section title={t("rfq.stepBudget", "Quantity & Budget")}>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           <div data-form-field="quantity">
-            <RequiredLabel>Quantity</RequiredLabel>
+            <RequiredLabel>{t("rfq.quantity", "Quantity")}</RequiredLabel>
             <input
               type="number"
               min={1}
@@ -1002,14 +1016,14 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
             <FieldHint name="quantity" />
           </div>
           <div data-form-field="unit">
-            <RequiredLabel>Unit</RequiredLabel>
+            <RequiredLabel>{t("common.unit", "Unit")}</RequiredLabel>
             <Select
               id="rfq-unit"
               className={selectClass}
               value={form.unit}
               onChange={(e) => updateField("unit", e.target.value)}
-              placeholder="Select unit"
-              options={getUnitOptions(form.unit)}
+              placeholder={t("rfq.selectUnit", "Select unit")}
+              options={getUnitOptions(form.unit, t)}
               error={!!fieldError("unit")}
               searchable={false}
               required
@@ -1017,7 +1031,7 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
             <FieldHint name="unit" />
           </div>
           <div>
-            <label className={labelClass}>Expected unit price</label>
+            <label className={labelClass}>{t("rfq.expectedUnitPrice", "Expected unit price")}</label>
             <input
               type="number"
               min={0}
@@ -1028,25 +1042,25 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
             />
           </div>
           <div>
-            <label className={labelClass}>Budget</label>
+            <label className={labelClass}>{t("rfq.budget", "Budget")}</label>
             <input
               type="number"
               min={0}
               step="0.01"
               value={form.budget}
               readOnly
-              title="Auto-calculated: quantity × expected unit price"
+              title={t("rfq.budgetAutoCalc", "Auto-calculated: quantity × expected unit price")}
               className={`${inputClass("budget")} cursor-default bg-muted`}
             />
             <p className="mt-1 text-[11px] text-muted-fg">
-              Auto-calculated from quantity × expected unit price
+              {t("rfq.budgetAutoCalc", "Auto-calculated from quantity × expected unit price")}
             </p>
           </div>
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2">
           <div data-form-field="quotationDeadline">
-            <RequiredLabel>Quotation deadline</RequiredLabel>
+            <RequiredLabel>{t("rfq.quoteDeadline", "Quotation deadline")}</RequiredLabel>
             <DateInput
               value={form.quotationDeadline}
               onChange={(e) => updateField("quotationDeadline", e.target.value)}
@@ -1055,7 +1069,7 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
             <FieldHint name="quotationDeadline" />
           </div>
           <div data-form-field="requiredBefore">
-            <label className={labelClass}>Required before</label>
+            <label className={labelClass}>{t("rfq.requiredBefore", "Required before")}</label>
             <DateInput
               value={form.requiredBefore}
               onChange={(e) => updateField("requiredBefore", e.target.value)}
@@ -1068,37 +1082,37 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
           ) : null}
 
           {activeStepIndex === 2 ? (
-      <Section title="Delivery Address">
+      <Section title={t("rfq.stepDelivery", "Delivery Address")}>
         <div data-form-field="addressLine1">
-          <RequiredLabel>Address line 1</RequiredLabel>
+          <RequiredLabel>{t("rfq.addressLine1", "Address line 1")}</RequiredLabel>
           <input
             value={form.addressLine1}
             onChange={(e) => updateField("addressLine1", e.target.value)}
-            placeholder="Street address, building number, area"
+            placeholder={t("rfq.addressLine1Placeholder", "Street address, building number, area")}
             className={inputClass("addressLine1")}
           />
           <FieldHint name="addressLine1" />
         </div>
 
         <div>
-          <label className={labelClass}>Address line 2</label>
+          <label className={labelClass}>{t("rfq.addressLine2", "Address line 2")}</label>
           <input
             value={form.addressLine2}
             onChange={(e) => updateField("addressLine2", e.target.value)}
-            placeholder="Landmark, suite number, floor (optional)"
+            placeholder={t("rfq.addressLine2Placeholder", "Landmark, suite number, floor (optional)")}
             className={inputClass("addressLine2")}
           />
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2">
           <div data-form-field="state">
-            <RequiredLabel>State</RequiredLabel>
+            <RequiredLabel>{t("rfq.selectState", "State")}</RequiredLabel>
             <StateSelect
               id="rfq-state"
               value={stateId}
               selectedLabel={form.state}
-              placeholder="Select state"
-              emptyLabel="Select state"
+              placeholder={t("rfq.selectState", "Select state")}
+              emptyLabel={t("rfq.selectState", "Select state")}
               error={Boolean(fieldErrors.state)}
               onChange={(nextId, label) => {
                 setStateId(nextId);
@@ -1120,14 +1134,14 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
             <FieldHint name="state" />
           </div>
           <div data-form-field="city">
-            <RequiredLabel>City</RequiredLabel>
+            <RequiredLabel>{t("rfq.selectCity", "City")}</RequiredLabel>
             <CitySelect
               id="rfq-city"
               value={cityId}
               selectedLabel={form.city}
               stateId={stateId}
-              placeholder={stateId ? "Select city" : "Select state first"}
-              emptyLabel="Select city"
+              placeholder={stateId ? t("rfq.selectCity", "Select city") : t("rfq.selectStateFirst", "Select state first")}
+              emptyLabel={t("rfq.selectCity", "Select city")}
               disabled={!stateId}
               error={Boolean(fieldErrors.city)}
               onChange={(nextId, label) => {
@@ -1147,7 +1161,7 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
             <FieldHint name="city" />
           </div>
           <div data-form-field="country">
-            <RequiredLabel>Country</RequiredLabel>
+            <RequiredLabel>{t("rfq.country", "Country")}</RequiredLabel>
             <input
               value={form.country}
               onChange={(e) => updateField("country", e.target.value)}
@@ -1156,13 +1170,13 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
             <FieldHint name="country" />
           </div>
           <div data-form-field="pincode">
-            <RequiredLabel>Pincode</RequiredLabel>
+            <RequiredLabel>{t("rfq.pincode", "Pincode")}</RequiredLabel>
             <input
               value={form.pincode}
               onChange={(e) => updateField("pincode", e.target.value.replace(/\D/g, "").slice(0, 6))}
               inputMode="numeric"
               pattern="\d{6}"
-              placeholder="6-digit pincode"
+              placeholder={t("rfq.pincodePlaceholder", "6-digit pincode")}
               className={inputClass("pincode")}
             />
             <FieldHint name="pincode" />
@@ -1172,9 +1186,9 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
           ) : null}
 
           {activeStepIndex === 3 ? (
-      <Section title="Listing Settings">
+      <Section title={t("rfq.stepSettings", "Listing Settings")}>
         <div data-form-field="visibility">
-          <RequiredLabel>Visibility</RequiredLabel>
+          <RequiredLabel>{t("rfq.visibility", "Visibility")}</RequiredLabel>
           <div className="grid gap-3 sm:grid-cols-2">
             <button
               type="button"
@@ -1187,9 +1201,9 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-foreground">Public</p>
+                  <p className="text-sm font-semibold text-foreground">{t("rfq.public", "Public")}</p>
                   <p className="mt-1 text-sm text-muted-fg">
-                    Visible to all sellers in the marketplace
+                    {t("rfq.publicDesc", "Visible to all sellers in the marketplace")}
                   </p>
                 </div>
                 <div className={`h-4 w-4 rounded-full border-2 transition-all ${
@@ -1214,9 +1228,9 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-foreground">Private</p>
+                  <p className="text-sm font-semibold text-foreground">{t("rfq.private", "Private")}</p>
                   <p className="mt-1 text-sm text-muted-fg">
-                    Invite specific sellers only
+                    {t("rfq.privateDesc", "Invite specific sellers only")}
                   </p>
                 </div>
                 <div className={`h-4 w-4 rounded-full border-2 transition-all ${
@@ -1236,9 +1250,9 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
 
         {form.visibility === "PRIVATE" ? (
           <div data-form-field="sellerIds" className="rounded-lg border border-primary-soft bg-primary-soft/20 p-4">
-            <RequiredLabel>Invite sellers</RequiredLabel>
+            <RequiredLabel>{t("rfq.inviteSellers", "Invite sellers")}</RequiredLabel>
             <p className="mb-3 text-sm text-muted-fg">
-              Search and select sellers who can see and quote on this RFQ.
+              {t("rfq.inviteSellersDesc", "Search and select sellers who can see and quote on this RFQ.")}
             </p>
             <SellerMultiSelect
               selectedIds={sellerIds}
@@ -1260,11 +1274,11 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
         ) : null}
 
         <div>
-          <label className={labelClass}>Payment terms</label>
+          <label className={labelClass}>{t("rfq.paymentTerms", "Payment terms")}</label>
             <input
               value={form.paymentTerms}
               onChange={(e) => updateField("paymentTerms", e.target.value)}
-              placeholder="e.g., 50% advance, 50% on delivery"
+              placeholder={t("rfq.paymentTermsPlaceholder", "e.g., 50% advance, 50% on delivery")}
               className={inputClass("paymentTerms")}
             />
         </div>
@@ -1279,10 +1293,10 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
             />
             <div>
               <p className="text-sm font-medium text-foreground">
-                Publish immediately
+                {t("rfq.publishImmediately", "Publish immediately")}
               </p>
               <p className="mt-1 text-sm text-muted-fg">
-                Make your RFQ visible to sellers right away so they can start quoting
+                {t("rfq.publishImmediatelyDesc", "Make your RFQ visible to sellers right away so they can start quoting")}
               </p>
             </div>
           </label>
@@ -1305,7 +1319,7 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
                 disabled={submitting}
                 className="sm:w-auto sm:min-w-[120px]"
               >
-                Back
+                {t("common.back", "Back")}
               </Button>
             ) : null}
           </div>
@@ -1320,7 +1334,7 @@ export default function CreateRfqForm({ rfqId }: { rfqId?: number } = {}) {
                 disabled={submitting}
                 className="!bg-primary hover:!bg-primary-hover sm:w-auto sm:min-w-[120px]"
               >
-                Continue
+                {t("rfq.continue", "Continue")}
               </Button>
             ) : (
               <Button

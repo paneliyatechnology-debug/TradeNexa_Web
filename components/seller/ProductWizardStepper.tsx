@@ -4,6 +4,8 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 
+import { useLanguage } from "@/context/LanguageContext";
+
 export interface WizardStepItem {
   key: string;
   label: string;
@@ -23,6 +25,7 @@ export default function ProductWizardStepper({
   maxReachedIndex,
   onStepClick,
 }: ProductWizardStepperProps) {
+  const { t } = useLanguage();
   const safeActiveIndex = Math.min(Math.max(0, activeIndex), Math.max(0, steps.length - 1));
   const safeMaxReached = Math.min(Math.max(0, maxReachedIndex), Math.max(0, steps.length - 1));
   const progressPct =
@@ -42,13 +45,15 @@ export default function ProductWizardStepper({
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-            Step {safeActiveIndex + 1} of {steps.length}
+            {t("rfq.stepOf", { current: safeActiveIndex + 1, total: steps.length }, `Step ${safeActiveIndex + 1} of ${steps.length}`)}
           </p>
           <h2 className="mt-1 text-lg font-semibold text-foreground sm:text-xl">
             {current?.label ?? "Create product"}
           </h2>
         </div>
-        <p className="text-sm font-medium text-muted-fg">{percentComplete}% complete</p>
+        <p className="text-sm font-medium text-muted-fg">
+          {t("rfq.percentComplete", { percent: percentComplete }, `${percentComplete}% complete`)}
+        </p>
       </div>
 
       <div className="relative mb-6 h-2 overflow-hidden rounded-full bg-border">

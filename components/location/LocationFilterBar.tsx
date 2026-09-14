@@ -4,6 +4,7 @@ import React from "react";
 import { X } from "lucide-react";
 import StateSelect from "@/components/location/StateSelect";
 import CitySelect from "@/components/location/CitySelect";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface LocationFilterBarProps {
   idPrefix: string;
@@ -39,6 +40,8 @@ export default function LocationFilterBar({
   variant = "default",
   resultsLabel,
 }: LocationFilterBarProps) {
+  const { t } = useLanguage();
+  const clearFiltersText = t("catalog.clearFilters", "Clear filters");
   const compactSelectClass =
     selectClassName ??
     (variant === "toolbar" || variant === "hero"
@@ -73,7 +76,7 @@ export default function LocationFilterBar({
             className="inline-flex h-9 shrink-0 items-center gap-1.5 px-2 text-sm font-medium text-white/85 underline-offset-4 transition hover:text-white hover:underline disabled:cursor-not-allowed disabled:text-white/40 disabled:no-underline"
           >
             <X className="h-3.5 w-3.5" />
-            Clear filters
+            {clearFiltersText}
           </button>
         </div>
       </div>
@@ -109,7 +112,7 @@ export default function LocationFilterBar({
               className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full border border-border bg-card px-3 text-xs font-semibold text-foreground transition hover:border-primary/30 hover:text-primary disabled:cursor-not-allowed disabled:text-muted-fg disabled:opacity-50 disabled:hover:border-border disabled:hover:text-muted-fg"
             >
               <X className="h-3.5 w-3.5" />
-              Clear filters
+              {clearFiltersText}
             </button>
           </div>
           {resultsLabel ? (
@@ -153,7 +156,7 @@ export default function LocationFilterBar({
         className={clearButtonClass}
       >
         <X className="h-4 w-4" />
-        Clear filters
+        {clearFiltersText}
       </button>
     </div>
   );

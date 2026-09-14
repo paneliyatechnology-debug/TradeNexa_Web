@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { ArrowRight, Calendar, Clock, MapPin, MessageSquare, Package, Users } from "lucide-react";
 import type { ApiRfqListItem } from "@/types/rfq";
+import { useLanguage } from "@/context/LanguageContext";
+import { translateLocationName } from "@/utils/locationTranslations";
 import {
   formatRfqDate,
   formatRfqDeadlineUrgency,
-  formatRfqLocation,
   formatRfqQuantity,
   formatRfqQuoteCount,
   formatSellerCompetitionCount,
@@ -23,9 +24,14 @@ interface RfqListCardProps {
 }
 
 export default function RfqListCard({ rfq, href, variant = "buyer", meta }: RfqListCardProps) {
+  const { t, currentLanguage } = useLanguage();
   const isSeller = variant === "seller";
   const quantity = formatRfqQuantity(rfq);
-  const location = formatRfqLocation(rfq);
+  const location = [
+    rfq.city ? translateLocationName(rfq.city, currentLanguage) : null,
+    rfq.state ? translateLocationName(rfq.state, currentLanguage) : null,
+    rfq.country,
+  ].filter(Boolean).join(", ") || "India";
   const deadlineUrgency = formatRfqDeadlineUrgency(rfq.quotation_deadline);
   const deadlineUrgent = isRfqDeadlineUrgent(rfq.quotation_deadline);
   const showStatus = shouldShowRfqStatusBadge(rfq.status, variant);
@@ -113,7 +119,9 @@ export default function RfqListCard({ rfq, href, variant = "buyer", meta }: RfqL
           href={href}
           className="inline-flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white shadow-[var(--shadow-button)] transition-all duration-200 hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 active:scale-[0.98]"
         >
-          {isSeller ? "View & Quote" : "View RFQ & Quotes"}
+          {isSeller
+            ? t("rfq.viewAndQuote", "View & Quote")
+            : t("rfq.viewRfqAndQuotes", "View RFQ & Quotes")}
           <ArrowRight className="h-4 w-4" aria-hidden />
         </Link>
       </div>

@@ -27,7 +27,7 @@ const tabs = SELLER_RFQ_STATUS_TABS;
 const PAGE_SIZE = 6;
 
 export default function SellerLeadsPage() {
-  const { t } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("all");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
@@ -42,12 +42,12 @@ export default function SellerLeadsPage() {
         status: rfqTabToApiStatus(activeTab),
         search: debouncedSearch || undefined,
       }),
-    [activeTab, debouncedSearch]
+    [activeTab, debouncedSearch, currentLanguage]
   );
 
   const { items, pagination, loading, error, goToPage } = usePaginatedList({
     fetchPage,
-    resetDeps: [activeTab, debouncedSearch],
+    resetDeps: [activeTab, debouncedSearch, currentLanguage],
   });
 
   const newTodayCount = useMemo(
@@ -56,7 +56,7 @@ export default function SellerLeadsPage() {
   );
 
   const hasSearch = debouncedSearch.trim().length > 0;
-  const tabLabel = formatRfqStatusTabLabel(activeTab).toLowerCase();
+  const tabLabel = formatRfqStatusTabLabel(activeTab, t).toLowerCase();
   const emptyTitle = hasSearch
     ? t("leads.noMatches", "No RFQs match your search")
     : activeTab === "all"
@@ -101,7 +101,7 @@ export default function SellerLeadsPage() {
                 onClick={() => setActiveTab(tab)}
                 className={portalFilterChipClass(activeTab === tab)}
               >
-                {tab === "all" ? t("catalog.tabs.all", "All") : formatRfqStatusTabLabel(tab)}
+                {formatRfqStatusTabLabel(tab, t)}
               </button>
             ))}
           </div>

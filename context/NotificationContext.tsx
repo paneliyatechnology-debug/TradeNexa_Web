@@ -34,7 +34,10 @@ import {
   isMarkAllUpdatedPayload,
   normalizeUnreadCountPayload,
   unreadCountForRole,
+  resolveNotificationPath,
 } from "@/utils/notificationHelpers";
+import { writeStoredActiveRole } from "@/utils/roleNavigation";
+import { syncActiveRoleToServiceWorker } from "@/services/fcmService";
 import type { AppNotification, NotificationUnreadCount } from "@/types/notifications";
 
 type InboxListener = (event: {
@@ -246,21 +249,20 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       if (notification) {
         notifyInboxListeners({ kind: "new", notification });
 
+        const path = resolveNotificationPath(notification, activeRole);
+        const pathPortal: "buyer" | "seller" = path.startsWith("/seller") ? "seller" : "buyer";
+
+        const handleNavigate = () => {
+          writeStoredActiveRole(pathPortal);
+          syncActiveRoleToServiceWorker(pathPortal);
+          window.location.href = path;
+        };
+
         // Show prominent in-app notification popup toast
         showNotificationToast({
           title: notification.title || "New Notification",
           body: notification.body || "You received a new update.",
-          onClick: () => {
-            if (notification.click_action) {
-              window.location.href = notification.click_action;
-            } else if (notification.type?.includes("INQUIRY")) {
-              window.location.href = activeRole === "seller" ? "/seller/inquiries" : "/buyer/inquiries";
-            } else if (notification.type?.includes("RFQ")) {
-              window.location.href = activeRole === "seller" ? "/seller/rfq" : "/buyer/rfq";
-            } else {
-              window.location.href = activeRole === "seller" ? "/seller/notifications" : "/buyer/notifications";
-            }
-          },
+          onClick: handleNavigate,
         });
 
         // Trigger native browser desktop notification if permitted
@@ -276,9 +278,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             });
             n.onclick = () => {
               window.focus();
-              if (notification.click_action) {
-                window.location.href = notification.click_action;
-              }
+              handleNavigate();
             };
           } catch {
             /* ignore notification creation error */

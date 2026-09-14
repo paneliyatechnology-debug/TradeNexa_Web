@@ -46,10 +46,14 @@
   --whatsapp-dark: #128c7e;
 
   /* Radius scale */
-  --radius-sm: 0.375rem; /* 6px — chips */
-  --radius: 0.5rem; /* 8px — inputs, buttons, selects */
-  --radius-lg: 0.75rem; /* 12px — cards, modals, panels */
-  --radius-xl: 1rem; /* 16px — marketing / heroes only */
+  --radius-sm: 0.375rem;
+  /* 6px — chips */
+  --radius: 0.5rem;
+  /* 8px — inputs, buttons, selects */
+  --radius-lg: 0.75rem;
+  /* 12px — cards, modals, panels */
+  --radius-xl: 1rem;
+  /* 16px — marketing / heroes only */
 
   /* Shadows — prefer border for dense portal UI */
   --shadow-soft: 0 4px 24px -4px rgb(13 27 42 / 0.08);
@@ -61,9 +65,12 @@
   --focus-ring-error: 0 0 0 3px rgb(198 40 40 / 0.18);
 
   --header-height: 4rem;
-  --control-h-sm: 2rem; /* h-8 */
-  --control-h-md: 2.5rem; /* h-10 — default */
-  --control-h-lg: 2.75rem; /* h-11 */
+  --control-h-sm: 2rem;
+  /* h-8 */
+  --control-h-md: 2.5rem;
+  /* h-10 — default */
+  --control-h-lg: 2.75rem;
+  /* h-11 */
 
   /* Portal semantic tokens (aligned with brand) */
   --portal-bg: #f4f6f9;
@@ -293,8 +300,13 @@ main {
 
 /* ── Skeleton shimmer ── */
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .skeleton {

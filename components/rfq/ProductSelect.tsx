@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Select } from "@/components/common/Select";
 import { fetchProductById, fetchProducts } from "@/services/catalogService";
 import type { ApiProductListItem } from "@/types/catalog";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ProductSelectProps {
   id: string;
@@ -39,6 +40,7 @@ export default function ProductSelect({
   disabled,
   className,
 }: ProductSelectProps) {
+  const { t, currentLanguage } = useLanguage();
   const [products, setProducts] = useState<ApiProductListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -82,7 +84,7 @@ export default function ProductSelect({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- products checked only to short-circuit; value drives the fetch
-  }, [value]);
+  }, [value, currentLanguage]);
 
   useEffect(() => {
     if (value && products.some((product) => String(product.id) === value)) {
@@ -126,7 +128,7 @@ export default function ProductSelect({
     return () => {
       cancelled = true;
     };
-  }, [hasSubcategory, subcategoryId]);
+  }, [hasSubcategory, subcategoryId, currentLanguage]);
 
   const loadMore = useCallback(async () => {
     if (!hasSubcategory || loadingMore || !hasMore) return;
@@ -159,16 +161,16 @@ export default function ProductSelect({
       items.unshift({ value, label: prefetchedName });
     }
 
-    return [{ value: "", label: "No linked product" }, ...items];
-  }, [prefetchedName, products, value]);
+    return [{ value: "", label: t("rfq.noLinkedProduct", "No linked product") }, ...items];
+  }, [prefetchedName, products, value, t]);
 
   const placeholder = !hasSubcategory
-    ? "Select subcategory first (optional)"
+    ? t("rfq.selectSubcategoryFirstOptional", "Select subcategory first (optional)")
     : loading
-      ? "Loading products..."
+      ? t("common.loading", "Loading products...")
       : products.length === 0
-        ? "No products in this subcategory"
-        : "Select product (optional)";
+        ? t("rfq.noProductsInSubcategory", "No products in this subcategory")
+        : t("rfq.selectProductOptional", "Select product (optional)");
 
   return (
     <Select
@@ -183,7 +185,7 @@ export default function ProductSelect({
       onLoadMore={loadMore}
       error={error}
       className={className}
-      searchPlaceholder="Search products..."
+      searchPlaceholder={t("rfq.searchProducts", "Search products...")}
     />
   );
 }

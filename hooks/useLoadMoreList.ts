@@ -60,6 +60,18 @@ export function useLoadMoreList<T>({
     }
   }, []);
 
+  const [languageTick, setLanguageTick] = useState(0);
+
+  useEffect(() => {
+    const handleLanguageChange = () => {
+      setLanguageTick((prev) => prev + 1);
+    };
+    window.addEventListener("tradenexa_language_change", handleLanguageChange);
+    return () => {
+      window.removeEventListener("tradenexa_language_change", handleLanguageChange);
+    };
+  }, []);
+
   useEffect(() => {
     if (!enabled) return;
 
@@ -93,7 +105,7 @@ export function useLoadMoreList<T>({
       requestIdRef.current += 1;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, ...resetDeps]);
+  }, [enabled, languageTick, ...resetDeps]);
 
   const loadMore = useCallback(() => {
     if (loading || loadingMore) return;

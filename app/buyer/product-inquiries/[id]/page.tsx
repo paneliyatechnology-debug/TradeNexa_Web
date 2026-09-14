@@ -64,7 +64,7 @@ function SnapshotStat({
 }
 
 export default function BuyerProductInquiryDetailPage() {
-  const { t } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -93,7 +93,7 @@ export default function BuyerProductInquiryDetailPage() {
     } finally {
       if (loadRequestRef.current === requestId) setLoading(false);
     }
-  }, [inquiryId, t]);
+  }, [inquiryId, t, currentLanguage]);
 
   useEffect(() => {
     void load();

@@ -18,10 +18,12 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useLoadMoreList } from "@/hooks/useLoadMoreList";
 import { getCategoryFallbackIcon } from "@/utils/categoryIcons";
 import { resolveImageUrl } from "@/utils/catalogHelpers";
+import { useLanguage } from "@/context/LanguageContext";
 import type { ApiCategoryDetail } from "@/types/catalog";
 import LocationFilterBar from "@/components/location/LocationFilterBar";
 
 export default function BuyerCategoryPage() {
+  const { currentLanguage } = useLanguage();
   const params = useParams();
   const rawId = params?.id;
   const idValue = Array.isArray(rawId) ? rawId[0] : rawId;
@@ -44,6 +46,7 @@ export default function BuyerCategoryPage() {
 }
 
 function BuyerCategoryContent({ categoryId }: { categoryId: number }) {
+  const { currentLanguage } = useLanguage();
   const [category, setCategory] = useState<ApiCategoryDetail | null>(null);
   const [metaLoading, setMetaLoading] = useState(true);
   const [metaError, setMetaError] = useState<string | null>(null);
@@ -124,7 +127,7 @@ function BuyerCategoryContent({ categoryId }: { categoryId: number }) {
     loadMore: loadMoreSubs,
   } = useLoadMoreList({
     fetchPage: fetchSubPage,
-    resetDeps: [categoryId],
+    resetDeps: [categoryId, currentLanguage],
     enabled: !!categoryId,
   });
 
@@ -165,7 +168,7 @@ function BuyerCategoryContent({ categoryId }: { categoryId: number }) {
     hasMore: hasMoreProducts,
   } = useLoadMoreList({
     fetchPage: fetchProductPage,
-    resetDeps: [categoryId, selectedSubId, debouncedSearch, cityId],
+    resetDeps: [categoryId, selectedSubId, debouncedSearch, stateId, cityId, currentLanguage],
     enabled: !!categoryId,
   });
 

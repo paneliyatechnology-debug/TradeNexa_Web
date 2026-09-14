@@ -37,13 +37,20 @@ export function useCityFilter(options: UseCityFilterOptions = {}) {
   const appliedGeoKey = useRef<string | null>(null);
   const requestedRef = useRef(false);
 
+  const stateNumericId = Number(stateId);
+  const hasStateFilter =
+    Boolean(stateId) && Number.isInteger(stateNumericId) && stateNumericId > 0;
+
   const cityNumericId = Number(cityId);
   const hasCityFilter =
     Boolean(cityId) && Number.isInteger(cityNumericId) && cityNumericId > 0;
 
   const cityFilterParams = useMemo(
-    () => (hasCityFilter ? { city_id: cityNumericId } : {}),
-    [hasCityFilter, cityNumericId]
+    () => ({
+      ...(hasStateFilter ? { state_id: stateNumericId } : {}),
+      ...(hasCityFilter ? { city_id: cityNumericId } : {}),
+    }),
+    [hasStateFilter, stateNumericId, hasCityFilter, cityNumericId]
   );
 
   // Apply cached geo immediately so dropdowns don't wait on context bootstrap.
@@ -66,27 +73,33 @@ export function useCityFilter(options: UseCityFilterOptions = {}) {
     );
   }, [dispatch, syncFromGeo, userTouched]);
 
-  // Apply live geo context once coordinates resolve to state/city IDs.
+  // Apply live geo context once coordinates or manual selection change
   useEffect(() => {
-    if (!syncFromGeo || userTouched || !geo) return;
-    if (geo.stateId == null || geo.cityId == null) return;
+    if (!syncFromGeo || !geo) return;
 
-    const key = `${geo.stateId}:${geo.cityId}`;
+    if (geo.stateId == null && geo.cityId == null) {
+      if (appliedGeoKey.current !== "empty" && appliedGeoKey.current !== null) {
+        appliedGeoKey.current = "empty";
+        dispatch(clearLocationFiltersAction());
+      }
+      return;
+    }
+
+    const key = `${geo.stateId ?? 0}:${geo.cityId ?? 0}`;
     if (appliedGeoKey.current === key) return;
     appliedGeoKey.current = key;
 
     dispatch(
       applyGeoLocation({
-        stateId: String(geo.stateId),
+        stateId: geo.stateId ? String(geo.stateId) : "",
         stateLabel: geo.stateName?.trim() || "",
-        cityId: String(geo.cityId),
+        cityId: geo.cityId ? String(geo.cityId) : "",
         cityLabel: geo.cityName?.trim() || "",
       })
     );
   }, [
     dispatch,
     syncFromGeo,
-    userTouched,
     geo,
     geo?.stateId,
     geo?.cityId,

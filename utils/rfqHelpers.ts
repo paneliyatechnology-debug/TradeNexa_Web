@@ -557,13 +557,21 @@ export function mapQuotationListResult(
   };
 }
 
-export function formatRfqStatus(status?: string | null): string {
-  if (!status) return "Unknown";
-  return status
-    .toLowerCase()
+export function formatRfqStatus(
+  status?: string | null,
+  t?: (key: string, fallback: string) => string
+): string {
+  if (!status) return t ? t("specs.unknown", "Unknown") : "Unknown";
+  const normalized = status.toLowerCase().trim();
+  const fallback = normalized
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+
+  if (t) {
+    return t(`rfqStatuses.${normalized}`, fallback);
+  }
+  return fallback;
 }
 
 export function rfqStatusClass(status?: string | null): string {
@@ -909,9 +917,12 @@ export const SELLER_RFQ_STATUS_TABS = [
   "closed",
 ] as const;
 
-export function formatRfqStatusTabLabel(tab: string): string {
-  if (!tab || tab === "all") return "All";
-  return formatRfqStatus(tab);
+export function formatRfqStatusTabLabel(
+  tab: string,
+  t?: (key: string, fallback: string) => string
+): string {
+  if (!tab || tab === "all") return t ? t("rfqStatuses.all", "All") : "All";
+  return formatRfqStatus(tab, t);
 }
 
 /** RFQ is still open for fresh seller quotes (only while PUBLISHED). */

@@ -34,8 +34,17 @@ export function cancelRouteInflightRequests(targetRoute?: string): void {
     // Ignore abort errors
   }
   currentRouteAbortController = new AbortController();
-  // Clear safe request cache so canceled promises don't block subsequent calls
   inflightSafeRequests.clear();
+}
+
+export function clearApiClientSafeRequests(): void {
+  inflightSafeRequests.clear();
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("tradenexa_language_change", () => {
+    clearApiClientSafeRequests();
+  });
 }
 
 /**

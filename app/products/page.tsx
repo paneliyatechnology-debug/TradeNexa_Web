@@ -109,13 +109,21 @@ function ProductsPageContent() {
             sort_order: "asc",
             ...cityFilterParams,
           }),
-    [debouncedSearch, categoryId, subcategoryId, trendingOnly, cityFilterParams]
+    [debouncedSearch, categoryId, subcategoryId, trendingOnly, cityFilterParams, currentLanguage]
   );
 
   const { items: products, pagination, loading, loadingMore, error, loadMore } =
     useLoadMoreList({
       fetchPage,
-      resetDeps: [debouncedSearch, categoryId, subcategoryId, trendingOnly, cityId, currentLanguage],
+      resetDeps: [
+        debouncedSearch,
+        categoryId,
+        subcategoryId,
+        trendingOnly,
+        stateId,
+        cityId,
+        currentLanguage,
+      ],
       enabled: !redirecting,
     });
 

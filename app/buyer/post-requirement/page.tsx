@@ -4,6 +4,7 @@ import React, { Suspense } from "react";
 import PortalBackLink from "@/components/portal/PortalBackLink";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import CreateRfqForm from "@/components/rfq/CreateRfqForm";
+import { useLanguage } from "@/context/LanguageContext";
 
 function FormLoadingSkeleton() {
   return (
@@ -55,13 +56,15 @@ function FormLoadingSkeleton() {
 }
 
 export default function PostRequirementPage() {
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
         <PortalBackLink href="/buyer/home" />
         <PortalPageHeader
-          title="Post Requirement"
-          subtitle="Create your RFQ to receive competitive quotes from verified suppliers"
+          title={t("rfq.postRequirement", "Post Requirement")}
+          subtitle={t("rfq.postRequirementSubtitle", "Create your RFQ to receive competitive quotes from verified suppliers")}
         />
         <Suspense fallback={<FormLoadingSkeleton />}>
           <CreateRfqForm />
@@ -70,3 +73,4 @@ export default function PostRequirementPage() {
     </div>
   );
 }
+

@@ -6,6 +6,8 @@ import { Select } from "@/components/common/Select";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { fetchCities } from "@/services/locationService";
 import type { ApiCity } from "@/types/location";
+import { translateLocationName } from "@/utils/locationTranslations";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface CitySelectProps {
   id: string;
@@ -35,6 +37,7 @@ export default function CitySelect({
   selectedLabel,
   emptyLabel = "All cities",
 }: CitySelectProps) {
+  const { currentLanguage, t } = useLanguage();
   const [cities, setCities] = useState<ApiCity[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -125,10 +128,16 @@ export default function CitySelect({
     setSearchInput(query);
   }, []);
 
+  const effectiveEmptyLabel =
+    emptyLabel === "All cities" ? t("location.allCities", "All cities") : emptyLabel;
+  const effectivePlaceholder =
+    placeholder === "All cities" ? t("location.allCities", "All cities") : placeholder;
+  const effectiveSearchPlaceholder = t("location.searchCities", "Search cities...");
+
   const options = useMemo(() => {
     const items = cities.map((city) => ({
       value: String(city.id),
-      label: city.name,
+      label: translateLocationName(city.name, currentLanguage),
     }));
 
     // Keep a selected city visible even before it appears in the fetched page.
@@ -137,19 +146,21 @@ export default function CitySelect({
       if (!alreadyListed) {
         items.unshift({
           value,
-          label: selectedLabel?.trim() || `City #${value}`,
+          label: selectedLabel?.trim()
+            ? translateLocationName(selectedLabel.trim(), currentLanguage)
+            : `City #${value}`,
         });
       }
     }
 
-    return [{ value: "", label: emptyLabel }, ...items];
-  }, [cities, emptyLabel, selectedLabel, value]);
+    return [{ value: "", label: effectiveEmptyLabel }, ...items];
+  }, [cities, currentLanguage, effectiveEmptyLabel, selectedLabel, value]);
 
   const resolvedPlaceholder = !hasState
-    ? "Select state first"
+    ? t("location.selectStateFirst", "Select state first")
     : loading && cities.length === 0
-      ? "Loading cities..."
-      : placeholder;
+      ? t("common.loading", "Loading cities...")
+      : effectivePlaceholder;
 
   return (
     <Select
@@ -169,7 +180,7 @@ export default function CitySelect({
       onSearchChange={hasState ? handleSearchChange : undefined}
       error={error}
       className={className}
-      searchPlaceholder="Search cities..."
+      searchPlaceholder={effectiveSearchPlaceholder}
       leadingIcon={<MapPin className="h-3.5 w-3.5" />}
     />
   );

@@ -39,7 +39,11 @@ interface LanguageContextValue {
   activeLanguageOption: LanguageOption;
   setLanguage: (langCode: string) => void;
   resetToDefaultLanguage: () => void;
-  t: (key: string, defaultText?: string) => string;
+  t: (
+    key: string,
+    defaultTextOrParams?: string | Record<string, string | number>,
+    defaultText?: string
+  ) => string;
   languages: LanguageOption[];
 }
 
@@ -92,8 +96,21 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
    * Helper to look up translation keys by dot-notation (e.g. 'nav.home' or 'common.save')
    */
   const t = useCallback(
-    (key: string, defaultText?: string): string => {
-      if (!key) return defaultText || "";
+    (
+      key: string,
+      defaultTextOrParams?: string | Record<string, string | number>,
+      defaultText?: string
+    ): string => {
+      let params: Record<string, string | number> | undefined;
+      let fallback = defaultText;
+
+      if (typeof defaultTextOrParams === "string") {
+        fallback = defaultTextOrParams;
+      } else if (defaultTextOrParams && typeof defaultTextOrParams === "object") {
+        params = defaultTextOrParams;
+      }
+
+      if (!key) return fallback || "";
       const dict = DICTIONARIES[currentLanguage] || DICTIONARIES.en || {};
       const fallbackDict = DICTIONARIES.en || {};
 
@@ -107,8 +124,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         return typeof curr === "string" ? curr : undefined;
       };
 
-      const result = resolveKey(dict, key) || resolveKey(fallbackDict, key);
-      return result !== undefined ? result : defaultText || key;
+      let result = resolveKey(dict, key) ?? resolveKey(fallbackDict, key) ?? fallback ?? key;
+
+      if (params && typeof result === "string") {
+        for (const [paramKey, paramVal] of Object.entries(params)) {
+          result = result.replaceAll(`{${paramKey}}`, String(paramVal));
+        }
+      }
+
+      return result;
     },
     [currentLanguage]
   );

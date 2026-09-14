@@ -24,8 +24,10 @@ import {
   counterpartyDisplayName,
   counterpartySellerId,
 } from "@/components/chat/chatCounterparty";
+import { useLanguage } from "@/context/LanguageContext";
 import { fetchSupplierById } from "@/services/supplierService";
 import { getInitials, resolveImageUrl } from "@/utils/catalogHelpers";
+import { formatLocationLabel, translateLocationName } from "@/utils/locationTranslations";
 import type { ApiChatConversation, ChatRole } from "@/types/chat";
 import type { ApiSupplier } from "@/types/supplier";
 
@@ -91,6 +93,7 @@ export default function ChatCompanyProfilePanel({
   fallbackLogoUrl = null,
   contactName = null,
 }: ChatCompanyProfilePanelProps) {
+  const { currentLanguage, t } = useLanguage();
   const isViewingSeller = role === "buyer";
   const resolvedSellerId = counterpartySellerId(conversation, sellerId);
   const buyerPartyId =
@@ -134,7 +137,7 @@ export default function ChatCompanyProfilePanel({
     return () => {
       cancelled = true;
     };
-  }, [open, isViewingSeller, profileLookupId]);
+  }, [open, isViewingSeller, profileLookupId, currentLanguage]);
 
   useEffect(() => {
     if (!open) return;
@@ -176,15 +179,15 @@ export default function ChatCompanyProfilePanel({
   const email = supplier?.email?.trim() || other?.email?.trim() || null;
   const address =
     other?.address_line_1?.trim() || null;
-  const state = other?.state?.trim() || supplier?.state?.trim() || null;
-  const city = other?.city?.trim() || supplier?.city?.trim() || null;
+  const state = supplier?.state?.trim() || other?.state?.trim() || null;
+  const city = supplier?.city?.trim() || other?.city?.trim() || null;
   const pincode = other?.pincode?.trim() || null;
 
   const aboutRows: ProfileRow[] = [];
 
   if (isViewingSeller) {
     // Seller profile: industry / business type / location / contact
-    const location = [city, state].filter(Boolean).join(", ");
+    const location = formatLocationLabel(city, state, currentLanguage);
     const normalizedIndustry = industry?.toLowerCase();
     const normalizedBusinessType = businessType?.toLowerCase();
     const showBothClassification =
@@ -192,32 +195,32 @@ export default function ChatCompanyProfilePanel({
       Boolean(businessType) &&
       normalizedIndustry !== normalizedBusinessType;
     if (showBothClassification) {
-      pushRow(aboutRows, Building2, "Industry", industry);
-      pushRow(aboutRows, Briefcase, "Business type", businessType);
+      pushRow(aboutRows, Building2, t("supplier.industry", "Industry"), industry);
+      pushRow(aboutRows, Briefcase, t("supplier.businessType", "Business type"), businessType);
     } else if (industry) {
-      pushRow(aboutRows, Building2, "Industry", industry);
+      pushRow(aboutRows, Building2, t("supplier.industry", "Industry"), industry);
     } else if (businessType) {
-      pushRow(aboutRows, Briefcase, "Business type", businessType);
+      pushRow(aboutRows, Briefcase, t("supplier.businessType", "Business type"), businessType);
     }
-    pushRow(aboutRows, MapPin, "Location", location);
-    pushRow(aboutRows, Phone, "Contact no", phone);
-    pushRow(aboutRows, Mail, "Email", email);
+    pushRow(aboutRows, MapPin, t("supplier.location", "Location"), location);
+    pushRow(aboutRows, Phone, t("supplier.contactNo", "Contact no"), phone);
+    pushRow(aboutRows, Mail, t("supplier.email", "Email"), email);
     if (other?.is_online != null) {
-      pushRow(aboutRows, BadgeCheck, "Status", other.is_online ? "Online" : "Offline");
+      pushRow(aboutRows, BadgeCheck, t("common.status", "Status"), other.is_online ? t("common.active", "Online") : t("common.inactive", "Offline"));
     }
   } else {
     // Buyer profile: register + buyer complete-profile required fields only.
     // Register: full name, mobile, email, business type.
     // Complete profile: company (hero), industry, address, state, city, pincode.
-    pushRow(aboutRows, UserIcon, "Full name", personName);
-    pushRow(aboutRows, Phone, "Mobile number", phone);
-    pushRow(aboutRows, Mail, "Email", email);
-    pushRow(aboutRows, Briefcase, "Business type", businessType);
-    pushRow(aboutRows, Building2, "Industry", industry);
-    pushRow(aboutRows, MapPin, "Address", address);
-    pushRow(aboutRows, MapPin, "State", state);
-    pushRow(aboutRows, MapPin, "City", city);
-    pushRow(aboutRows, Hash, "Pincode", pincode);
+    pushRow(aboutRows, UserIcon, t("supplier.fullName", "Full name"), personName);
+    pushRow(aboutRows, Phone, t("supplier.mobileNumber", "Mobile number"), phone);
+    pushRow(aboutRows, Mail, t("supplier.email", "Email"), email);
+    pushRow(aboutRows, Briefcase, t("supplier.businessType", "Business type"), businessType);
+    pushRow(aboutRows, Building2, t("supplier.industry", "Industry"), industry);
+    pushRow(aboutRows, MapPin, t("supplier.address", "Address"), address);
+    pushRow(aboutRows, MapPin, t("supplier.state", "State"), state ? translateLocationName(state, currentLanguage) : null);
+    pushRow(aboutRows, MapPin, t("supplier.city", "City"), city ? translateLocationName(city, currentLanguage) : null);
+    pushRow(aboutRows, Hash, t("supplier.pincode", "Pincode"), pincode);
   }
 
   const showCatalogCta = isViewingSeller && resolvedSellerId != null;
@@ -247,7 +250,9 @@ export default function ChatCompanyProfilePanel({
               <ArrowLeft className="h-4 w-4" />
             </button>
             <p className="truncate text-sm font-semibold text-foreground">
-              {isViewingSeller ? "Company profile" : "Buyer profile"}
+              {isViewingSeller
+                ? t("chats.companyProfile", "Company profile")
+                : t("chats.buyerProfile", "Buyer profile")}
             </p>
           </header>
 
@@ -283,7 +288,7 @@ export default function ChatCompanyProfilePanel({
             {loading ? (
               <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-fg">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                Loading profile...
+                {t("common.loading", "Loading profile...")}
               </div>
             ) : (
               <div className="mt-2 space-y-2 pb-6">
@@ -308,7 +313,7 @@ export default function ChatCompanyProfilePanel({
                   <section className="mx-3 overflow-hidden rounded-2xl border border-border bg-card sm:mx-4">
                     <DetailRow
                       icon={Star}
-                      label="Rating"
+                      label={t("supplier.rating", "Rating")}
                       value={
                         supplier!.rating != null
                           ? `${supplier!.rating.toFixed(1)} / 5`
@@ -318,7 +323,7 @@ export default function ChatCompanyProfilePanel({
                     <div className="border-t border-border">
                       <DetailRow
                         icon={Package}
-                        label="Products"
+                        label={t("supplier.products", "Products")}
                         value={
                           supplier!.product_count != null
                             ? String(supplier!.product_count)
@@ -329,7 +334,7 @@ export default function ChatCompanyProfilePanel({
                     <div className="border-t border-border">
                       <DetailRow
                         icon={TrendingUp}
-                        label="Response rate"
+                        label={t("supplier.responseRate", "Response rate")}
                         value={
                           supplier!.response_rate != null
                             ? `${Math.round(supplier!.response_rate)}%`
@@ -340,7 +345,7 @@ export default function ChatCompanyProfilePanel({
                     <div className="border-t border-border">
                       <DetailRow
                         icon={Clock3}
-                        label="Years in business"
+                        label={t("supplier.yearsInBusiness", "Years in business")}
                         value={
                           supplier!.years_in_business != null
                             ? String(supplier!.years_in_business)
@@ -358,7 +363,7 @@ export default function ChatCompanyProfilePanel({
                       className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
                     >
                       <Package className="h-4 w-4" aria-hidden />
-                      View catalog
+                      {t("supplier.viewCatalog", "View catalog")}
                     </Link>
                   </div>
                 ) : null}

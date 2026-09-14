@@ -70,7 +70,9 @@ function isSellerSide(
   portal: Portal,
   activeRole?: Portal | null
 ): boolean {
-  return portal === "seller" || activeRole === "seller";
+  if (portal === "seller") return true;
+  if (portal === "buyer") return false;
+  return activeRole === "seller";
 }
 
 /**
@@ -103,10 +105,10 @@ function resolveByTypeAndAction(
   const sellerSide = isSellerSide(portal, activeRole);
   const ref = data.reference_id?.trim() || "";
 
-  // Chat: always follow active portal role (buyer ↔ seller switch).
+  // Chat: prioritize explicitRole / data.role if provided so seller chat notifications open seller chats
   if (type === "CHAT_MESSAGE" || action === "OPEN_CHAT") {
     const cid = data.conversation_id?.trim() || ref;
-    const chatPortal = activeRole === "seller" ? "seller" : "buyer";
+    const chatPortal = explicitRole || (activeRole === "seller" ? "seller" : "buyer");
     const base = chatPortal === "seller" ? "/seller/chats" : "/buyer/chats";
     return cid ? `${base}?conversation=${encodeURIComponent(cid)}` : base;
   }
@@ -274,7 +276,9 @@ function buyerRfqPath(rfqId) {
 }
 
 function isSellerSide(portal, activeRole) {
-  return portal === "seller" || activeRole === "seller";
+  if (portal === "seller") return true;
+  if (portal === "buyer") return false;
+  return activeRole === "seller";
 }
 
 function actionToTypeHint(action) {
@@ -296,7 +300,7 @@ function resolveByTypeAndAction(data, type, action, activeRole) {
 
   if (type === "CHAT_MESSAGE" || action === "OPEN_CHAT") {
     var cid = (data.conversation_id || ref).trim();
-    var chatPortal = activeRole === "seller" ? "seller" : "buyer";
+    var chatPortal = explicitRole || (activeRole === "seller" ? "seller" : "buyer");
     var base = chatPortal === "seller" ? "/seller/chats" : "/buyer/chats";
     return cid ? base + "?conversation=" + encodeURIComponent(cid) : base;
   }

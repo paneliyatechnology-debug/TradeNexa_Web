@@ -45,6 +45,8 @@ import { showErrorToast, showSuccessToast } from "@/utils/toast";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import ChatSidePanel from "@/components/chat/ChatSidePanel";
 import { useChat } from "@/context/ChatContext";
+import { useLanguage } from "@/context/LanguageContext";
+import { translateLocationName } from "@/utils/locationTranslations";
 
 const QUOTATIONS_PAGE_SIZE = 5;
 
@@ -70,6 +72,7 @@ function DetailMetaItem({
 
 export default function BuyerRfqDetailPage() {
   const params = useParams();
+  const { t, currentLanguage } = useLanguage();
   const rfqId = Number(params.id);
   const invalidId = !rfqId || Number.isNaN(rfqId);
 
@@ -89,7 +92,7 @@ export default function BuyerRfqDetailPage() {
         sort_by: "created_at",
         sort_order: "desc",
       }),
-    [rfqId]
+    [rfqId, currentLanguage]
   );
 
   const {
@@ -101,7 +104,7 @@ export default function BuyerRfqDetailPage() {
     reload: reloadQuotes,
   } = usePaginatedList({
     fetchPage: fetchQuotesPage,
-    resetDeps: [rfqId],
+    resetDeps: [rfqId, currentLanguage],
     enabled: !invalidId,
   });
 
@@ -119,7 +122,7 @@ export default function BuyerRfqDetailPage() {
     } finally {
       if (rfqRequestRef.current === requestId) setRfqLoading(false);
     }
-  }, [invalidId, rfqId, hydrateRfqConversations]);
+  }, [invalidId, rfqId, hydrateRfqConversations, currentLanguage]);
 
   useEffect(() => {
     void loadRfq();
@@ -133,10 +136,10 @@ export default function BuyerRfqDetailPage() {
     try {
       if (action === "accept") {
         await acceptQuotation(quotationId);
-        showSuccessToast("Quotation accepted");
+        showSuccessToast(t("rfq.quotationAccepted", "Quotation accepted"));
       } else {
         await rejectQuotation(quotationId);
-        showSuccessToast("Quotation rejected");
+        showSuccessToast(t("rfq.quotationRejected", "Quotation rejected"));
       }
       await Promise.all([loadRfq(), reloadQuotes()]);
     } catch (err) {
@@ -155,7 +158,7 @@ export default function BuyerRfqDetailPage() {
     setActionId(-1);
     try {
       await publishRfq(rfq.id);
-      showSuccessToast("RFQ published");
+      showSuccessToast(t("rfq.publishedSuccess", "RFQ published"));
       await Promise.all([loadRfq(), reloadQuotes()]);
     } catch (err) {
       const message =
@@ -173,7 +176,7 @@ export default function BuyerRfqDetailPage() {
     setActionId(-2);
     try {
       await cancelRfq(rfq.id);
-      showSuccessToast("RFQ cancelled");
+      showSuccessToast(t("rfq.cancelledSuccess", "RFQ cancelled"));
       await Promise.all([loadRfq(), reloadQuotes()]);
     } catch (err) {
       const message =
@@ -189,8 +192,8 @@ export default function BuyerRfqDetailPage() {
   if (invalidId) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
-        <PortalBackLink href="/buyer/inquiries" label="My RFQs" />
-        <p className="text-sm text-error">Invalid RFQ id</p>
+        <PortalBackLink href="/buyer/inquiries" label={t("rfq.myRfqs", "My RFQs")} />
+        <p className="text-sm text-error">{t("rfq.invalidId", "Invalid RFQ id")}</p>
       </div>
     );
   }
@@ -199,11 +202,11 @@ export default function BuyerRfqDetailPage() {
     return (
       <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
         <div className="border-b border-border pb-4">
-          <PortalBackLink href="/buyer/inquiries" label="My RFQs" />
+          <PortalBackLink href="/buyer/inquiries" label={t("rfq.myRfqs", "My RFQs")} />
         </div>
         <div className="flex items-center justify-center gap-2 py-20 text-sm text-muted-fg">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
-          Loading RFQ...
+          {t("rfq.loadingRfq", "Loading RFQ...")}
         </div>
       </div>
     );
@@ -213,15 +216,15 @@ export default function BuyerRfqDetailPage() {
     return (
       <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
         <div className="border-b border-border pb-4">
-          <PortalBackLink href="/buyer/inquiries" label="My RFQs" />
+          <PortalBackLink href="/buyer/inquiries" label={t("rfq.myRfqs", "My RFQs")} />
         </div>
         <PortalEmptyState
           icon={FileText}
-          title="RFQ not found"
-          description="This requirement may have been removed."
+          title={t("rfq.notFound", "RFQ not found")}
+          description={t("rfq.notFoundDesc", "This requirement may have been removed.")}
           action={
             <Link href="/buyer/inquiries">
-              <Button>Back to RFQs</Button>
+              <Button>{t("rfq.backToRfqs", "Back to RFQs")}</Button>
             </Link>
           }
         />
@@ -244,10 +247,16 @@ export default function BuyerRfqDetailPage() {
   ).length;
   const quotesMismatch = !quotesLoading && totalQuotes > 0 && quotations.length === 0;
 
+  const locationValue = [
+    rfq.city ? translateLocationName(rfq.city, currentLanguage) : null,
+    rfq.state ? translateLocationName(rfq.state, currentLanguage) : null,
+    rfq.country,
+  ].filter(Boolean).join(", ") || "India";
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
       <div className="mb-6 border-b border-border pb-5">
-        <PortalBackLink href="/buyer/inquiries" label="My RFQs" />
+        <PortalBackLink href="/buyer/inquiries" label={t("rfq.myRfqs", "My RFQs")} />
         <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h1
@@ -257,18 +266,20 @@ export default function BuyerRfqDetailPage() {
             >
               {rfq.title}
             </h1>
-            <p className="mt-1 text-sm text-muted-fg">Requirement details and seller quotations</p>
+            <p className="mt-1 text-sm text-muted-fg">
+              {t("rfq.requirementDetailsSubtitle", "Requirement details and seller quotations")}
+            </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:justify-end">
             <RfqStatusBadge status={rfq.status} />
             <span className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1 text-xs font-semibold text-muted-fg">
               <Calendar className="h-3.5 w-3.5" />
-              Posted {formatRfqDate(rfq.created_at)}
+              {t("rfq.posted", "Posted")} {formatRfqDate(rfq.created_at)}
             </span>
             {rfq.quotation_deadline ? (
               <span className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1 text-xs font-semibold text-muted-fg">
                 <Clock className="h-3.5 w-3.5" />
-                Deadline {formatRfqDate(rfq.quotation_deadline)}
+                {t("rfq.deadline", "Deadline")} {formatRfqDate(rfq.quotation_deadline)}
               </span>
             ) : null}
           </div>
@@ -277,7 +288,9 @@ export default function BuyerRfqDetailPage() {
 
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] lg:items-start lg:gap-8">
         <section>
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-fg">Requirement</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-fg">
+            {t("rfq.requirement", "Requirement")}
+          </p>
 
           <article
             className={`surface-card mt-2 p-5 sm:p-6 ${
@@ -295,35 +308,37 @@ export default function BuyerRfqDetailPage() {
 
             {rfq.description ? (
               <div className="mb-5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-fg">Description</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-fg">
+                  {t("specs.description", "Description")}
+                </p>
                 <p className="mt-2 text-sm leading-relaxed text-muted-fg">{rfq.description}</p>
               </div>
             ) : null}
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {quantity ? (
-                <DetailMetaItem icon={Package} label="Quantity" value={quantity} />
+                <DetailMetaItem icon={Package} label={t("specs.quantity", "Quantity")} value={quantity} />
               ) : null}
-              <DetailMetaItem icon={MapPin} label="Location" value={formatRfqLocation(rfq)} />
+              <DetailMetaItem icon={MapPin} label={t("specs.location", "Location")} value={locationValue} />
               <DetailMetaItem
                 icon={Clock}
-                label="Quote deadline"
+                label={t("rfq.quoteDeadline", "Quote deadline")}
                 value={formatRfqDate(rfq.quotation_deadline)}
               />
               {rfq.expected_price != null ? (
                 <DetailMetaItem
                   icon={Wallet}
-                  label="Expected price"
+                  label={t("rfq.expectedPrice", "Expected price")}
                   value={formatPrice(rfq.expected_price, rfq.currency)}
                 />
               ) : null}
               {rfq.payment_terms ? (
-                <DetailMetaItem icon={FileText} label="Payment terms" value={rfq.payment_terms} />
+                <DetailMetaItem icon={FileText} label={t("specs.paymentTerms", "Payment terms")} value={rfq.payment_terms} />
               ) : null}
               {rfq.category_name || rfq.subcategory_name ? (
                 <DetailMetaItem
                   icon={FileText}
-                  label="Category"
+                  label={t("specs.category", "Category")}
                   value={[rfq.category_name, rfq.subcategory_name].filter(Boolean).join(" · ")}
                 />
               ) : null}
@@ -335,7 +350,7 @@ export default function BuyerRfqDetailPage() {
                   <>
                     <Link href={`/buyer/rfq/${rfq.id}/edit`} className="block min-w-0">
                       <Button variant="outline" size="sm" className="w-full">
-                        Edit draft
+                        {t("rfq.editDraft", "Edit draft")}
                       </Button>
                     </Link>
                     <Button
@@ -345,7 +360,7 @@ export default function BuyerRfqDetailPage() {
                       disabled={actionId !== null}
                       onClick={() => void handlePublish()}
                     >
-                      Publish RFQ
+                      {t("rfq.publishRfq", "Publish RFQ")}
                     </Button>
                     <DeleteRfqButton
                       rfqId={rfq.id}
@@ -364,7 +379,7 @@ export default function BuyerRfqDetailPage() {
                     disabled={actionId !== null}
                     onClick={() => void handleCancel()}
                   >
-                    Cancel RFQ
+                    {t("rfq.cancelRfq", "Cancel RFQ")}
                   </Button>
                 ) : null}
               </div>
@@ -374,17 +389,21 @@ export default function BuyerRfqDetailPage() {
 
         <section className="mt-8 lg:mt-0">
           <div className="lg:sticky lg:top-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-fg">Quotations</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-fg">
+              {t("rfq.quotations", "Quotations")}
+            </p>
             <h2 className="mt-1 text-xl font-semibold text-foreground">
               {quotesLoading && totalQuotes === 0
-                ? "Loading quotes..."
+                ? t("rfq.loadingQuotes", "Loading quotes...")
                 : totalQuotes === 0
-                  ? "No quotes yet"
-                  : `${totalQuotes} quote${totalQuotes === 1 ? "" : "s"} received`}
+                  ? t("rfq.noQuotesYet", "No quotes yet")
+                  : totalQuotes === 1
+                    ? t("rfq.oneQuoteReceived", "1 quote received")
+                    : t("rfq.quotesReceived", "{count} quotes received").replace("{count}", String(totalQuotes))}
             </h2>
             {actionableCount > 0 ? (
               <p className="mt-1 text-xs text-primary">
-                {actionableCount} on this page awaiting your decision
+                {t("rfq.awaitingDecision", "{count} on this page awaiting your decision").replace("{count}", String(actionableCount))}
               </p>
             ) : null}
 
@@ -397,27 +416,30 @@ export default function BuyerRfqDetailPage() {
             {quotesLoading && quotations.length === 0 ? (
               <div className="mt-4 flex items-center justify-center gap-2 py-12 text-sm text-muted-fg">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                Loading quotations...
+                {t("rfq.loadingQuotations", "Loading quotations...")}
               </div>
             ) : quotesMismatch ? (
               <div className="mt-4 rounded-xl border border-warning/30 bg-warning-soft p-6 text-center">
-                <p className="text-sm font-semibold text-foreground">Could not load quotations</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {t("rfq.couldNotLoadQuotations", "Could not load quotations")}
+                </p>
                 <p className="mt-1 text-xs text-muted-fg">
-                  This RFQ shows {totalQuotes} quote{totalQuotes === 1 ? "" : "s"}, but the list did not load.
-                  Try refreshing.
+                  {t("rfq.quotesMismatchDesc", "This RFQ shows quotes, but the list did not load. Try refreshing.").replace("{totalQuotes}", String(totalQuotes))}
                 </p>
                 <div className="mt-3">
                   <Button size="sm" onClick={() => void reloadQuotes()}>
-                    Retry
+                    {t("common.retry", "Retry")}
                   </Button>
                 </div>
               </div>
             ) : totalQuotes === 0 ? (
               <div className="mt-4 rounded-xl border border-dashed border-border bg-muted p-6 text-center">
                 <FileText className="mx-auto h-8 w-8 text-muted-fg" />
-                <p className="mt-3 text-sm font-semibold text-foreground">No quotations yet</p>
+                <p className="mt-3 text-sm font-semibold text-foreground">
+                  {t("rfq.noQuotationsYet", "No quotations yet")}
+                </p>
                 <p className="mt-1 text-xs text-muted-fg">
-                  Sellers will submit quotes here once your RFQ is live.
+                  {t("rfq.sellersSubmitQuotesDesc", "Sellers will submit quotes here once your RFQ is live.")}
                 </p>
               </div>
             ) : (
@@ -451,7 +473,7 @@ export default function BuyerRfqDetailPage() {
                             onClick={() => void runQuotationAction(quotation.id, "accept")}
                             className="bg-success hover:bg-success/90"
                           >
-                            Accept
+                            {t("rfq.accept", "Accept")}
                           </Button>
                           <Button
                             size="sm"
@@ -459,7 +481,7 @@ export default function BuyerRfqDetailPage() {
                             disabled={actionId === quotation.id}
                             onClick={() => void runQuotationAction(quotation.id, "reject")}
                           >
-                            Reject
+                            {t("rfq.reject", "Reject")}
                           </Button>
                           <Button
                             size="sm"
@@ -467,7 +489,7 @@ export default function BuyerRfqDetailPage() {
                             disabled={actionId === quotation.id}
                             onClick={() => setRevisionFor(quotation.id)}
                           >
-                            Request revision
+                            {t("rfq.requestRevision", "Request revision")}
                           </Button>
                         </>
                       ) : undefined

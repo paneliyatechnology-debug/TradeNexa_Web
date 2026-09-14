@@ -23,6 +23,8 @@ interface ChatCounterpartyHeaderProps {
   sellerId?: number | null;
   /** Person name under company (optional). */
   contactName?: string | null;
+  /** Live typing indicator from socket */
+  isTyping?: boolean;
   leading?: React.ReactNode;
   trailing?: React.ReactNode;
   className?: string;
@@ -38,6 +40,7 @@ export default function ChatCounterpartyHeader({
   conversation = null,
   sellerId = null,
   contactName = null,
+  isTyping = false,
   leading,
   trailing,
   className = "",
@@ -117,6 +120,13 @@ export default function ChatCounterpartyHeader({
             />
           ) : null}
         </div>
+        {isTyping ? (
+          <p className="truncate text-xs font-semibold text-primary animate-pulse flex items-center gap-1">
+            <span>typing...</span>
+          </p>
+        ) : personName ? (
+          <p className="truncate text-xs text-muted-fg">{personName}</p>
+        ) : null}
       </div>
     </div>
   );

@@ -74,10 +74,14 @@ export function getSellerRole(product: ApiProductDetail): string | null {
   return product.seller?.company?.business_type?.trim() || null;
 }
 
-export function buildProductSpecs(product: ApiProductDetail): {
+export function buildProductSpecs(
+  product: ApiProductDetail,
+  t?: (key: string, fallback?: string) => string
+): {
   keySpecs: ProductSpecRow[];
   fullSpecs: ProductSpecRow[];
 } {
+  const tr = (key: string, fallback: string) => (t ? t(key, fallback) : fallback);
   const { basic_details: basic, pricing, seller, inventory } = product;
   const material = basic.material ?? product.material;
   const productCondition =
@@ -90,36 +94,36 @@ export function buildProductSpecs(product: ApiProductDetail): {
   const contactPhone = seller?.contact?.phone;
 
   const keySpecs: ProductSpecRow[] = [
-    basic.brand && { label: "Brand", value: basic.brand.name },
-    basic.subcategory && { label: "Subcategory", value: basic.subcategory.name },
-    basic.category && { label: "Category", value: basic.category.name },
-    material && { label: "Material", value: material },
-    productCondition && { label: "Condition", value: productCondition },
-    basic.country_of_origin && { label: "Origin", value: basic.country_of_origin },
-    pricing.hsn_code && { label: "HSN Code", value: pricing.hsn_code },
-    pricing.price_type && { label: "Price Type", value: pricing.price_type },
+    basic.brand && { label: tr("specs.brand", "Brand"), value: basic.brand.name },
+    basic.subcategory && { label: tr("specs.subcategory", "Subcategory"), value: basic.subcategory.name },
+    basic.category && { label: tr("specs.category", "Category"), value: basic.category.name },
+    material && { label: tr("specs.material", "Material"), value: material },
+    productCondition && { label: tr("specs.condition", "Condition"), value: productCondition },
+    basic.country_of_origin && { label: tr("specs.origin", "Origin"), value: basic.country_of_origin },
+    pricing.hsn_code && { label: tr("specs.hsnCode", "HSN Code"), value: pricing.hsn_code },
+    pricing.price_type && { label: tr("specs.priceType", "Price Type"), value: pricing.price_type },
     pricing.gst_percentage != null && {
-      label: "GST",
+      label: tr("specs.gst", "GST"),
       value: `${pricing.gst_percentage}%${pricing.gst_included ? " (incl.)" : ""}`,
     },
   ].filter(Boolean) as ProductSpecRow[];
 
   const fullSpecs: ProductSpecRow[] = [
     ...keySpecs,
-    { label: "Min. Order", value: `${pricing.minimum_order_quantity} ${pricing.unit}` },
-    { label: "Unit", value: pricing.unit },
-    stockStatus && { label: "Stock Status", value: stockStatus },
+    { label: tr("specs.minOrder", "Min. Order"), value: `${pricing.minimum_order_quantity} ${pricing.unit}` },
+    { label: tr("specs.unit", "Unit"), value: pricing.unit },
+    stockStatus && { label: tr("specs.stockStatus", "Stock Status"), value: stockStatus },
     stockQuantity != null && {
-      label: "Stock Quantity",
+      label: tr("specs.stockQuantity", "Stock Quantity"),
       value: String(stockQuantity),
     },
-    product.warranty && { label: "Warranty", value: product.warranty },
-    { label: "Listed", value: formatListedAgo(product.created_at) },
-    { label: "Last Updated", value: formatListedAgo(product.updated_at) },
-    companyName && { label: "Supplier", value: companyName },
-    locationAddress && { label: "Supplier Address", value: locationAddress },
-    contactEmail && { label: "Supplier Email", value: contactEmail },
-    contactPhone && { label: "Supplier Phone", value: contactPhone },
+    product.warranty && { label: tr("specs.warranty", "Warranty"), value: product.warranty },
+    { label: tr("specs.listed", "Listed"), value: formatListedAgo(product.created_at) },
+    { label: tr("specs.lastUpdated", "Last Updated"), value: formatListedAgo(product.updated_at) },
+    companyName && { label: tr("specs.supplier", "Supplier"), value: companyName },
+    locationAddress && { label: tr("specs.supplierAddress", "Supplier Address"), value: locationAddress },
+    contactEmail && { label: tr("specs.supplierEmail", "Supplier Email"), value: contactEmail },
+    contactPhone && { label: tr("specs.supplierPhone", "Supplier Phone"), value: contactPhone },
   ].filter(Boolean) as ProductSpecRow[];
 
   return { keySpecs, fullSpecs };

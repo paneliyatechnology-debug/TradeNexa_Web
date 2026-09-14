@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Globe, Laptop, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/context/LanguageContext";
 import { getInitials } from "@/utils/catalogHelpers";
 import type { PortalNavItem } from "@/components/portal/PortalBottomNav";
 import SidebarItem from "@/components/portal/SidebarItem";
@@ -30,8 +31,10 @@ function SidebarProfile({
   onNavigate?: () => void;
 }) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const isSeller = accent === "seller";
-  const displayName = user?.company || user?.name || (isSeller ? "Seller" : "Buyer");
+  const defaultRoleName = isSeller ? t("portalNav.seller", "Seller") : t("portalNav.buyer", "Buyer");
+  const displayName = user?.company || user?.name || defaultRoleName;
   const initials = getInitials(displayName);
 
   const avatarRing = isSeller
@@ -64,7 +67,7 @@ function SidebarProfile({
             <span
               className={`mt-1.5 inline-block rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] ${badgeClass}`}
             >
-              {isSeller ? "Seller" : "Buyer"}
+              {isSeller ? t("portalNav.seller", "Seller") : t("portalNav.buyer", "Buyer")}
             </span>
           </div>
         ) : null}
@@ -87,11 +90,12 @@ function SidebarNav({
   accent?: "buyer" | "seller";
   onNavigate?: () => void;
 }) {
+  const { t } = useLanguage();
   return (
     <nav className="flex-1 overflow-y-auto px-3 pb-2">
       {!collapsed ? (
         <p className="mb-2.5 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-          Menu
+          {t("portalNav.menu", "Menu")}
         </p>
       ) : null}
       <ul className="space-y-0.5">
@@ -120,6 +124,7 @@ function SidebarFooter({
   accent?: "buyer" | "seller";
   onNavigate?: () => void;
 }) {
+  const { t } = useLanguage();
   const isSeller = accent === "seller";
   const loginDevicesHref = isSeller
     ? "/seller/settings/login-devices"
@@ -131,7 +136,7 @@ function SidebarFooter({
       <Link
         href={loginDevicesHref}
         onClick={onNavigate}
-        title={collapsed ? "Login Devices" : undefined}
+        title={collapsed ? t("portalNav.loginDevices", "Login Devices") : undefined}
         className={`group flex h-11 items-center rounded-lg text-[13.5px] font-normal text-slate-400 transition-colors duration-200 hover:bg-white/[0.05] hover:text-slate-200 ${
           collapsed ? "justify-center px-0" : "gap-3 px-3"
         }`}
@@ -139,12 +144,12 @@ function SidebarFooter({
         <span className="flex h-8 w-8 shrink-0 items-center justify-center text-slate-500 transition-colors group-hover:text-slate-300">
           <Laptop className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
         </span>
-        {!collapsed ? <span className="flex-1">Login Devices</span> : null}
+        {!collapsed ? <span className="flex-1">{t("portalNav.loginDevices", "Login Devices")}</span> : null}
       </Link>
       <Link
         href="/"
         onClick={onNavigate}
-        title={collapsed ? "Back to Website" : undefined}
+        title={collapsed ? t("portalNav.backToWebsite", "Back to Website") : undefined}
         className={`group flex h-11 items-center rounded-lg text-[13.5px] font-normal text-slate-400 transition-colors duration-200 hover:bg-white/[0.05] hover:text-slate-200 ${
           collapsed ? "justify-center px-0" : "gap-3 px-3"
         }`}
@@ -152,7 +157,7 @@ function SidebarFooter({
         <span className="flex h-8 w-8 shrink-0 items-center justify-center text-slate-500 transition-colors group-hover:text-slate-300">
           <Globe className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
         </span>
-        {!collapsed ? <span className="flex-1">Back to Website</span> : null}
+        {!collapsed ? <span className="flex-1">{t("portalNav.backToWebsite", "Back to Website")}</span> : null}
       </Link>
     </div>
   );
@@ -165,6 +170,7 @@ function CollapseToggle({
   collapsed: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useLanguage();
   return (
     <div className="hidden shrink-0 px-3 pb-4 pt-1 lg:block">
       <div className="mb-2 h-px bg-white/[0.08]" aria-hidden />
@@ -174,7 +180,7 @@ function CollapseToggle({
         className={`flex h-11 w-full cursor-pointer items-center rounded-lg text-slate-500 transition-colors duration-200 hover:bg-white/[0.05] hover:text-slate-300 ${
           collapsed ? "justify-center" : "gap-3 px-3"
         }`}
-        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        aria-label={collapsed ? t("portalNav.expand", "Expand sidebar") : t("portalNav.collapse", "Collapse sidebar")}
       >
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04]">
           {collapsed ? (
@@ -183,7 +189,11 @@ function CollapseToggle({
             <PanelLeftClose className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden />
           )}
         </span>
-        {!collapsed ? <span className="text-[13.5px] font-normal">Collapse</span> : null}
+        {!collapsed ? (
+          <span className="text-[13.5px] font-normal">
+            {collapsed ? t("portalNav.expand", "Expand") : t("portalNav.collapse", "Collapse")}
+          </span>
+        ) : null}
       </button>
     </div>
   );
@@ -251,6 +261,15 @@ export default function PortalSidebar({
 }: PortalSidebarProps) {
   const pathname = usePathname();
 
+  React.useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileOpen]);
+
   const handleNavigate = () => {
     onMobileClose?.();
   };
@@ -283,7 +302,7 @@ export default function PortalSidebar({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-50 bg-navy/40 backdrop-blur-[2px] lg:hidden"
+              className="fixed inset-0 z-[60] bg-navy/50 backdrop-blur-xs lg:hidden"
               onClick={onMobileClose}
             />
             <motion.aside
@@ -291,7 +310,7 @@ export default function PortalSidebar({
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", stiffness: 400, damping: 36 }}
-              className="fixed inset-y-0 left-0 z-50 flex h-dvh w-[260px] shrink-0 flex-col border-r border-white/[0.08] bg-portal-sidebar shadow-xl lg:hidden"
+              className="fixed inset-y-0 left-0 z-[60] flex h-dvh w-[260px] shrink-0 flex-col border-r border-white/[0.08] bg-portal-sidebar shadow-2xl lg:hidden"
             >
               <SidebarPanel
                 items={items}

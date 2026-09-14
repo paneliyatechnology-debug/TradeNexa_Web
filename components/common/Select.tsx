@@ -268,7 +268,7 @@ export function Select({
           left: menuPosition.left,
           width: menuPosition.width,
           maxHeight: menuPosition.maxHeight,
-          zIndex: 9999,
+          zIndex: 100001,
         }}
         className="flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-card)]"
       >

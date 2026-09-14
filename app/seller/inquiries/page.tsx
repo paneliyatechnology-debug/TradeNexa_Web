@@ -23,7 +23,7 @@ import { portalFilterChipClass } from "@/components/portal/portalLayout";
 const PAGE_SIZE = 6;
 
 export default function SellerInquiriesPage() {
-  const { t } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
   const [activeTab, setActiveTab] = useState<InquiryStatusTab>("all");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
@@ -43,12 +43,12 @@ export default function SellerInquiriesPage() {
         status: inquiryTabToApiStatus(activeTab),
         search: debouncedSearch || undefined,
       }),
-    [activeTab, debouncedSearch]
+    [activeTab, debouncedSearch, currentLanguage]
   );
 
   const { items, pagination, loading, error, goToPage } = usePaginatedList({
     fetchPage,
-    resetDeps: [activeTab, debouncedSearch],
+    resetDeps: [activeTab, debouncedSearch, currentLanguage],
   });
 
   const getTabLabel = (tab: InquiryStatusTab) => {

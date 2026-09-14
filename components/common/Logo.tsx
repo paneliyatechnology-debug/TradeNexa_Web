@@ -19,7 +19,7 @@ interface LogoProps {
 }
 
 /** Navbar: 60×60px display box — source image is 600×600 */
-function NavbarLogo({ priority, className = "" }: { priority?: boolean; className?: string }) {
+function NavbarLogo({ priority = true, className = "" }: { priority?: boolean; className?: string }) {
   return (
     <Image
       src="/tradenexa-logo.png"
@@ -27,7 +27,8 @@ function NavbarLogo({ priority, className = "" }: { priority?: boolean; classNam
       width={600}
       height={600}
       priority={priority}
-      className={`size-[60px] object-contain object-left mix-blend-darken [clip-path:inset(0_0_24%_0)] ${className}`}
+      loading={priority ? "eager" : undefined}
+      className={`size-[48px] sm:size-[60px] object-contain object-left mix-blend-darken [clip-path:inset(0_0_24%_0)] ${className}`}
     />
   );
 }
@@ -36,7 +37,7 @@ export function Logo({
   size = "md",
   href = "/",
   className = "",
-  priority = false,
+  priority = true,
 }: LogoProps) {
   if (size === "nav") {
     const navLogo = <NavbarLogo priority={priority} className={className} />;
@@ -58,6 +59,7 @@ export function Logo({
       width={600}
       height={600}
       priority={priority}
+      loading={priority ? "eager" : undefined}
       className={`w-auto object-contain object-left mix-blend-darken ${sizeClasses[size]} ${className}`}
     />
   );

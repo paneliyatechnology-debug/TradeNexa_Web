@@ -14,6 +14,7 @@ import ChatSidePanel from "@/components/chat/ChatSidePanel";
 import { ReviseQuotationFormModal } from "@/components/rfq/ReviseQuotationForm";
 import { UpdateQuotationFormModal } from "@/components/rfq/UpdateQuotationForm";
 import { useChat } from "@/context/ChatContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { fetchSellerQuotations, withdrawQuotation } from "@/services/rfqService";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -28,6 +29,7 @@ import { showErrorToast, showSuccessToast } from "@/utils/toast";
 const PAGE_SIZE = 5;
 
 export default function SellerQuotationsPage() {
+  const { currentLanguage } = useLanguage();
   const [withdrawingId, setWithdrawingId] = useState<number | null>(null);
   const [revisingQuotation, setRevisingQuotation] = useState<ApiQuotation | null>(null);
   const [updatingQuotation, setUpdatingQuotation] = useState<ApiQuotation | null>(null);
@@ -45,12 +47,12 @@ export default function SellerQuotationsPage() {
         sort_order: "desc",
         search: debouncedSearch || undefined,
       }),
-    [debouncedSearch]
+    [debouncedSearch, currentLanguage]
   );
 
   const { items, pagination, loading, error, goToPage, reload } = usePaginatedList({
     fetchPage,
-    resetDeps: [debouncedSearch],
+    resetDeps: [debouncedSearch, currentLanguage],
   });
 
   const hasSearch = debouncedSearch.trim().length > 0;

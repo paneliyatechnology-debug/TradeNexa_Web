@@ -10,6 +10,7 @@ import PortalEmptyState from "@/components/portal/PortalEmptyState";
 import { fetchProductById, fetchRelatedProducts } from "@/services/catalogService";
 import type { ApiProductDetail, ApiProductListItem } from "@/types/catalog";
 import { useWishlist } from "@/hooks/useWishlist";
+import { useLanguage } from "@/context/LanguageContext";
 import type { ProductDetailLinks } from "@/utils/productDetailLinks";
 
 interface PortalProductPageProps {
@@ -18,6 +19,7 @@ interface PortalProductPageProps {
 }
 
 export default function PortalProductPage({ links, browseHref }: PortalProductPageProps) {
+  const { currentLanguage } = useLanguage();
   const params = useParams();
   const productId = Number(params.id);
   const invalidId = !productId || Number.isNaN(productId);
@@ -92,7 +94,7 @@ export default function PortalProductPage({ links, browseHref }: PortalProductPa
     return () => {
       cancelled = true;
     };
-  }, [productId, invalidId, addToWishlist]);
+  }, [productId, invalidId, addToWishlist, currentLanguage]);
 
   if (invalidId) {
     return (

@@ -13,6 +13,7 @@ export const CHAT_SOCKET_LISTEN_EVENTS = [
   "message:new",
   "conversation:updated",
   "message:read",
+  "typing:indicator",
   /** Live Unread Inbox guide — full badge + per-conversation snapshot */
   "unread_summary",
   "chat:error",
@@ -30,6 +31,9 @@ export const CHAT_SOCKET_LISTEN_EVENTS = [
 export const CHAT_SOCKET_ALIAS_EVENTS = {
   receive_message: "message:new",
   messages_read: "message:read",
+  user_typing: "typing:indicator",
+  user_stop_typing: "typing:indicator",
+  typing: "typing:indicator",
 } as const;
 
 /** Client → server */
@@ -37,6 +41,10 @@ export const CHAT_SOCKET_EMIT_EVENTS = [
   "conversation:join",
   "conversation:leave",
   "message:read",
+  "typing_start",
+  "typing_stop",
+  "typing:start",
+  "typing:stop",
   /** Request a fresh unread_summary snapshot */
   "get_unread_summary",
   "notification:get_unread_count",

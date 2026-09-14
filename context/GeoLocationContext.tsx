@@ -28,6 +28,12 @@ interface GeoLocationContextValue {
   ready: boolean;
   locating: boolean;
   requestLocation: () => Promise<void>;
+  selectLocation: (location: {
+    state_id: number | null;
+    state_name: string | null;
+    city_id: number | null;
+    city_name: string | null;
+  }) => void;
 }
 
 const GeoLocationContext = createContext<GeoLocationContextValue | undefined>(undefined);
@@ -216,6 +222,32 @@ export function GeoLocationProvider({ children }: { children: React.ReactNode })
     }
   }, [applyCache, stateId, cityId, locating, permissionStatus]);
 
+  const selectLocation = useCallback(
+    (loc: {
+      state_id: number | null;
+      state_name: string | null;
+      city_id: number | null;
+      city_name: string | null;
+    }) => {
+      setStateId(loc.state_id);
+      setCityId(loc.city_id);
+      setStateName(loc.state_name);
+      setCityName(loc.city_name);
+      writeGeoLastLocation({
+        state_id: loc.state_id ?? 0,
+        city_id: loc.city_id ?? 0,
+        state_name: loc.state_name ?? undefined,
+        city_name: loc.city_name ?? undefined,
+        lat: 0,
+        lng: 0,
+        timestamp: Date.now(),
+      });
+      writeGeoPermissionStatus("granted");
+      setPermissionStatus("granted");
+    },
+    []
+  );
+
   const value = useMemo<GeoLocationContextValue>(
     () => ({
       stateId,
@@ -226,6 +258,7 @@ export function GeoLocationProvider({ children }: { children: React.ReactNode })
       ready,
       locating,
       requestLocation,
+      selectLocation,
     }),
     [
       stateId,
@@ -236,6 +269,7 @@ export function GeoLocationProvider({ children }: { children: React.ReactNode })
       ready,
       locating,
       requestLocation,
+      selectLocation,
     ]
   );
 

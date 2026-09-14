@@ -215,8 +215,8 @@ export default function PortalProfileView({ variant }: PortalProfileViewProps) {
             title={t("profile.accountDetails", "Account Details")}
             subtitle={
               variant === "buyer"
-                ? "Registration and complete-profile required fields"
-                : "Your registered information"
+                ? t("profile.buyerSubDetails", "Registration and complete-profile required fields")
+                : t("profile.sellerSubDetails", "Your registered information")
             }
           >
             {accountDetails.length > 0 ? (
@@ -264,7 +264,7 @@ export default function PortalProfileView({ variant }: PortalProfileViewProps) {
                   <UserIcon className="h-5 w-5" />
                 </div>
                 <p className="text-sm font-semibold text-muted-fg">
-                  No account details available yet.
+                  {t("profile.noDetailsYet", "No account details available yet.")}
                 </p>
                 <Link
                   href={theme.editHref}
@@ -300,7 +300,7 @@ export default function PortalProfileView({ variant }: PortalProfileViewProps) {
           <div className="surface-card p-5">
             <p className="text-sm font-semibold text-foreground">{t("common.signOut", "Sign out")}</p>
             <p className="mt-1 text-xs leading-relaxed text-muted-fg">
-              Sign out from your account on this device.
+              {t("profile.signOutDeviceDesc", "Sign out from your account on this device.")}
             </p>
             <button
               type="button"

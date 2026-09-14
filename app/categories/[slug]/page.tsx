@@ -133,7 +133,7 @@ export default function CategoryDetailPage() {
     loadMore: loadMoreProducts,
   } = useLoadMoreList({
     fetchPage: fetchProductPage,
-    resetDeps: [category?.id, selectedSubId, debouncedSearch, cityId, currentLanguage],
+    resetDeps: [category?.id, selectedSubId, debouncedSearch, stateId, cityId, currentLanguage],
     enabled: !!category,
   });
 

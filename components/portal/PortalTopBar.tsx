@@ -8,8 +8,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useActiveRole } from "@/context/ActiveRoleContext";
 import { useNotifications } from "@/context/NotificationContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { Logo } from "@/components/common/Logo";
 import { LanguageSelector } from "@/components/common/LanguageSelector";
+import LocationSelectorButton from "@/components/location/LocationSelectorButton";
 import PortalTooltip from "@/components/portal/PortalTooltip";
 
 interface PortalTopBarProps {
@@ -27,6 +29,7 @@ export default function PortalTopBar({
 }: PortalTopBarProps) {
   const router = useRouter();
   const { logoutUser } = useAuth();
+  const { t } = useLanguage();
   const { wishlistTotal } = useWishlist();
   const { unreadCount } = useNotifications();
   const { canSwitchRole, activeRole, setActiveRole } = useActiveRole();
@@ -45,45 +48,60 @@ export default function PortalTopBar({
 
   return (
     <header className="sticky top-0 z-40 shrink-0 border-b border-portal-border bg-card/95 backdrop-blur-xl">
-      <div className="flex h-14 items-center justify-between gap-3 px-4 sm:px-6">
-        <div className="flex min-w-0 items-center gap-3">
+      <div className="flex h-13 sm:h-14 items-center justify-between gap-2 px-3 sm:px-6">
+        {/* Left: Hamburger Menu & Logo */}
+        <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-3">
           <button
             type="button"
             onClick={onMenuClick}
-            className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-portal-border text-muted-fg transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 lg:hidden"
+            className="flex h-8.5 w-8.5 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-portal-border text-muted-fg transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 lg:hidden"
             aria-label="Open menu"
           >
-            <Menu className="h-5 w-5" aria-hidden />
+            <Menu className="h-4.5 w-4.5" aria-hidden />
           </button>
-          <Logo size="nav" href={activeRole === "seller" ? "/seller/dashboard" : "/buyer/home"} />
+          <div className="shrink-0 flex items-center">
+            <Logo size="nav" href={activeRole === "seller" ? "/seller/dashboard" : "/buyer/home"} />
+          </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
-          <div className="hidden sm:block">
-            <LanguageSelector align="right" className="[&>button]:h-9 [&>button]:border-portal-border [&>button]:bg-transparent [&>button]:text-xs hover:[&>button]:bg-muted" />
-          </div>
+        {/* Right Actions */}
+        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5 ml-auto">
+          <LocationSelectorButton />
 
-          <PortalTooltip label="Back to Website">
+          <LanguageSelector
+            align="right"
+            className="[&>button]:h-8.5 [&>button]:sm:h-9 [&>button]:border-portal-border [&>button]:bg-transparent [&>button]:text-xs hover:[&>button]:bg-muted"
+          />
+
+          <PortalTooltip label={t("portalNav.backToWebsite", "Back to Website")}>
             <Link
               href="/"
-              className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-portal-border px-2.5 text-muted-fg transition-colors duration-200 sm:px-3 lg:hidden ${hoverAccent}`}
-              aria-label="Back to Website"
+              className={`hidden sm:inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-portal-border px-2.5 text-muted-fg transition-colors duration-200 lg:hidden ${hoverAccent}`}
+              aria-label={t("portalNav.backToWebsite", "Back to Website")}
             >
               <Globe className="h-4 w-4 shrink-0" aria-hidden />
-              <span className="hidden text-xs font-medium sm:inline">Website</span>
+              <span className="text-xs font-medium">{t("portalNav.backToWebsite", "Website")}</span>
             </Link>
           </PortalTooltip>
 
           {canSwitchRole ? (
-            <PortalTooltip label={activeRole === "buyer" ? "Switch to Seller" : "Switch to Buyer"}>
+            <PortalTooltip
+              label={
+                activeRole === "buyer"
+                  ? t("portalNav.switchToSeller", "Switch to Seller")
+                  : t("portalNav.switchToBuyer", "Switch to Buyer")
+              }
+            >
               <button
                 type="button"
                 onClick={switchRole}
-                className={`inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-portal-border px-2.5 text-xs font-medium text-muted-fg transition-colors duration-200 sm:px-3 ${hoverAccent}`}
+                className={`hidden md:inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-portal-border px-2.5 text-xs font-medium text-muted-fg transition-colors duration-200 ${hoverAccent}`}
               >
                 <ArrowLeftRight className="h-3.5 w-3.5" aria-hidden />
-                <span className="hidden sm:inline">
-                  {activeRole === "buyer" ? "Switch to Seller" : "Switch to Buyer"}
+                <span>
+                  {activeRole === "buyer"
+                    ? t("portalNav.switchToSeller", "Switch to Seller")
+                    : t("portalNav.switchToBuyer", "Switch to Buyer")}
                 </span>
               </button>
             </PortalTooltip>
@@ -93,10 +111,10 @@ export default function PortalTopBar({
             <PortalTooltip label={wishlistTotal > 0 ? `Wishlist (${wishlistTotal})` : "Wishlist"}>
               <Link
                 href="/buyer/wishlist"
-                className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-fg transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+                className="hidden xs:flex relative h-8.5 w-8.5 sm:h-9 sm:w-9 items-center justify-center rounded-lg text-muted-fg transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
                 aria-label={`Wishlist${wishlistTotal > 0 ? `, ${wishlistTotal} saved` : ""}`}
               >
-                <Heart className="h-5 w-5" strokeWidth={2} aria-hidden />
+                <Heart className="h-4.5 w-4.5 sm:h-5 sm:w-5" strokeWidth={2} aria-hidden />
                 {wishlistTotal > 0 ? (
                   <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-white">
                     {wishlistTotal > 9 ? "9+" : wishlistTotal}
@@ -113,10 +131,10 @@ export default function PortalTopBar({
           >
             <Link
               href={notificationsHref}
-              className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-fg transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
+              className="relative flex h-8.5 w-8.5 sm:h-9 sm:w-9 items-center justify-center rounded-lg text-muted-fg transition-colors duration-200 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
               aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
             >
-              <Bell className="h-5 w-5" aria-hidden />
+              <Bell className="h-4.5 w-4.5 sm:h-5 sm:w-5" aria-hidden />
               {unreadCount > 0 ? (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-white">
                   {unreadCount > 9 ? "9+" : unreadCount}
@@ -125,14 +143,14 @@ export default function PortalTopBar({
             </Link>
           </PortalTooltip>
 
-          <PortalTooltip label="Sign out">
+          <PortalTooltip label={t("common.signOut", "Sign out")}>
             <button
               type="button"
               onClick={() => {
                 void logoutUser().then(() => router.replace("/"));
               }}
               className="hidden h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-muted-fg transition-colors duration-200 hover:bg-error-soft hover:text-error focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25 sm:flex"
-              aria-label="Sign out"
+              aria-label={t("common.signOut", "Sign out")}
             >
               <LogOut className="h-4 w-4" aria-hidden />
             </button>

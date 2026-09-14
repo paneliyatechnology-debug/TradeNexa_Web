@@ -7,6 +7,7 @@ import { Trash2 } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { deleteProduct } from "@/services/productService";
 import { showErrorToast, showSuccessToast } from "@/utils/toast";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface DeleteProductButtonProps {
   productId: number;
@@ -30,13 +31,15 @@ export default function DeleteProductButton({
   redirectHref = "/seller/catalog",
   onDeleted,
   className = "",
-  label = "Delete",
+  label,
   onOpenConfirm,
   confirmOpen: confirmOpenProp,
   onConfirmOpenChange,
   hideTrigger = false,
 }: DeleteProductButtonProps) {
   const router = useRouter();
+  const { t } = useLanguage();
+  const displayLabel = label !== undefined ? label : t("common.delete", "Delete");
   const [internalOpen, setInternalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -113,11 +116,13 @@ export default function DeleteProductButton({
                 id={`delete-product-title-${productId}`}
                 className="text-base font-semibold text-foreground"
               >
-                Delete product?
+                {t("seller.deleteProductTitle", "Delete product?")}
               </h3>
               <p className="mt-2 text-sm text-muted-fg">
-                Are you sure you want to permanently delete &quot;{productName}&quot;? This cannot be
-                undone.
+                {t(
+                  "seller.deleteProductConfirm",
+                  `Are you sure you want to permanently delete "${productName}"? This cannot be undone.`
+                ).replace("{name}", productName)}
               </p>
               <div className="mt-6 flex justify-end gap-3">
                 <Button
@@ -126,16 +131,16 @@ export default function DeleteProductButton({
                   onClick={() => setConfirmOpen(false)}
                   disabled={loading}
                 >
-                  Cancel
+                  {t("common.cancel", "Cancel")}
                 </Button>
                 <Button
                   type="button"
                   variant="danger"
                   loading={loading}
-                  loadingText="Deleting..."
+                  loadingText={t("common.deleting", "Deleting...")}
                   onClick={() => void handleDelete()}
                 >
-                  Delete
+                  {t("common.delete", "Delete")}
                 </Button>
               </div>
             </div>
@@ -150,15 +155,15 @@ export default function DeleteProductButton({
         <button
           type="button"
           onClick={openConfirm}
-          aria-label={label.trim() ? undefined : "Delete product"}
-          title={label.trim() ? undefined : "Delete"}
+          aria-label={displayLabel.trim() ? undefined : t("common.delete", "Delete product")}
+          title={displayLabel.trim() ? undefined : t("common.delete", "Delete")}
           className={
             className ||
             "inline-flex h-10 items-center gap-1.5 rounded-lg border border-error/30 px-3 text-sm font-semibold text-error transition hover:border-error/50 hover:bg-error/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/25"
           }
         >
           <Trash2 className="h-3.5 w-3.5" aria-hidden />
-          {label.trim() ? label : null}
+          {displayLabel.trim() ? displayLabel : null}
         </button>
       ) : null}
       {dialog}

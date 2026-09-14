@@ -5,6 +5,7 @@ import {
   type FcmPushData,
 } from "@/utils/fcmNavigation";
 import { formatDateListLabel } from "@/utils/dateFormat";
+import { clampPortalPathForAccount, readStoredAccountRole } from "@/utils/roleNavigation";
 
 /** Flatten inbox `data` + top-level fields into FCM-style string map for routing. */
 export function notificationToFcmData(notification: AppNotification): FcmPushData {
@@ -47,7 +48,9 @@ export function resolveNotificationPath(
   notification: AppNotification,
   activeRole?: "buyer" | "seller" | null
 ): string {
-  return resolveFcmNavigationPath(notificationToFcmData(notification), activeRole);
+  const accountRole = readStoredAccountRole();
+  const rawPath = resolveFcmNavigationPath(notificationToFcmData(notification), activeRole);
+  return clampPortalPathForAccount(rawPath, accountRole);
 }
 
 export function formatNotificationTime(value?: string | null): string {

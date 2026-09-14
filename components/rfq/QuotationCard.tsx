@@ -6,6 +6,7 @@ import { MessageSquare } from "lucide-react";
 import QuotationStatusBadge from "@/components/rfq/QuotationStatusBadge";
 import type { ApiQuotation } from "@/types/rfq";
 import { formatPrice } from "@/utils/catalogHelpers";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   computeQuotationTotalWithGst,
   formatRfqDate,
@@ -53,6 +54,7 @@ export default function QuotationCard({
   onCardClick,
 }: QuotationCardProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [showRemarks, setShowRemarks] = useState(false);
   const rejected = emphasizeStatus && isQuotationRejected(quotation.status);
   const statusHint = emphasizeStatus ? getQuotationStatusHint(quotation.status) : null;
@@ -66,13 +68,16 @@ export default function QuotationCard({
   // Prefer company name for buyer-facing quote cards; fall back to person name only if needed.
   const company = quotation.seller_company?.trim() || null;
   const contact = quotation.seller_name?.trim() || null;
-  const sellerPrimary = company || contact || "Seller";
+  const sellerPrimary = company || contact || t("portalNav.seller", "Seller");
   // Show person name as secondary only when company is the primary label.
   const sellerSecondary = company && contact && contact !== company ? contact : null;
   const productPrimary =
-    quotation.product_name?.trim() || quotation.rfq_title?.trim() || "Quotation";
+    quotation.product_name?.trim() || quotation.rfq_title?.trim() || t("rfq.quotations", "Quotation");
   const isClickable = Boolean(href || onCardClick);
-  const chatLabel = showSellerInfo && !showProductName ? "Chat with seller" : "Chat with buyer";
+  const chatLabel =
+    showSellerInfo && !showProductName
+      ? t("rfq.chatWithSeller", "Chat with seller")
+      : t("rfq.chatWithBuyer", "Chat with buyer");
 
   function handleCardActivate() {
     onCardClick?.();
@@ -128,12 +133,14 @@ export default function QuotationCard({
               </p>
               {sellerSecondary ? (
                 <p className="mt-0.5 truncate text-xs text-muted-fg">
-                  Contact: {sellerSecondary}
+                  {t("rfq.contact", "Contact")}: {sellerSecondary}
                 </p>
               ) : null}
             </>
           ) : (
-            <p className="text-base font-semibold text-foreground">Your quotation</p>
+            <p className="text-base font-semibold text-foreground">
+              {t("rfq.yourQuotation", "Your quotation")}
+            </p>
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -161,7 +168,9 @@ export default function QuotationCard({
             rejected ? "border-border bg-muted" : "border-primary/15 bg-primary-soft/50"
           }`}
         >
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-fg">Estimated total</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-fg">
+            {t("rfq.estimatedTotal", "Estimated total")}
+          </p>
           <p className={`mt-1 text-xl font-semibold leading-none ${rejected ? "text-muted-fg" : "text-primary"}`}>
             {formatPrice(totals.total, quotation.currency)}
           </p>
@@ -171,7 +180,7 @@ export default function QuotationCard({
               : null}
             {quotation.gst_percentage != null ? ` + ${quotation.gst_percentage}% GST` : null}
             {quotation.transportation_charge != null && quotation.transportation_charge > 0
-              ? ` + ${formatPrice(quotation.transportation_charge, quotation.currency)} transport`
+              ? ` + ${formatPrice(quotation.transportation_charge, quotation.currency)} ${t("rfq.transport", "transport")}`
               : null}
           </p>
         </div>
@@ -179,25 +188,33 @@ export default function QuotationCard({
 
       <div className="mt-3.5 grid grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-4">
         <div>
-          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-fg">Unit price</p>
+          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-fg">
+            {t("rfq.unitPrice", "Unit price")}
+          </p>
           <p className={`mt-0.5 text-sm font-semibold ${rejected ? "text-muted-fg" : "text-foreground"}`}>
             {quotation.price != null ? formatPrice(quotation.price, quotation.currency) : "—"}
           </p>
         </div>
         <div>
-          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-fg">Quantity</p>
+          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-fg">
+            {t("specs.quantity", "Quantity")}
+          </p>
           <p className="mt-0.5 text-sm font-semibold text-foreground">
             {quotation.quantity ?? "—"} {quotation.unit ?? ""}
           </p>
         </div>
         <div>
-          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-fg">Delivery</p>
+          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-fg">
+            {t("rfq.delivery", "Delivery")}
+          </p>
           <p className="mt-0.5 text-sm font-semibold text-foreground">
-            {quotation.delivery_days != null ? `${quotation.delivery_days} days` : "—"}
+            {quotation.delivery_days != null ? `${quotation.delivery_days} ${t("rfq.days", "days")}` : "—"}
           </p>
         </div>
         <div>
-          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-fg">GST</p>
+          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-fg">
+            {t("rfq.gst", "GST")}
+          </p>
           <p className="mt-0.5 text-sm font-semibold text-foreground">
             {quotation.gst_percentage != null ? `${quotation.gst_percentage}%` : "—"}
           </p>
@@ -207,7 +224,7 @@ export default function QuotationCard({
       {buyerRevisionRemarks ? (
         <div className="mt-3.5 rounded-lg border border-warning/25 bg-warning-soft px-3.5 py-3">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-warning">
-            Buyer&apos;s revision request
+            {t("rfq.buyerRevisionRequest", "Buyer's revision request")}
           </p>
           <p className="mt-1.5 text-sm leading-relaxed text-foreground">{buyerRevisionRemarks}</p>
         </div>
@@ -216,7 +233,7 @@ export default function QuotationCard({
       {sellerRemarks && revisionPending && buyerRevisionRemarks ? (
         <div className="mt-3 rounded-lg border border-border bg-muted/60 px-3.5 py-3">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-fg">
-            Your remarks
+            {t("rfq.yourRemarks", "Your remarks")}
           </p>
           <p className="mt-1.5 text-sm leading-relaxed text-muted-fg">{sellerRemarks}</p>
         </div>
@@ -225,7 +242,7 @@ export default function QuotationCard({
       <div className="mt-3.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border pt-3 text-xs text-muted-fg">
         {quotation.payment_terms ? (
           <span>
-            <span className="font-semibold text-foreground">Payment:</span> {quotation.payment_terms}
+            <span className="font-semibold text-foreground">{t("rfq.payment", "Payment")}:</span> {quotation.payment_terms}
           </span>
         ) : null}
         {sellerRemarks && !(revisionPending && buyerRevisionRemarks) ? (
@@ -237,10 +254,12 @@ export default function QuotationCard({
             }}
             className="cursor-pointer font-semibold text-primary hover:text-primary-hover"
           >
-            {showRemarks ? "Hide remarks" : "View remarks"}
+            {showRemarks ? t("rfq.hideRemarks", "Hide remarks") : t("rfq.viewRemarks", "View remarks")}
           </button>
         ) : null}
-        <span className="ml-auto shrink-0">Submitted {formatRfqDate(quotation.created_at)}</span>
+        <span className="ml-auto shrink-0">
+          {t("rfq.submitted", "Submitted")} {formatRfqDate(quotation.created_at)}
+        </span>
       </div>
 
       {showRemarks && sellerRemarks && !(revisionPending && buyerRevisionRemarks) ? (

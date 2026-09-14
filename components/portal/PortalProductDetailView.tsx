@@ -243,6 +243,7 @@ function SupplierCard({
   supplierHref: ((sellerId: number) => string) | null;
   compact?: boolean;
 }) {
+  const { t } = useLanguage();
   const { seller } = product;
   const contactPhone = getSellerContactPhone(product);
   const contactPhoneDisplay = seller.contact?.phone;
@@ -291,7 +292,7 @@ function SupplierCard({
         {verified ? (
           <span className="inline-flex items-center gap-1 rounded-lg bg-primary px-2 py-1 text-[11px] font-semibold text-white">
             <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
-            Verified
+            {t("nav.verified", "Verified")}
           </span>
         ) : null}
       </div>
@@ -315,7 +316,9 @@ function SupplierCard({
           <p className={`font-semibold text-foreground ${compact ? "text-xs" : "text-sm"}`}>
             {years}
           </p>
-          <p className="mt-0.5 text-[10px] font-semibold text-muted-fg">Years in business</p>
+          <p className="mt-0.5 text-[10px] font-semibold text-muted-fg">
+            {t("specs.yearsInBusiness", "Years in business")}
+          </p>
         </div>
         <div className={`rounded-xl bg-primary-soft/50 text-center ${compact ? "p-2" : "p-3"}`}>
           <p
@@ -326,13 +329,17 @@ function SupplierCard({
             {Number(rating).toFixed(1)}
             <Star className="h-3 w-3 fill-warning text-warning" aria-hidden />
           </p>
-          <p className="mt-0.5 text-[10px] font-semibold text-muted-fg">Rating</p>
+          <p className="mt-0.5 text-[10px] font-semibold text-muted-fg">
+            {t("common.rating", "Rating")}
+          </p>
         </div>
         <div className={`rounded-xl bg-primary-soft/50 text-center ${compact ? "p-2" : "p-3"}`}>
           <p className={`font-semibold text-foreground ${compact ? "text-xs" : "text-sm"}`}>
             {responseRate}%
           </p>
-          <p className="mt-0.5 text-[10px] font-semibold text-muted-fg">Response rate</p>
+          <p className="mt-0.5 text-[10px] font-semibold text-muted-fg">
+            {t("specs.responseRate", "Response rate")}
+          </p>
         </div>
       </div>
 
@@ -344,7 +351,7 @@ function SupplierCard({
               compact ? "py-2 text-xs" : "py-2.5 text-sm"
             }`}
           >
-            View Profile
+            {t("specs.viewProfile", "View Profile")}
           </Link>
         ) : null}
         {contactPhone ? (
@@ -441,7 +448,10 @@ export default function PortalProductDetailView({
   const activeMedia =
     galleryMedia.find((item) => item.id === activeMediaId) ?? galleryMedia[0] ?? null;
 
-  const { keySpecs, fullSpecs } = useMemo(() => buildProductSpecs(product), [product]);
+  const { keySpecs, fullSpecs } = useMemo(
+    () => buildProductSpecs(product, t),
+    [product, t]
+  );
 
   const description = getProductDescription(product);
   const showReadMore = description.length > 280;
@@ -458,9 +468,13 @@ export default function PortalProductDetailView({
   const showInquiryCta = !isSellerView && Boolean(links.product);
   const approvalStatus = product.approval_status ?? null;
   const displayCanEdit = canSellerEditProduct(approvalStatus);
-  const displayApprovalHint = approvalStatusHint(approvalStatus);
+  const displayApprovalHint = approvalStatusHint(approvalStatus, t);
 
-  const thirdStatTitle = basic.brand ? "Brand" : basic.subcategory ? "Type" : "Quality";
+  const thirdStatTitle = basic.brand
+    ? t("specs.brand", "Brand")
+    : basic.subcategory
+      ? t("specs.subcategory", "Type")
+      : t("specs.condition", "Quality");
   const thirdStatValue = basic.brand?.name ?? basic.subcategory?.name ?? "Standard";
 
   const handleShare = async () => {
@@ -554,7 +568,9 @@ export default function PortalProductDetailView({
               }`}
             >
               <ArrowLeft className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
-              {links.back.label}
+              {isSellerView
+                ? t("specs.backToCatalog", "Back to Catalog")
+                : t("specs.backToProducts", links.back.label || "Back to products")}
             </Link>
           ) : (
             <button
@@ -565,7 +581,9 @@ export default function PortalProductDetailView({
               }`}
             >
               <ArrowLeft className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
-              {links.back.label}
+              {isSellerView
+                ? t("specs.backToCatalog", "Back to Catalog")
+                : t("specs.backToProducts", links.back.label || "Back to products")}
             </button>
           )}
           <h2
@@ -585,7 +603,7 @@ export default function PortalProductDetailView({
                 <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                 {formatRating(ratings.average)}
                 {ratings.total_reviews != null && ratings.total_reviews > 0
-                  ? ` (${ratings.total_reviews} reviews)`
+                  ? ` (${ratings.total_reviews} ${t("specs.reviews", "reviews")})`
                   : ""}
               </span>
             ) : null}
@@ -603,13 +621,13 @@ export default function PortalProductDetailView({
             {isPremium ? (
               <span className="inline-flex items-center gap-1 rounded-lg bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary">
                 <Sparkles className="h-3 w-3" />
-                Premium
+                {t("specs.premium", "Premium")}
               </span>
             ) : null}
             {marketplace.is_trending ? (
               <span className="inline-flex items-center gap-1 rounded-lg bg-warning-soft px-2 py-0.5 text-xs font-bold text-accent">
                 <TrendingUp className="h-3 w-3" />
-                Trending
+                {t("specs.trending", "Trending")}
               </span>
             ) : null}
           </div>
@@ -622,7 +640,7 @@ export default function PortalProductDetailView({
               className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium text-foreground transition-colors duration-200 hover:border-primary hover:text-primary"
             >
               <Pencil className="h-3.5 w-3.5" />
-              Edit
+              {t("common.edit", "Edit")}
             </Link>
           ) : null}
           {links.editProduct ? (
@@ -667,7 +685,7 @@ export default function PortalProductDetailView({
           </div>
           {product.latest_review_remarks ? (
             <p className="mt-2 text-sm text-foreground">
-              <span className="font-semibold">Admin remarks: </span>
+              <span className="font-semibold">{t("specs.adminRemarks", "Admin remarks:")} </span>
               {product.latest_review_remarks}
             </p>
           ) : null}
@@ -695,7 +713,9 @@ export default function PortalProductDetailView({
               compact ? "p-4" : "p-6"
             }`}
           >
-            <p className={`text-white/80 ${compact ? "text-xs" : "text-sm"}`}>Wholesale B2B Price</p>
+            <p className={`text-white/80 ${compact ? "text-xs" : "text-sm"}`}>
+              {t("specs.wholesalePrice", "Wholesale B2B Price")}
+            </p>
             <p className={`mt-1 font-semibold ${compact ? "text-2xl sm:text-3xl" : "text-3xl sm:text-4xl"}`}>
               {formatPrice(pricing.price)}
               <span
@@ -711,13 +731,13 @@ export default function PortalProductDetailView({
               </p>
             ) : null}
             <p className="mt-3 text-xs text-white/70">
-              Prices are indicative and subject to order volume negotiations.
+              {t("specs.priceDisclaimer", "Prices are indicative and subject to order volume negotiations.")}
             </p>
           </div>
 
           <div className={`grid grid-cols-2 gap-2 sm:grid-cols-3 ${compact ? "gap-2" : "gap-3"}`}>
             <PortalStatCard
-              title="Min. Order"
+              title={t("specs.minOrder", "Min. Order")}
               value={`${pricing.minimum_order_quantity} ${pricing.unit}`}
               icon={ShoppingBag}
               color="text-primary"
@@ -725,7 +745,7 @@ export default function PortalProductDetailView({
               compact={compact}
             />
             <PortalStatCard
-              title="Listed"
+              title={t("specs.listed", "Listed")}
               value={listedDaysLabel(product.created_at)}
               icon={Clock}
               color="text-success"
@@ -759,10 +779,10 @@ export default function PortalProductDetailView({
                   type="button"
                   onClick={() => void openExistingInquiryChat()}
                   disabled={openingChat}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:opacity-60 cursor-pointer"
                 >
                   <MessageCircle className="h-4 w-4" />
-                  {openingChat ? "Opening…" : "Continue chat"}
+                  {openingChat ? t("specs.opening", "Opening…") : t("specs.continueChat", "Continue chat")}
                 </button>
               ) : (
                 <button
@@ -771,7 +791,7 @@ export default function PortalProductDetailView({
                   className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white transition hover:bg-primary/90"
                 >
                   <MessageCircle className="h-4 w-4" />
-                  Send Inquiry
+                  {t("specs.sendInquiry", "Send Inquiry")}
                 </button>
               )}
               {contactPhone ? (
@@ -782,7 +802,7 @@ export default function PortalProductDetailView({
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-success/20 bg-card px-6 py-3 text-sm font-semibold text-success transition hover:border-success/40 hover:bg-success-soft"
                 >
                   <MessageCircle className="h-4 w-4" />
-                  WhatsApp
+                  {t("specs.whatsapp", "WhatsApp")}
                 </a>
               ) : null}
             </div>
@@ -795,7 +815,7 @@ export default function PortalProductDetailView({
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-success/20 bg-card px-6 py-3 text-sm font-semibold text-success transition hover:border-success/40 hover:bg-success-soft"
               >
                 <MessageCircle className="h-4 w-4" />
-                WhatsApp Seller
+                {t("specs.whatsappSeller", "WhatsApp Seller")}
               </a>
             </div>
           ) : null}
@@ -803,7 +823,7 @@ export default function PortalProductDetailView({
           {keySpecs.length > 0 ? (
             <div className={`${cardClass} hidden lg:block ${compact ? "p-4" : "p-5"}`}>
               <h3 className={`mb-3 font-semibold text-foreground ${compact ? "text-sm" : "mb-4 text-base"}`}>
-                Key Specifications
+                {t("specs.keySpecifications", "Key Specifications")}
               </h3>
               <div className={`grid grid-cols-2 gap-2 xl:grid-cols-3 ${compact ? "gap-2" : "gap-3"}`}>
                 {keySpecs.map((spec) => (
@@ -825,7 +845,11 @@ export default function PortalProductDetailView({
       <div className={`grid grid-cols-1 lg:grid-cols-12 ${compact ? "mt-5 gap-5" : "mt-8 gap-8"}`}>
         <div className={`${isSellerView ? "lg:col-span-12" : "lg:col-span-8"} ${compact ? "space-y-5" : "space-y-8"}`}>
           {keySpecs.length > 0 ? (
-            <PortalSection title="Key Specifications" subtitle="From product details" compact={compact}>
+            <PortalSection
+              title={t("specs.keySpecifications", "Key Specifications")}
+              subtitle={t("specs.fromProductDetails", "From product details")}
+              compact={compact}
+            >
               <div className="flex gap-3 overflow-x-auto pb-1 lg:hidden">
                 {keySpecs.map((spec) => (
                   <div key={spec.label} className={`${cardClass} shrink-0 px-4 py-3`}>
@@ -837,7 +861,7 @@ export default function PortalProductDetailView({
             </PortalSection>
           ) : null}
 
-          <PortalSection title="About this Product" compact={compact}>
+          <PortalSection title={t("specs.aboutProduct", "About this Product")} compact={compact}>
             <div className={`${cardClass} ${compact ? "p-4" : "p-5 lg:p-6"}`}>
               {description ? (
                 <>
@@ -849,9 +873,9 @@ export default function PortalProductDetailView({
                     <button
                       type="button"
                       onClick={() => setDescExpanded((v) => !v)}
-                      className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-primary"
+                      className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-primary cursor-pointer"
                     >
-                      {descExpanded ? "Show less" : "Read More"}
+                      {descExpanded ? t("specs.showLess", "Show less") : t("specs.readMore", "Read More")}
                       <ChevronDown
                         className={`h-4 w-4 transition ${descExpanded ? "rotate-180" : ""}`}
                       />
@@ -860,14 +884,14 @@ export default function PortalProductDetailView({
                 </>
               ) : (
                 <p className="text-sm text-muted-fg">
-                  No description provided by the seller yet.
+                  {t("specs.noDescription", "No description provided by the seller yet.")}
                 </p>
               )}
             </div>
           </PortalSection>
 
           {fullSpecs.length > 0 ? (
-            <PortalSection title="Product Specifications" compact={compact}>
+            <PortalSection title={t("specs.productSpecifications", "Product Specifications")} compact={compact}>
               <div className={`${cardClass} overflow-hidden`}>
                 {fullSpecs.map((spec, i) => (
                   <div
@@ -888,7 +912,7 @@ export default function PortalProductDetailView({
 
           {similarProducts.length > 0 ? (
             <PortalSection
-              title="Similar Products"
+              title={t("specs.similarProducts", "Similar Products")}
               subtitle={
                 basic.subcategory
                   ? `More in ${basic.subcategory.name}`
@@ -906,11 +930,11 @@ export default function PortalProductDetailView({
                     }
                     className="text-sm font-bold text-primary"
                   >
-                    View all
+                    {t("common.viewAll", "View all")}
                   </Link>
                 ) : (
                   <Link href={links.search} className="text-sm font-bold text-primary">
-                    View all
+                    {t("common.viewAll", "View all")}
                   </Link>
                 )
               }
@@ -932,7 +956,11 @@ export default function PortalProductDetailView({
         {!isSellerView ? (
           <div className="lg:col-span-4">
             <div className="lg:sticky lg:top-4">
-              <PortalSection title="Supplier" subtitle={product.seller.company?.name} compact={compact}>
+              <PortalSection
+                title={t("specs.supplier", "Supplier")}
+                subtitle={product.seller.company?.name}
+                compact={compact}
+              >
                 <SupplierCard
                   product={product}
                   inquiryMessage={inquiryMessage}
@@ -976,10 +1004,10 @@ export default function PortalProductDetailView({
                 type="button"
                 onClick={() => void openExistingInquiryChat()}
                 disabled={openingChat}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:opacity-60"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:opacity-60 cursor-pointer"
               >
                 <MessageCircle className="h-4 w-4" />
-                {openingChat ? "Opening…" : "Continue chat"}
+                {openingChat ? t("specs.opening", "Opening…") : t("specs.continueChat", "Continue chat")}
               </button>
             ) : (
               <button
@@ -988,7 +1016,7 @@ export default function PortalProductDetailView({
                 className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-white transition hover:bg-primary/90"
               >
                 <MessageCircle className="h-4 w-4" />
-                Send Inquiry
+                {t("specs.sendInquiry", "Send Inquiry")}
               </button>
             )
           ) : !isSellerView && contactPhone ? (
@@ -999,7 +1027,7 @@ export default function PortalProductDetailView({
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-success/20 bg-success-soft py-3.5 text-sm font-semibold text-success transition hover:border-success/40"
             >
               <MessageCircle className="h-4 w-4" />
-              WhatsApp Seller
+              {t("specs.whatsappSeller", "WhatsApp Seller")}
             </a>
           ) : null}
         </div>

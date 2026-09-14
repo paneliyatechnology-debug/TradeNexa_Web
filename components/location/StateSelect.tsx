@@ -6,6 +6,8 @@ import { Select } from "@/components/common/Select";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { fetchStates } from "@/services/locationService";
 import { INDIA_COUNTRY_ID, type ApiState } from "@/types/location";
+import { translateLocationName } from "@/utils/locationTranslations";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface StateSelectProps {
   id: string;
@@ -35,6 +37,7 @@ export default function StateSelect({
   selectedLabel,
   emptyLabel = "All states",
 }: StateSelectProps) {
+  const { currentLanguage, t } = useLanguage();
   const [states, setStates] = useState<ApiState[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -112,10 +115,16 @@ export default function StateSelect({
     setSearchInput(query);
   }, []);
 
+  const effectiveEmptyLabel =
+    emptyLabel === "All states" ? t("location.allStates", "All states") : emptyLabel;
+  const effectivePlaceholder =
+    placeholder === "All states" ? t("location.allStates", "All states") : placeholder;
+  const effectiveSearchPlaceholder = t("location.searchStates", "Search states...");
+
   const options = useMemo(() => {
     const items = states.map((state) => ({
       value: String(state.id),
-      label: state.name,
+      label: translateLocationName(state.name, currentLanguage),
     }));
 
     if (value) {
@@ -123,13 +132,15 @@ export default function StateSelect({
       if (!alreadyListed) {
         items.unshift({
           value,
-          label: selectedLabel?.trim() || `State #${value}`,
+          label: selectedLabel?.trim()
+            ? translateLocationName(selectedLabel.trim(), currentLanguage)
+            : `State #${value}`,
         });
       }
     }
 
-    return [{ value: "", label: emptyLabel }, ...items];
-  }, [emptyLabel, selectedLabel, states, value]);
+    return [{ value: "", label: effectiveEmptyLabel }, ...items];
+  }, [currentLanguage, effectiveEmptyLabel, selectedLabel, states, value]);
 
   return (
     <Select
@@ -141,7 +152,7 @@ export default function StateSelect({
         onChange(next, next ? label : undefined);
       }}
       options={options}
-      placeholder={loading && states.length === 0 ? "Loading states..." : placeholder}
+      placeholder={loading && states.length === 0 ? "Loading states..." : effectivePlaceholder}
       disabled={disabled}
       hasMore={hasMore}
       loadingMore={loadingMore || (loading && states.length > 0)}
@@ -149,7 +160,7 @@ export default function StateSelect({
       onSearchChange={handleSearchChange}
       error={error}
       className={className}
-      searchPlaceholder="Search states..."
+      searchPlaceholder={effectiveSearchPlaceholder}
       leadingIcon={<MapPin className="h-3.5 w-3.5" />}
     />
   );

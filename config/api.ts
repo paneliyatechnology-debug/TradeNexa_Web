@@ -33,7 +33,7 @@ const envVar = process.env.NEXT_PUBLIC_ENV?.toLowerCase()?.trim();
 export const CURRENT_ENV: AppEnvironment =
   envVar === "local" || envVar === "live" ? envVar : ACTIVE_ENV;
 
-export const IS_LIVE = CURRENT_ENV === "live";
+export const IS_LIVE = CURRENT_ENV === "local";
 
 /**
  * Dynamically resolves Backend Origin.

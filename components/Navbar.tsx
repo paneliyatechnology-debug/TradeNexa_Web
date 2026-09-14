@@ -19,6 +19,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { getDashboardPathForRole } from "@/utils/roleNavigation";
 import { Logo } from "@/components/common/Logo";
 import { Button } from "@/components/common/Button";
+import LocationSelectorButton from "@/components/location/LocationSelectorButton";
 import type { UserRole } from "@/types/auth";
 
 const AuthModal = dynamic(() => import("@/components/AuthModal"), { ssr: false });
@@ -81,10 +82,9 @@ export default function Navbar() {
   const dashboardHref = user ? getDashboardPathForRole(user.role) : "/buyer/home";
 
   const linkClass = (active: boolean) =>
-    `rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-      active
-        ? "bg-primary-soft text-primary"
-        : "text-muted-fg hover:bg-muted hover:text-foreground"
+    `rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 ${active
+      ? "bg-primary-soft text-primary"
+      : "text-muted-fg hover:bg-muted hover:text-foreground"
     }`;
 
   return (
@@ -138,11 +138,10 @@ export default function Navbar() {
                         <Link
                           key={link.name}
                           href={link.href}
-                          className={`block rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                            isNavActive(link.href)
+                          className={`block rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 ${isNavActive(link.href)
                               ? "bg-primary-soft text-primary"
                               : "text-muted-fg hover:bg-muted hover:text-foreground"
-                          }`}
+                            }`}
                         >
                           {link.name}
                         </Link>
@@ -164,6 +163,8 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center gap-2">
+              <LocationSelectorButton variant="navbar" className="hidden sm:inline-flex" />
+
               {isAuthenticated && user ? (
                 <>
                   <Link href={dashboardHref} className="hidden sm:inline-flex">
@@ -298,16 +299,18 @@ export default function Navbar() {
               className="border-t border-border bg-card lg:hidden"
             >
               <div className="scroll-area max-h-[calc(100dvh-4rem)] space-y-0.5 overflow-y-auto px-4 py-4">
+                <div className="mb-3 sm:hidden">
+                  <LocationSelectorButton variant="navbar" className="w-full justify-between" />
+                </div>
                 {navLinks.map((link) => (
                   <Link
                     key={link.name}
                     href={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`block rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
-                      isNavActive(link.href)
+                    className={`block rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${isNavActive(link.href)
                         ? "bg-primary-soft text-primary"
                         : "text-muted-fg hover:bg-muted"
-                    }`}
+                      }`}
                   >
                     {link.name}
                   </Link>

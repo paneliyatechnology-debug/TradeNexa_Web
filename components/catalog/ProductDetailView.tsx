@@ -494,7 +494,7 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
                       className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-muted px-6 py-3.5 text-sm font-bold text-foreground transition hover:border-primary/30 hover:bg-card"
                     >
                       <MessageCircle className="h-4 w-4" />
-                      WhatsApp
+                      {t("specs.whatsapp", "WhatsApp")}
                     </a>
                   )}
                   {phone && (

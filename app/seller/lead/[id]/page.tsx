@@ -16,6 +16,7 @@ import { ReviseQuotationFormModal } from "@/components/rfq/ReviseQuotationForm";
 import { UpdateQuotationFormModal } from "@/components/rfq/UpdateQuotationForm";
 import ChatSidePanel from "@/components/chat/ChatSidePanel";
 import { useChat } from "@/context/ChatContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { fetchSellerRfqById, findSellerQuotationForRfq, withdrawQuotation } from "@/services/rfqService";
 import type { ApiQuotation, ApiRfqDetail } from "@/types/rfq";
 import { formatPrice } from "@/utils/catalogHelpers";
@@ -64,6 +65,7 @@ function PageShell({ children }: { children: React.ReactNode }) {
 }
 
 export default function SellerLeadDetailPage() {
+  const { currentLanguage } = useLanguage();
   const params = useParams();
   const searchParams = useSearchParams();
   const rfqId = Number(params.id);
@@ -77,16 +79,8 @@ export default function SellerLeadDetailPage() {
 
   useEffect(() => {
     const explicit = resolveLeadBackSource(fromParam);
-    if (fromParam) {
+    if (explicit !== backSource) {
       setBackSource(explicit);
-      return;
-    }
-
-    try {
-      const refPath = new URL(document.referrer || window.location.href).pathname;
-      setBackSource(refPath.startsWith("/seller/chats") ? "inbox" : "feed");
-    } catch {
-      setBackSource("feed");
     }
   }, [fromParam]);
 
@@ -120,7 +114,7 @@ export default function SellerLeadDetailPage() {
     } finally {
       if (loadRequestRef.current === requestId) setLoading(false);
     }
-  }, [invalidId, rfqId, hydrateRfqConversations]);
+  }, [invalidId, rfqId, hydrateRfqConversations, currentLanguage]);
 
   useEffect(() => {
     void load();

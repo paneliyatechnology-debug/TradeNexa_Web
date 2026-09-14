@@ -4,6 +4,7 @@ import {
   approvalStatusClass,
   formatApprovalStatus,
 } from "@/utils/productApprovalHelpers";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ProductApprovalBadgeProps {
   status?: string | null;
@@ -14,13 +15,14 @@ export default function ProductApprovalBadge({
   status,
   className = "",
 }: ProductApprovalBadgeProps) {
+  const { t } = useLanguage();
   if (!status) return null;
 
   return (
     <span
       className={`inline-flex rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${approvalStatusClass(status)} ${className}`}
     >
-      {formatApprovalStatus(status)}
+      {formatApprovalStatus(status, t)}
     </span>
   );
 }

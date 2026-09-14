@@ -1,3 +1,7 @@
+"use client";
+
+import React from "react";
+import { useLanguage } from "@/context/LanguageContext";
 import { formatRfqStatus, quotationStatusClass } from "@/utils/rfqHelpers";
 
 interface QuotationStatusBadgeProps {
@@ -6,7 +10,8 @@ interface QuotationStatusBadgeProps {
 }
 
 export default function QuotationStatusBadge({ status, className = "" }: QuotationStatusBadgeProps) {
-  const label = formatRfqStatus(status);
+  const { t } = useLanguage();
+  const label = formatRfqStatus(status, t);
   return (
     <span
       className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold capitalize ${quotationStatusClass(status)} ${className}`}

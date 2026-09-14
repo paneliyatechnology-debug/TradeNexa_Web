@@ -154,7 +154,10 @@ export function navigateFromFcmNotification(
     const pathOnly = parsed ? parsed.pathname : url.split("?")[0] || "";
     if (!pathOnly || pathOnly === "/") {
       if (pushData && (pushData.type || pushData.click_action)) {
-        url = resolveFcmNavigationPath(pushData, readStoredActiveRole() ?? "buyer");
+        url = resolveFcmNavigationPath(
+          pushData,
+          (pushData.role as "buyer" | "seller") || readStoredActiveRole() || "buyer"
+        );
       } else {
         return;
       }
@@ -245,7 +248,10 @@ export function subscribeFcmServiceWorkerNavigation(): () => void {
 }
 
 function resolveFcmRedirectUrl(data: FcmPushData): string {
-  return resolveFcmNavigationPath(data, readStoredActiveRole() ?? "buyer");
+  return resolveFcmNavigationPath(
+    data,
+    (data.role as "buyer" | "seller") || readStoredActiveRole() || "buyer"
+  );
 }
 
 async function registerMessagingServiceWorker(): Promise<ServiceWorkerRegistration | null> {

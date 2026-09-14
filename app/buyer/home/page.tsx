@@ -42,7 +42,7 @@ function SectionLink({ href, children }: { href: string; children: React.ReactNo
 
 export default function BuyerHomePage() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
   const [suppliers, setSuppliers] = useState<ApiSupplier[]>([]);
   const [suppliersLoading, setSuppliersLoading] = useState(true);
   const [trending, setTrending] = useState<ApiProductListItem[]>([]);
@@ -136,7 +136,7 @@ export default function BuyerHomePage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [currentLanguage]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-6 lg:px-8">

@@ -16,10 +16,12 @@ import {
 import { useCityFilter } from "@/hooks/useCityFilter";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useLoadMoreList } from "@/hooks/useLoadMoreList";
+import { useLanguage } from "@/context/LanguageContext";
 import type { ApiCategoryDetail, ApiSubcategory } from "@/types/catalog";
 
 export default function SubcategoryProductsPage() {
   const params = useParams();
+  const { t, currentLanguage } = useLanguage();
   const categorySlug = String(params.slug ?? "");
   const subSlug = String(params.subSlug ?? "");
 
@@ -173,7 +175,15 @@ export default function SubcategoryProductsPage() {
     error: productError,
   } = useLoadMoreList({
     fetchPage: fetchProductPage,
-    resetDeps: [selectedSubId, category?.id, resolvedSub?.id, debouncedSearch, cityId],
+    resetDeps: [
+      selectedSubId,
+      category?.id,
+      resolvedSub?.id,
+      debouncedSearch,
+      stateId,
+      cityId,
+      currentLanguage,
+    ],
     enabled: !!category || !!resolvedSub,
   });
 

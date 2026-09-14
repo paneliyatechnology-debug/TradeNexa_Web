@@ -18,6 +18,8 @@ import {
   disconnectChatSocket,
   emitGetUnreadSummary,
   emitMessageRead,
+  emitTypingStart,
+  emitTypingStop,
   getChatSocketStatus,
   joinConversation,
   leaveConversation,
@@ -48,6 +50,8 @@ import {
   mergeConversationMeta,
 } from "@/utils/chatHelpers";
 import { showErrorToast, showNotificationToast } from "@/utils/toast";
+import { writeStoredActiveRole } from "@/utils/roleNavigation";
+import { syncActiveRoleToServiceWorker } from "@/services/fcmService";
 import type {
   ApiChatConversation,
   ApiChatMessage,
@@ -111,6 +115,9 @@ interface ChatContextValue {
   ) => Promise<void>;
   upsertConversationMeta: (conversation: ApiChatConversation) => void;
   conversationsMeta: Record<number, ApiChatConversation>;
+  typingByConversation: Record<number, boolean>;
+  sendTypingStart: (conversationId: number) => void;
+  sendTypingStop: (conversationId: number) => void;
 }
 
 const ChatContext = createContext<ChatContextValue | undefined>(undefined);
@@ -166,6 +173,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [conversationsMeta, setConversationsMeta] = useState<Record<number, ApiChatConversation>>(
     {}
   );
+  const [typingByConversation, setTypingByConversation] = useState<Record<number, boolean>>({});
+  const typingTimersRef = useRef<Map<number, NodeJS.Timeout>>(new Map());
   const activeIdRef = useRef<number | null>(null);
   const conversationsMetaRef = useRef<Record<number, ApiChatConversation>>({});
   const unreadSyncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -382,15 +391,77 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         });
       }
 
+      // Clear typing indicator for this conversation when message arrives
+      setTypingByConversation((prev) => {
+        if (!prev[owned.conversation_id]) return prev;
+        return { ...prev, [owned.conversation_id]: false };
+      });
+
       // Show popup toast if message is from the other user and not currently inside this conversation
       if (!owned.is_mine && activeConversationId !== owned.conversation_id) {
+        const rawData = unwrapSocketPayload(payload);
+        const record = (rawData && typeof rawData === "object" ? rawData : {}) as Record<string, unknown>;
+        const myId = currentUserIdRef.current;
+        const conversationBuyerId =
+          record.buyer_id ??
+          (record.conversation as Record<string, unknown> | undefined)?.buyer_id ??
+          conversationsMetaRef.current[owned.conversation_id]?.buyer_id;
+        const conversationSellerId =
+          record.seller_id ??
+          (record.conversation as Record<string, unknown> | undefined)?.seller_id ??
+          conversationsMetaRef.current[owned.conversation_id]?.seller_id;
+
+        let targetRole: "buyer" | "seller" = activeRoleRef.current;
+        if (myId && conversationSellerId && Number(myId) === Number(conversationSellerId)) {
+          targetRole = "seller";
+        } else if (myId && conversationBuyerId && Number(myId) === Number(conversationBuyerId)) {
+          targetRole = "buyer";
+        }
+
         showNotificationToast({
           title: owned.sender_name || "New Chat Message",
           body: owned.content || "You received a new message.",
           onClick: () => {
-            window.location.href = `/${activeRoleRef.current}/chats?conversation=${owned.conversation_id}`;
+            writeStoredActiveRole(targetRole);
+            syncActiveRoleToServiceWorker(targetRole);
+            window.location.href = `/${targetRole}/chats?conversation=${owned.conversation_id}`;
           },
         });
+      }
+    };
+
+    const onTypingIndicator = (...args: unknown[]) => {
+      const payload = coalesceIncomingSocketPayload(args);
+      const data = unwrapSocketPayload(payload);
+      if (!data || typeof data !== "object") return;
+      const record = data as Record<string, unknown>;
+      const conversationId = Number(record.conversation_id || record.conversationId);
+      const isTyping = Boolean(record.is_typing ?? record.isTyping ?? record.typing ?? true);
+      const typingUserId = Number(record.user_id || record.userId);
+
+      if (!Number.isFinite(conversationId) || conversationId <= 0) return;
+      if (typingUserId && typingUserId === currentUserIdRef.current) return;
+
+      const existingTimer = typingTimersRef.current.get(conversationId);
+      if (existingTimer) {
+        clearTimeout(existingTimer);
+        typingTimersRef.current.delete(conversationId);
+      }
+
+      setTypingByConversation((prev) => {
+        if (prev[conversationId] === isTyping) return prev;
+        return { ...prev, [conversationId]: isTyping };
+      });
+
+      if (isTyping) {
+        const timer = setTimeout(() => {
+          setTypingByConversation((prev) => {
+            if (!prev[conversationId]) return prev;
+            return { ...prev, [conversationId]: false };
+          });
+          typingTimersRef.current.delete(conversationId);
+        }, 4000);
+        typingTimersRef.current.set(conversationId, timer);
       }
     };
 
@@ -543,6 +614,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           return subscribeChatEvent(event, onConversationUpdated);
         case "unread_summary":
           return subscribeChatEvent(event, onUnreadSummary);
+        case "typing:indicator":
+          return subscribeChatEvent(event, onTypingIndicator);
         case "chat:error":
           return subscribeChatEvent(event, onChatError);
         default:
@@ -887,6 +960,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const sendTypingStart = useCallback((conversationId: number) => {
+    emitTypingStart(conversationId);
+  }, []);
+
+  const sendTypingStop = useCallback((conversationId: number) => {
+    emitTypingStop(conversationId);
+  }, []);
+
   const value = useMemo<ChatContextValue>(
     () => ({
       socketStatus,
@@ -907,6 +988,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       markRead,
       upsertConversationMeta,
       conversationsMeta,
+      typingByConversation,
+      sendTypingStart,
+      sendTypingStop,
     }),
     [
       socketStatus,
@@ -926,6 +1010,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       markRead,
       upsertConversationMeta,
       conversationsMeta,
+      typingByConversation,
+      sendTypingStart,
+      sendTypingStop,
     ]
   );
 

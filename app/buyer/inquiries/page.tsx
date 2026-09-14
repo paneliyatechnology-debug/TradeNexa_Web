@@ -28,7 +28,7 @@ const tabs = BUYER_RFQ_STATUS_TABS;
 const PAGE_SIZE = 6;
 
 export default function BuyerInquiriesPage() {
-  const { t } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
   const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("all");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search);
@@ -48,12 +48,12 @@ export default function BuyerInquiriesPage() {
         status: rfqTabToApiStatus(activeTab),
         search: debouncedSearch || undefined,
       }),
-    [activeTab, debouncedSearch]
+    [activeTab, debouncedSearch, currentLanguage]
   );
 
   const { items, pagination, loading, error, goToPage } = usePaginatedList({
     fetchPage,
-    resetDeps: [activeTab, debouncedSearch],
+    resetDeps: [activeTab, debouncedSearch, currentLanguage],
   });
 
   const newTodayCount = useMemo(
@@ -67,16 +67,16 @@ export default function BuyerInquiriesPage() {
   );
 
   const hasSearch = debouncedSearch.trim().length > 0;
-  const tabLabel = formatRfqStatusTabLabel(activeTab).toLowerCase();
+  const tabLabel = formatRfqStatusTabLabel(activeTab, t).toLowerCase();
   const emptyTitle = hasSearch
-    ? t("inquiries.buyerNoRfqsFound", "No RFQs match your search")
+    ? t("inquiries.noInquiriesFound", "No inquiries match your search")
     : activeTab === "all"
-      ? t("inquiries.buyerNoRfqsYet", "No RFQs yet")
+      ? t("inquiries.buyerNoFeed", "You haven't posted any RFQs yet")
       : `${t("inquiries.buyerNoStatusRfqs", `No ${tabLabel} RFQs`).replace("{status}", tabLabel)}`;
   const emptyDescription = hasSearch
-    ? t("leads.noMatchesDesc", `No results for "${debouncedSearch.trim()}". Try a different keyword or clear the search.`).replace("{search}", debouncedSearch.trim())
+    ? t("inquiries.noInquiriesMatchDesc", `No results for "${debouncedSearch.trim()}".`).replace("{search}", debouncedSearch.trim())
     : activeTab === "all"
-      ? t("inquiries.buyerNoRfqsDesc", "Post a requirement to receive quotes from verified sellers.")
+      ? t("inquiries.buyerNoFeedDesc", "Post your requirements to start receiving quotes from verified sellers.")
       : `${t("inquiries.buyerNoStatusDesc", `You don't have any RFQs in the ${tabLabel} state.`).replace("{status}", tabLabel)}`;
 
   const showPostPrompt = !loading && pagination.total > 0 && pagination.total <= PAGE_SIZE;
@@ -120,7 +120,7 @@ export default function BuyerInquiriesPage() {
                 onClick={() => setActiveTab(tab)}
                 className={portalFilterChipClass(activeTab === tab)}
               >
-                {tab === "all" ? t("catalog.tabs.all", "All") : formatRfqStatusTabLabel(tab)}
+                {formatRfqStatusTabLabel(tab, t)}
               </button>
             ))}
           </div>

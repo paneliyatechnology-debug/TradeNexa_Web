@@ -24,7 +24,7 @@ import { useChat } from "@/context/ChatContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { usePaginatedList } from "@/hooks/usePaginatedList";
-import { fetchConversations } from "@/services/chatService";
+import { fetchConversation, fetchConversations } from "@/services/chatService";
 import { conversationCounterpartyLogo, effectiveConversationUnread, mergeConversationMeta, sortConversationsByLastMessage } from "@/utils/chatHelpers";
 import { getInitials, resolveImageUrl } from "@/utils/catalogHelpers";
 import type { ApiChatConversation, ChatRole } from "@/types/chat";
@@ -108,8 +108,13 @@ export default function ChatsInbox({ role }: ChatsInboxProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useLanguage();
-  const { syncConversationsUnread, upsertConversationMeta, conversationsMeta, unreadSummary } =
-    useChat();
+  const {
+    syncConversationsUnread,
+    upsertConversationMeta,
+    conversationsMeta,
+    unreadSummary,
+    typingByConversation,
+  } = useChat();
   const chatRole = role;
   const isSeller = chatRole === "seller";
 
@@ -167,9 +172,26 @@ export default function ChatsInbox({ role }: ChatsInboxProps) {
     if (!Number.isFinite(deepLinkConversationId) || deepLinkConversationId <= 0) return;
     if (selected?.id === deepLinkConversationId) return;
     const match = items.find((c) => c.id === deepLinkConversationId);
-    if (!match) return;
-    upsertConversationMeta(match);
-    setSelected(match);
+    if (match) {
+      upsertConversationMeta(match);
+      setSelected(match);
+      return;
+    }
+    // Fetch single conversation if not in current page list
+    let cancelled = false;
+    void (async () => {
+      try {
+        const fetched = await fetchConversation(deepLinkConversationId);
+        if (cancelled || !fetched) return;
+        upsertConversationMeta(fetched);
+        setSelected(fetched);
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [deepLinkConversationId, items, selected?.id, upsertConversationMeta]);
 
   const rows = useMemo(() => {
@@ -419,13 +441,19 @@ export default function ChatsInbox({ role }: ChatsInboxProps) {
                             ) : null}
                           </span>
                           <span className="mt-0.5 flex items-center gap-2">
-                            <span
-                              className={`min-w-0 flex-1 truncate text-xs ${
-                                unread > 0 ? "text-foreground" : "text-muted-fg"
-                              }`}
-                            >
-                              {preview}
-                            </span>
+                            {typingByConversation[conversation.id] ? (
+                              <span className="min-w-0 flex-1 truncate text-xs font-semibold text-primary animate-pulse">
+                                {t("chats.typing", "typing...")}
+                              </span>
+                            ) : (
+                              <span
+                                className={`min-w-0 flex-1 truncate text-xs ${
+                                  unread > 0 ? "text-foreground" : "text-muted-fg"
+                                }`}
+                              >
+                                {preview}
+                              </span>
+                            )}
                             {unread > 0 ? (
                               <ConversationBadge count={unread} size="md" className="shrink-0" />
                             ) : null}
@@ -464,6 +492,7 @@ export default function ChatsInbox({ role }: ChatsInboxProps) {
                   logoUrl={conversationCounterpartyLogo(selected, chatRole)}
                   conversation={selected}
                   sellerId={selected.seller_id}
+                  isTyping={Boolean(selected?.id && typingByConversation[selected.id])}
                   leading={
                     <button
                       type="button"

@@ -27,7 +27,7 @@ export default function ChatSidePanel({
   ...chatProps
 }: ChatSidePanelProps) {
   const [mounted, setMounted] = React.useState(false);
-  const { activeConversationId, conversationsMeta } = useChat();
+  const { activeConversationId, conversationsMeta, typingByConversation } = useChat();
 
   useEffect(() => {
     setMounted(true);
@@ -133,6 +133,7 @@ export default function ChatSidePanel({
             logoUrl={logoUrl}
             conversation={conversationMeta}
             sellerId={chatProps.sellerId}
+            isTyping={Boolean(conversationMeta?.id && typingByConversation[conversationMeta.id])}
             trailing={
               <button
                 type="button"

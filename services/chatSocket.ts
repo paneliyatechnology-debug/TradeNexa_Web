@@ -408,6 +408,22 @@ export function emitMessageRead(conversationId: number, lastReadMessageId?: numb
   emitWhenConnected(s, "message:read", payload);
 }
 
+/** Emit typing start to active conversation room. */
+export function emitTypingStart(conversationId: number) {
+  if (!Number.isFinite(conversationId) || conversationId <= 0) return;
+  const s = connectChatSocket();
+  emitWhenConnected(s, "typing_start", { conversation_id: conversationId });
+  emitWhenConnected(s, "typing:start", { conversation_id: conversationId });
+}
+
+/** Emit typing stop to active conversation room. */
+export function emitTypingStop(conversationId: number) {
+  if (!Number.isFinite(conversationId) || conversationId <= 0) return;
+  const s = connectChatSocket();
+  emitWhenConnected(s, "typing_stop", { conversation_id: conversationId });
+  emitWhenConnected(s, "typing:stop", { conversation_id: conversationId });
+}
+
 /**
  * Guide: Live Unread Inbox — request a fresh `unread_summary` snapshot.
  * Server replies on this socket only (user room).

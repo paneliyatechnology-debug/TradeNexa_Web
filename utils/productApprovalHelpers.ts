@@ -65,24 +65,30 @@ export function extractApprovalStatus(raw: Record<string, unknown> | null | unde
   return null;
 }
 
-export function formatApprovalStatus(status?: string | null): string {
+export function formatApprovalStatus(
+  status?: string | null,
+  t?: (key: string, fallback: string) => string
+): string {
   switch (status) {
     case "in_review":
-      return "In review";
+      return t ? t("specs.inReview", "In review") : "In review";
     case "revision_required":
-      return "Revision required";
+      return t ? t("specs.revisionRequired", "Revision required") : "Revision required";
     case "approved":
-      return "Approved";
+      return t ? t("specs.approved", "Approved") : "Approved";
     case "rejected":
-      return "Rejected";
+      return t ? t("specs.rejected", "Rejected") : "Rejected";
     default:
-      return "Unknown";
+      return t ? t("specs.unknown", "Unknown") : "Unknown";
   }
 }
 
-export function formatApprovalStatusTabLabel(tab: string): string {
-  if (tab === "all") return "All";
-  return formatApprovalStatus(tab);
+export function formatApprovalStatusTabLabel(
+  tab: string,
+  t?: (key: string, fallback: string) => string
+): string {
+  if (tab === "all") return t ? t("catalog.tabs.all", "All") : "All";
+  return formatApprovalStatus(tab, t);
 }
 
 export function approvalStatusClass(status?: string | null): string {
@@ -110,16 +116,27 @@ export function approvalTabToApiStatus(
   return tab === "all" ? undefined : tab;
 }
 
-export function approvalStatusHint(status?: string | null): string | null {
+export function approvalStatusHint(
+  status?: string | null,
+  t?: (key: string, fallback: string) => string
+): string | null {
   switch (status) {
     case "in_review":
-      return "Waiting for admin moderation. Buyers cannot see this listing yet.";
+      return t
+        ? t("specs.inReviewHint", "Waiting for admin moderation. Buyers cannot see this listing yet.")
+        : "Waiting for admin moderation. Buyers cannot see this listing yet.";
     case "revision_required":
-      return "Admin requested changes. Edit and save the product to continue.";
+      return t
+        ? t("specs.revisionRequiredHint", "Admin requested changes. Edit and save the product to continue.")
+        : "Admin requested changes. Edit and save the product to continue.";
     case "approved":
-      return "Live for buyers when Active. Material edits will send it back to review.";
+      return t
+        ? t("specs.approvedHint", "Live for buyers when Active. Material edits will send it back to review.")
+        : "Live for buyers when Active. Material edits will send it back to review.";
     case "rejected":
-      return "Permanently rejected. This listing cannot be edited or resubmitted.";
+      return t
+        ? t("specs.rejectedHint", "Permanently rejected. This listing cannot be edited or resubmitted.")
+        : "Permanently rejected. This listing cannot be edited or resubmitted.";
     default:
       return null;
   }

@@ -118,6 +118,9 @@ export default function ChatPanel({
     sendMedia,
     markRead,
     upsertConversationMeta,
+    typingByConversation,
+    sendTypingStart,
+    sendTypingStop,
   } = useChat();
 
   const [bootLoading, setBootLoading] = useState(true);
@@ -144,6 +147,54 @@ export default function ChatPanel({
   const lastMarkedReadIdRef = useRef<number | null>(null);
   const initialScrollDoneRef = useRef(false);
   const markReadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isTypingActiveRef = useRef(false);
+
+  const isOtherTyping = Boolean(conversationId && typingByConversation[conversationId]);
+
+  const stopTyping = useCallback(() => {
+    if (typingTimerRef.current) {
+      clearTimeout(typingTimerRef.current);
+      typingTimerRef.current = null;
+    }
+    if (isTypingActiveRef.current && conversationId) {
+      isTypingActiveRef.current = false;
+      sendTypingStop(conversationId);
+    }
+  }, [conversationId, sendTypingStop]);
+
+  const handleDraftChange = (text: string) => {
+    setDraft(text);
+    if (!conversationId) return;
+
+    if (text.trim().length > 0) {
+      if (!isTypingActiveRef.current) {
+        isTypingActiveRef.current = true;
+        sendTypingStart(conversationId);
+      }
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+      typingTimerRef.current = setTimeout(() => {
+        if (isTypingActiveRef.current && conversationId) {
+          isTypingActiveRef.current = false;
+          sendTypingStop(conversationId);
+        }
+      }, 2000);
+    } else {
+      stopTyping();
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      stopTyping();
+    };
+  }, [stopTyping]);
+
+  useEffect(() => {
+    if (isOtherTyping && stickToBottom.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [isOtherTyping]);
 
   const messages = conversationId ? messagesByConversation[conversationId] ?? [] : [];
   const messagesRef = useRef(messages);
@@ -521,6 +572,7 @@ export default function ChatPanel({
   async function handleSend() {
     if (!conversationId || !draft.trim() || sendingRef.current) return;
     const content = draft.trim();
+    stopTyping();
     sendingRef.current = true;
     setDraft("");
     setSending(true);
@@ -615,7 +667,11 @@ export default function ChatPanel({
             </div>
             <div className="min-w-0 pt-0.5">
               <h3 className="truncate text-sm font-bold text-foreground">{headerName}</h3>
-              {disconnected && !chatUnavailable ? (
+              {isOtherTyping ? (
+                <p className="truncate text-xs font-semibold text-primary animate-pulse flex items-center gap-1">
+                  <span>{t("chats.typing", "typing...")}</span>
+                </p>
+              ) : disconnected && !chatUnavailable ? (
                 <div className="mt-0.5">
                   <span className="inline-flex items-center rounded-full border border-warning/25 bg-warning-soft px-2 py-0.5 text-[10px] font-semibold text-warning">
                     {t("chats.reconnecting", "Reconnecting...")}
@@ -706,6 +762,20 @@ export default function ChatPanel({
                 </div>
               </React.Fragment>
             ))}
+            {isOtherTyping ? (
+              <div className="flex items-center gap-2 px-1 py-1.5 mt-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <div className="flex items-center gap-2 rounded-2xl rounded-tl-xs bg-card border border-border/80 px-3.5 py-2 shadow-xs text-xs font-medium text-muted-fg">
+                  <span className="text-xs font-semibold text-foreground/85">
+                    {t("chats.typing", "typing")}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-bounce" />
+                  </span>
+                </div>
+              </div>
+            ) : null}
             <div ref={bottomRef} />
           </>
         )}
@@ -803,7 +873,7 @@ export default function ChatPanel({
               value={draft}
               disabled={composerDisabled}
               onChange={(e) => {
-                setDraft(e.target.value);
+                handleDraftChange(e.target.value);
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {

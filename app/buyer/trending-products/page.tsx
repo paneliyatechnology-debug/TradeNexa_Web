@@ -13,8 +13,10 @@ import { fetchTrendingProducts } from "@/services/catalogService";
 import { useCityFilter } from "@/hooks/useCityFilter";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useLoadMoreList } from "@/hooks/useLoadMoreList";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function BuyerTrendingPage() {
+  const { currentLanguage } = useLanguage();
   const [query, setQuery] = React.useState("");
   const debounced = useDebouncedValue(query, 400);
   const {
@@ -47,7 +49,7 @@ export default function BuyerTrendingPage() {
   const { items: products, pagination, loading, loadingMore, hasMore, loadMore } =
     useLoadMoreList({
       fetchPage,
-      resetDeps: [debounced, cityId],
+      resetDeps: [debounced, stateId, cityId, currentLanguage],
     });
 
   const hasAnyFilter = Boolean(query.trim() || hasLocationFilter);

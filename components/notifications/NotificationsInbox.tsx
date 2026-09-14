@@ -362,8 +362,15 @@ export default function NotificationsInbox({ accent = "buyer" }: NotificationsIn
     if (openingId != null || markingSelected) return;
     setOpeningId(notification.id);
 
+    const explicitRole =
+      notification.role === "seller" || notification.role === "buyer"
+        ? notification.role
+        : notification.data?.role === "seller" || notification.data?.role === "buyer"
+        ? (notification.data.role as "seller" | "buyer")
+        : null;
+
     const portalRole =
-      activeRole === "seller" || accent === "seller" ? "seller" : "buyer";
+      explicitRole ?? (activeRole === "seller" || accent === "seller" ? "seller" : "buyer");
     const path = resolveNotificationPath(notification, portalRole);
     const pathPortal = getPortalForPath(path);
 
