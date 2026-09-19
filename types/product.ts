@@ -53,6 +53,7 @@ export interface CreateProductFormData {
   categoryId: number;
   subcategoryId: number;
   brandId: number;
+  brandName?: string;
   shortDescription: string;
   description: string;
   price: string;

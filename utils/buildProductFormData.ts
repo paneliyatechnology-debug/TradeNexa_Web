@@ -54,7 +54,12 @@ export function buildProductFormData(
   formData.append("name", toFormString(data.name).trim());
   formData.append("category_id", String(data.categoryId));
   formData.append("subcategory_id", String(data.subcategoryId));
-  formData.append("brand_id", String(data.brandId));
+  if (data.brandId && Number(data.brandId) > 0) {
+    formData.append("brand_id", String(data.brandId));
+  }
+  if (data.brandName?.trim()) {
+    formData.append("brand_name", data.brandName.trim());
+  }
   formData.append("short_description", toFormString(data.shortDescription).trim());
   formData.append("price", toFormString(data.price).trim());
   formData.append("currency", toFormString(data.currency).trim());

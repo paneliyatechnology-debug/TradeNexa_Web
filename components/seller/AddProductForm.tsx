@@ -134,6 +134,7 @@ function emptyForm(sellerId?: number): CreateProductFormData {
     categoryId: 0,
     subcategoryId: 0,
     brandId: 0,
+    brandName: "",
     shortDescription: "",
     description: "",
     price: "",
@@ -261,7 +262,7 @@ function getFormErrors(
   if (!toFormString(form.name).trim()) errors.name = "Product name is required.";
   if (!form.categoryId) errors.category = "Please select a category.";
   if (!form.subcategoryId) errors.subcategory = "Please select a subcategory.";
-  if (!form.brandId) errors.brand = "Please select a brand.";
+  if (!toFormString(form.brandName || form.brandId).trim()) errors.brand = "Brand name is required.";
 
   const shortLen = toFormString(form.shortDescription).trim().length;
   if (shortLen < 10 || shortLen > 500) {
@@ -1119,17 +1120,15 @@ export default function AddProductForm({ productId }: { productId?: number } = {
           </FormField>
         </div>
 
-        <FormField label="Brand" htmlFor="brand" fieldKey="brand" required error={errors.brand}>
-          <Select
+        <FormField label="Brand Name" htmlFor="brand" fieldKey="brand" required error={errors.brand}>
+          <Input
             id="brand"
-            value={form.brandId ? String(form.brandId) : ""}
-            onChange={(e) => updateForm("brandId", Number(e.target.value))}
-            placeholder={brandsLoading ? "Loading..." : "Select brand"}
-            options={brands.map((b) => ({ value: String(b.id), label: b.name }))}
-            disabled={brandsLoading}
-            hasMore={brandsHasMore}
-            loadingMore={brandsLoadingMore}
-            onLoadMore={loadMoreBrands}
+            value={form.brandName ?? ""}
+            onChange={(e) => {
+              updateForm("brandName", e.target.value);
+              updateForm("brandId", 0);
+            }}
+            placeholder="Enter brand name (e.g. Havells, Sony, Generic)"
             error={!!errors.brand}
             aria-required
           />

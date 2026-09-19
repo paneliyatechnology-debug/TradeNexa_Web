@@ -145,6 +145,7 @@ export function mapProductDetailToFormData(
     categoryId: readCategoryId(product),
     subcategoryId: readSubcategoryId(product),
     brandId: product.basic_details.brand?.id ?? 0,
+    brandName: product.basic_details.brand?.name ?? "",
     shortDescription: toFormString(product.basic_details.short_description),
     description: toFormString(product.basic_details.description),
     price: toFormString(product.pricing.price),
