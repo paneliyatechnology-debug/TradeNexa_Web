@@ -137,32 +137,20 @@ export function areRolesLoaded(): boolean {
 }
 
 export async function ensureRolesLoaded(): Promise<RegisterableRoleOption[]> {
-  ensureStaticRoles();
-
-  if (!loadPromise) {
-    loadPromise = fetchRoles()
-      .then((roles) => {
-        const activeRegisterable = roles.filter((role) => {
-          if (!role.is_active) return false;
-          return apiCodeToUserRole(role.code) !== null;
-        });
-
-        if (activeRegisterable.length >= 3) {
-          setRolesFromApi(activeRegisterable);
-        } else {
-          setRolesFromApi(STATIC_API_ROLES);
-        }
-      })
-      .catch(() => {
-        setRolesFromApi(STATIC_API_ROLES);
-        loadPromise = null;
-      });
-  }
-
   try {
-    await loadPromise;
+    const roles = await fetchRoles();
+    const activeRegisterable = roles.filter((role) => {
+      if (!role.is_active) return false;
+      return apiCodeToUserRole(role.code) !== null;
+    });
+
+    if (activeRegisterable.length >= 1) {
+      setRolesFromApi(activeRegisterable);
+    } else {
+      ensureStaticRoles();
+    }
   } catch {
-    setRolesFromApi(STATIC_API_ROLES);
+    ensureStaticRoles();
   }
 
   return getRegisterableRoles();
