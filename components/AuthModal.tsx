@@ -8,7 +8,7 @@ import { FormField } from "@/components/common/FormField";
 import { Select } from "@/components/common/Select";
 import { IndianFlag } from "@/components/common/IndianFlag";
 import { RoleSelector } from "@/components/common/RoleSelector";
-import { fetchBusinessTypesPage } from "@/services/businessTypesService";
+import { fetchBusinessTypes, fetchBusinessTypesPage } from "@/services/businessTypesService";
 import { ensureRolesLoaded, userRoleToRoleId } from "@/utils/authHelpers";
 import type { ApiBusinessType } from "@/types/businessType";
 import { scrollToFirstFormError } from "@/utils/scrollToFormError";
@@ -256,14 +256,14 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
       try {
         await ensureRolesLoaded();
         const roleId = userRoleToRoleId(regForm.role);
-        const { results, pagination } = await fetchBusinessTypesPage(roleId, 1, 50);
+        const results = await fetchBusinessTypes(roleId);
 
         if (cancelled) return;
 
         setSelectedRoleId(roleId);
         setBusinessTypes(results);
-        setBusinessTypesPage(pagination.page || 1);
-        setBusinessTypesHasMore(pagination.page < pagination.totalPages);
+        setBusinessTypesPage(1);
+        setBusinessTypesHasMore(false);
         setRegForm((prev) => ({ ...prev, businessTypeId: "" }));
       } catch {
         if (!cancelled) {

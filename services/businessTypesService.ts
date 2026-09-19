@@ -32,7 +32,7 @@ function normalizeBusinessTypes(items: ApiBusinessType[]): ApiBusinessType[] {
 export async function fetchBusinessTypesPage(
   roleId: number,
   page = 1,
-  limit = 10
+  limit = 100
 ): Promise<BusinessTypesPageResult> {
   const response = await apiClient.get(API_ENDPOINTS.BUSINESS_TYPES, {
     params: {
@@ -62,19 +62,8 @@ export async function fetchBusinessTypesPage(
   };
 }
 
-/** Loads all pages (used where infinite scroll is not needed). */
+/** Loads all business types for a role (full list). */
 export async function fetchBusinessTypes(roleId: number): Promise<ApiBusinessType[]> {
-  const all: ApiBusinessType[] = [];
-  let page = 1;
-  let totalPages = 1;
-
-  while (page <= totalPages && page <= 20) {
-    const { results, pagination } = await fetchBusinessTypesPage(roleId, page, 50);
-    all.push(...results);
-    totalPages = Math.max(pagination.totalPages || 1, 1);
-    page += 1;
-    if (!results.length) break;
-  }
-
-  return normalizeBusinessTypes(all);
+  const { results } = await fetchBusinessTypesPage(roleId, 1, 100);
+  return results;
 }
