@@ -256,7 +256,7 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
       try {
         await ensureRolesLoaded();
         const roleId = userRoleToRoleId(regForm.role);
-        const { results, pagination } = await fetchBusinessTypesPage(roleId, 1, 10);
+        const { results, pagination } = await fetchBusinessTypesPage(roleId, 1, 50);
 
         if (cancelled) return;
 
