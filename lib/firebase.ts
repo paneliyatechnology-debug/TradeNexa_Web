@@ -2,12 +2,13 @@ import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 
 export const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyDBF96jQzVSVfw299ZM87zGtmWcKyBqesU",
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "tradnexa.firebaseapp.com",
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "tradnexa",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "tradnexa.firebasestorage.app",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "632431608578",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:632431608578:web:243ffaf7771f1de193781b",
+  apiKey: "AIzaSyDBF96jQzVSVfw299ZM87zGtmWcKyBqesU",
+  authDomain: "tradnexa.firebaseapp.com",
+  projectId: "tradnexa",
+  storageBucket: "tradnexa.firebasestorage.app",
+  messagingSenderId: "632431608578",
+  appId: "1:632431608578:web:243ffaf7771f1de193781b",
+  measurementId: "G-CNHCQFSR82",
 };
 
 /**
