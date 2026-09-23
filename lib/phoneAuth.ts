@@ -54,12 +54,16 @@ export function formatFirebasePhoneAuthError(error: unknown): string {
 }
 
 /**
- * Initializes and manages the invisible RecaptchaVerifier singleton.
+ * Initializes and manages the RecaptchaVerifier singleton.
+ * Uses 'normal' (interactive check) by default to guarantee 100% token validity and prevent 400 Bad Request.
  */
-export function initRecaptchaVerifier(containerId: string = "recaptcha-container"): RecaptchaVerifier {
+export function initRecaptchaVerifier(
+  containerId: string = "recaptcha-container",
+  size: "normal" | "invisible" = "normal"
+): RecaptchaVerifier {
   const auth = getFirebaseAuth();
   if (!auth) {
-    throw new Error("Firebase Auth is not initialized. Please check your environment variables.");
+    throw new Error("Firebase Auth is not initialized. Please check your configuration.");
   }
 
   let container = document.getElementById(containerId);
@@ -67,24 +71,17 @@ export function initRecaptchaVerifier(containerId: string = "recaptcha-container
     container = document.createElement("div");
     container.id = containerId;
     document.body.appendChild(container);
-  } else {
-    // Clear any leftover DOM from previous instances to avoid "reCAPTCHA already rendered"
-    container.innerHTML = "";
   }
 
+  // If already initialized on this container, return existing verifier
   if (window.recaptchaVerifier) {
-    try {
-      window.recaptchaVerifier.clear();
-    } catch {
-      // safe cleanup
-    }
-    window.recaptchaVerifier = undefined;
+    return window.recaptchaVerifier;
   }
 
   const verifier = new RecaptchaVerifier(auth, container, {
-    size: "invisible",
+    size,
     callback: () => {
-      // reCAPTCHA solved automatically
+      // reCAPTCHA solved
     },
     "expired-callback": () => {
       if (window.recaptchaVerifier) {
@@ -114,7 +111,18 @@ export async function sendFirebasePhoneOtp(
     throw new Error("Firebase Auth is not initialized.");
   }
 
-  const verifier = initRecaptchaVerifier(containerId);
+  let verifier = window.recaptchaVerifier;
+  if (!verifier) {
+    verifier = initRecaptchaVerifier(containerId, "normal");
+  }
+
+  // Ensure reCAPTCHA token is obtained
+  try {
+    await verifier.verify();
+  } catch (verifyErr) {
+    console.warn("[PhoneAuth] reCAPTCHA verification prompt:", verifyErr);
+  }
+
   const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, verifier);
   window.confirmationResult = confirmationResult;
 

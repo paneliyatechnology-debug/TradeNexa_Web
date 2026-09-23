@@ -18,6 +18,7 @@ import {
   ensureNotificationPermission,
   getFcmToken,
 } from "@/services/fcmService";
+import { initRecaptchaVerifier } from "@/lib/phoneAuth";
 import {
   Smartphone,
   ShieldCheck,
@@ -240,6 +241,20 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
   const [businessTypesHasMore, setBusinessTypesHasMore] = useState(false);
   const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
   const [agreedTerms, setAgreedTerms] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && authModalStep === "login") {
+      const timer = setTimeout(() => {
+        try {
+          const verifier = initRecaptchaVerifier("recaptcha-container", "normal");
+          verifier.render().catch(() => {});
+        } catch {
+          // ignore
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, authModalStep]);
 
   useEffect(() => {
     const shouldLoad =
@@ -578,6 +593,8 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
 
               {errors.phone && <FieldError message={errors.phone} />}
             </div>
+
+            <div id="recaptcha-container" className="my-2 flex justify-center min-h-[78px]" />
 
             {sendOtpState.error && <ErrorBanner message={sendOtpState.error} />}
 
@@ -947,7 +964,6 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
       maxWidth="sm"
     >
       <AnimatePresence mode="wait">{renderStep()}</AnimatePresence>
-      <div id="recaptcha-container" />
     </Modal>
   );
 }
