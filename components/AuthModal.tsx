@@ -947,6 +947,7 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
       maxWidth="sm"
     >
       <AnimatePresence mode="wait">{renderStep()}</AnimatePresence>
+      <div id="recaptcha-container" />
     </Modal>
   );
 }
