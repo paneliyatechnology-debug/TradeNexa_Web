@@ -3,13 +3,13 @@ import { getMessaging, isSupported, type Messaging } from "firebase/messaging";
 import { getAuth, type Auth } from "firebase/auth";
 
 export const firebaseConfig = {
-  apiKey: "AIzaSyDBF96jQzVSVfw299ZM87zGtmWcKyBqesU",
-  authDomain: "tradnexa.firebaseapp.com",
-  projectId: "tradnexa",
-  storageBucket: "tradnexa.firebasestorage.app",
-  messagingSenderId: "632431608578",
-  appId: "1:632431608578:web:243ffaf7771f1de193781b",
-  measurementId: "G-CNHCQFSR82",
+  apiKey: "AIzaSyA69_MjbZ22YnkFxPqLWOGSOfuJPB44Ni0",
+  authDomain: "tradehub-b7b28.firebaseapp.com",
+  projectId: "tradehub-b7b28",
+  storageBucket: "tradehub-b7b28.firebasestorage.app",
+  messagingSenderId: "42547333485",
+  appId: "1:42547333485:web:5c4dbbdc1ee9f95cb6b264",
+  measurementId: "G-4BWH7SKJQH",
 };
 
 /** Checks if core Firebase Auth is configured */
