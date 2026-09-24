@@ -37,19 +37,51 @@ export const IS_LIVE = CURRENT_ENV === "live";
 
 /**
  * Dynamically resolves Backend Origin.
- * On mobile/LAN devices accessing via Wi-Fi (e.g. http://192.168.1.103:3000),
- * this automatically points to http://192.168.1.103:5000 instead of dead localhost:5000 on the phone.
+ * - On production/deployed sites (Vercel, HTTPS, .vercel.app, tradenexa domains),
+ *   automatically uses the live Railway backend (https://tradenexabackend-dev.up.railway.app).
+ * - On local LAN/mobile devices accessing via local Wi-Fi (e.g. http://192.168.1.103:3000),
+ *   points to http://192.168.1.103:5000.
+ * - On local development machine (localhost / 127.0.0.1),
+ *   points to http://localhost:5000.
  */
 export function getBackendOrigin(): string {
   if (CURRENT_ENV === "live") {
     return URL_CONFIG.live.origin;
   }
+
   if (typeof window !== "undefined" && window.location?.hostname) {
     const host = window.location.hostname;
-    if (host && host !== "localhost" && host !== "127.0.0.1") {
+    const protocol = window.location.protocol;
+
+    // Any HTTPS or deployed production domain (like Vercel, Railway, custom domain)
+    // MUST use the live HTTPS backend to prevent Mixed Content blocking.
+    if (
+      protocol === "https:" ||
+      host.includes("vercel.app") ||
+      host.includes("railway.app") ||
+      host.includes("tradenexa") ||
+      host.endsWith(".app") ||
+      host.endsWith(".com")
+    ) {
+      return URL_CONFIG.live.origin;
+    }
+
+    // Local Wi-Fi / private LAN IP testing on mobile (e.g. 192.168.x.x, 10.x.x.x)
+    const isPrivateLanIp = /^(?:192\.168\.|10\.|172\.(?:1[6-9]|2\d|3[01])\.)/.test(host);
+    if (isPrivateLanIp && protocol === "http:") {
       return `http://${host}:5000`;
     }
+
+    if (host === "localhost" || host === "127.0.0.1") {
+      return URL_CONFIG.local.origin;
+    }
   }
+
+  // Server-side rendering fallback for production deployments
+  if (process.env.NODE_ENV === "production" && (process.env.VERCEL || process.env.NEXT_PUBLIC_VERCEL_URL)) {
+    return URL_CONFIG.live.origin;
+  }
+
   return URL_CONFIG.local.origin;
 }
 
