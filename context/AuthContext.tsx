@@ -42,12 +42,6 @@ import {
 } from "@/utils/runApiAction";
 import { showErrorToast } from "@/utils/toast";
 import {
-  getRecaptchaToken,
-  sendOtpViaClientFirebase,
-  confirmFirebaseOtp,
-  formatFirebasePhoneAuthError,
-} from "@/lib/phoneAuth";
-import {
   getDashboardPathForRole,
   getDefaultActiveRole,
   isPortalPath,
@@ -322,46 +316,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const sendOtpRequest = async (phone: string, countryCode: string) => {
     const mobile_number = formatMobileNumber(countryCode, phone);
+    const response = await apiClient.post(API_ENDPOINTS.SEND_OTP, { mobile_number });
+    const data = unwrapApiPayload<Record<string, unknown>>(response.data);
 
-    // 1. Dispatch REAL SMS directly to physical phone via Firebase Client Web SDK
-    let clientVerificationId: string | null = null;
-    try {
-      const clientRes = await sendOtpViaClientFirebase(mobile_number, "recaptcha-container");
-      clientVerificationId = clientRes.verificationId;
-    } catch (clientErr: unknown) {
-      console.error("[AuthContext] Firebase phone auth error:", clientErr);
-      const friendlyMessage = formatFirebasePhoneAuthError(clientErr);
-      throw new Error(friendlyMessage);
+    const verificationId = getFirebaseVerificationId(data);
+    const apiMobileNumber = getMobileNumber(data) || mobile_number;
+
+    if (!verificationId) {
+      throw new Error("OTP sent but verification ID missing from server response.");
     }
 
-    if (!clientVerificationId) {
-      throw new Error("Failed to initialize OTP verification session. Please try again.");
-    }
-
-    // 2. Register verification session with backend API
-    const payload: { mobile_number: string; firebase_verification_id: string } = {
-      mobile_number,
-      firebase_verification_id: clientVerificationId,
-    };
-
-    let apiVerificationId = clientVerificationId;
-    let apiMobileNumber = mobile_number;
-    try {
-      const response = await apiClient.post(API_ENDPOINTS.SEND_OTP, payload);
-      const data = unwrapApiPayload<Record<string, unknown>>(response.data);
-      apiVerificationId = getFirebaseVerificationId(data) || clientVerificationId;
-      apiMobileNumber = getMobileNumber(data) || mobile_number;
-    } catch (backendErr) {
-      console.warn("[AuthContext] Backend session registration warning:", backendErr);
-    }
-
-    setFirebaseVerificationId(apiVerificationId);
+    setFirebaseVerificationId(verificationId);
     setSessionMobileNumber(apiMobileNumber);
 
     return {
-      firebase_verification_id: apiVerificationId,
+      firebase_verification_id: verificationId,
       mobile_number: apiMobileNumber,
-      message: "OTP sent successfully to your mobile number",
+      message: String((response.data as { message?: string }).message || "OTP sent successfully"),
     } as SendOtpResponse;
   };
 
@@ -388,31 +359,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       fallbackError: "Failed to verify OTP code",
       successMessage: "OTP verified successfully",
       action: async () => {
-        // 1. Validate OTP directly with Firebase Web SDK and retrieve Google ID Token
-        let firebaseIdToken: string | null = null;
-        try {
-          const { idToken } = await confirmFirebaseOtp(otp);
-          firebaseIdToken = idToken;
-        } catch (firebaseErr: unknown) {
-          console.error("[AuthContext] Firebase confirmOtp error:", firebaseErr);
-          const friendlyMessage = formatFirebasePhoneAuthError(firebaseErr);
-          throw new Error(friendlyMessage);
-        }
-
-        // 2. Transmit session details and Google ID Token to TradeNexa backend
         const device = await buildLoginDevicePayload();
-        const body: Record<string, unknown> = {
+        const body = {
           firebase_verification_id: firebaseVerificationId,
           mobile_number: sessionMobileNumber,
           otp: Number(otp),
           device,
         };
-        if (firebaseIdToken) {
-          body.id_token = firebaseIdToken;
-          body.firebase_id_token = firebaseIdToken;
-        }
-
         const response = await apiClient.post(API_ENDPOINTS.VERIFY_OTP, body);
+
         const data = unwrapApiPayload<Record<string, unknown>>(response.data);
         const session = parseAuthSession(data);
 
