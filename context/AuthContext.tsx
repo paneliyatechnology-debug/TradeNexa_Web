@@ -6,7 +6,6 @@ import React, {
   useState,
   useEffect,
   useCallback,
-  useMemo,
   useRef,
   ReactNode,
 } from "react";
@@ -23,8 +22,6 @@ import apiClient from "@/services/apiClient";
 import { API_ENDPOINTS } from "@/config/endpoints";
 import {
   formatMobileNumber,
-  getFirebaseVerificationId,
-  getMobileNumber,
   mapApiProfileToUser,
   parseAuthSession,
   unwrapApiPayload,
@@ -32,6 +29,13 @@ import {
   ensureRolesLoaded,
   type ApiUserProfile,
 } from "@/utils/authHelpers";
+import {
+  requestFirebasePhoneOtp,
+  signOutOfFirebase,
+  mapFirebasePhoneAuthError,
+  clearRecaptchaVerifier,
+} from "@/lib/phoneAuth";
+import type { ConfirmationResult } from "firebase/auth";
 import { buildProfileFormData } from "@/utils/buildProfileFormData";
 import { buildLoginDevicePayload } from "@/services/fcmService";
 import { deleteProfile } from "@/services/profileService";
@@ -102,7 +106,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authModalRole, setAuthModalRole] = useState<UserRole | null>(null);
   const [authModalPhone, setAuthModalPhone] = useState("");
   const [authModalCountryCode, setAuthModalCountryCode] = useState("+91");
-  const [firebaseVerificationId, setFirebaseVerificationId] = useState<string | null>(null);
   const [sessionMobileNumber, setSessionMobileNumber] = useState<string | null>(null);
   const [sendOtpState, setSendOtpState] = useState<AsyncOperationState<SendOtpResponse>>(initialOpState());
   const [verifyOtpState, setVerifyOtpState] = useState<AsyncOperationState<VerifyOtpResponse>>(initialOpState());
@@ -113,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [completeProfileState, setCompleteProfileState] = useState<AsyncOperationState<User>>(initialOpState());
   const closeModalTimerRef = useRef<number | null>(null);
   const skipProfileTimerRef = useRef<number | null>(null);
+  const confirmationResultRef = useRef<ConfirmationResult | null>(null);
 
   const redirectToDashboard = useCallback((userData: User) => {
     if (userData.role !== "both") {
@@ -239,6 +243,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // Clear local session even if API logout fails
     }
+    await signOutOfFirebase();
     clearSession();
   };
 
@@ -258,12 +263,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const closeAuthModal = useCallback(() => {
     setIsAuthModalOpen(false);
+    clearRecaptchaVerifier();
+    confirmationResultRef.current = null;
     if (closeModalTimerRef.current) window.clearTimeout(closeModalTimerRef.current);
     closeModalTimerRef.current = window.setTimeout(() => {
       closeModalTimerRef.current = null;
       setAuthModalPhone("");
       setAuthModalRole(null);
-      setFirebaseVerificationId(null);
       setSessionMobileNumber(null);
       setSendOtpState(initialOpState());
       setVerifyOtpState(initialOpState());
@@ -314,89 +320,120 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, redirectToDashboard, closeCompleteProfileModal]);
 
-  const sendOtpRequest = async (phone: string, countryCode: string) => {
-    const mobile_number = formatMobileNumber(countryCode, phone);
-    const response = await apiClient.post(API_ENDPOINTS.SEND_OTP, { mobile_number });
-    const data = unwrapApiPayload<Record<string, unknown>>(response.data);
-
-    const verificationId = getFirebaseVerificationId(data);
-    const apiMobileNumber = getMobileNumber(data) || mobile_number;
-
-    if (!verificationId) {
-      throw new Error("OTP sent but verification ID missing from server response.");
-    }
-
-    setFirebaseVerificationId(verificationId);
-    setSessionMobileNumber(apiMobileNumber);
-
-    return {
-      firebase_verification_id: verificationId,
-      mobile_number: apiMobileNumber,
-      message: String((response.data as { message?: string }).message || "OTP sent successfully"),
-    } as SendOtpResponse;
-  };
-
   const sendOtpAction = async (phone: string, countryCode: string): Promise<boolean> => {
-    const result = await runApiAction({
-      setState: setSendOtpState,
-      action: () => sendOtpRequest(phone, countryCode),
-      successMessage: "OTP sent successfully",
-      fallbackError: "Failed to send OTP code",
-    });
-    return !!result;
+    const formattedMobile = formatMobileNumber(countryCode, phone);
+    setSendOtpState({ loading: true, success: false, error: null, response: null });
+
+    try {
+      const confirmationResult = await requestFirebasePhoneOtp(formattedMobile, "recaptcha-container");
+      confirmationResultRef.current = confirmationResult;
+      setSessionMobileNumber(formattedMobile);
+      setAuthModalPhone(phone);
+      setAuthModalCountryCode(countryCode);
+
+      const resp: SendOtpResponse = {
+        mobile_number: formattedMobile,
+        message: "OTP sent successfully via Firebase",
+      };
+
+      setSendOtpState({ loading: false, success: true, error: null, response: resp });
+      return true;
+    } catch (err) {
+      const friendlyError = mapFirebasePhoneAuthError(err);
+      setSendOtpState({ loading: false, success: false, error: friendlyError, response: null });
+      showErrorToast(friendlyError);
+      return false;
+    }
   };
 
   const verifyOtpAction = async (otp: string): Promise<VerifyOtpResponse | null> => {
-    if (!firebaseVerificationId || !sessionMobileNumber) {
+    if (!confirmationResultRef.current) {
       const errorMsg = "Verification session expired. Please request a new OTP.";
       setVerifyOtpState({ loading: false, success: false, error: errorMsg, response: null });
       showErrorToast(errorMsg);
       return null;
     }
 
-    return runApiAction({
-      setState: setVerifyOtpState,
-      fallbackError: "Failed to verify OTP code",
-      successMessage: "OTP verified successfully",
-      action: async () => {
-        const device = await buildLoginDevicePayload();
-        const body = {
-          firebase_verification_id: firebaseVerificationId,
-          mobile_number: sessionMobileNumber,
-          otp: Number(otp),
-          device,
-        };
-        const response = await apiClient.post(API_ENDPOINTS.VERIFY_OTP, body);
+    setVerifyOtpState({ loading: true, success: false, error: null, response: null });
 
-        const data = unwrapApiPayload<Record<string, unknown>>(response.data);
-        const session = parseAuthSession(data);
+    try {
+      // 1. Confirm OTP code using Firebase Web Phone Auth
+      const userCredential = await confirmationResultRef.current.confirm(otp.trim());
+      const firebaseUser = userCredential.user;
 
-        storeTokens(session.access_token, session.refresh_token);
+      // Extract verified phone number from Firebase token / credentials
+      const verifiedPhone = firebaseUser.phoneNumber || sessionMobileNumber;
+      if (verifiedPhone) {
+        setSessionMobileNumber(verifiedPhone);
+      }
 
-        if (session.is_registered && session.access_token && session.user) {
-          persistSession(session.access_token, session.user, session.refresh_token);
-        }
+      // 2. Obtain Firebase ID Token with forced refresh
+      const idToken = await firebaseUser.getIdToken(true);
 
-        return {
-          is_registered: session.is_registered,
-          access_token: session.access_token,
-          refresh_token: session.refresh_token,
-          user: session.user,
-          message: String((response.data as { message?: string }).message || "OTP verified successfully"),
-        } as VerifyOtpResponse;
-      },
-    });
+      // 3. Send Firebase ID Token to TradeNexa backend
+      const device = await buildLoginDevicePayload();
+      const response = await apiClient.post(API_ENDPOINTS.FIREBASE_PHONE_LOGIN, {
+        idToken,
+        device,
+      });
+
+      const data = unwrapApiPayload<Record<string, unknown>>(response.data);
+      const session = parseAuthSession(data);
+      const backendMobile = ((data.mobile_number as string | undefined) || verifiedPhone) ?? undefined;
+      if (backendMobile) {
+        setSessionMobileNumber(backendMobile);
+      }
+
+      // Store TradeNexa JWT access & refresh tokens
+      storeTokens(session.access_token, session.refresh_token);
+
+      if (session.is_registered && session.access_token && session.user) {
+        persistSession(session.access_token, session.user, session.refresh_token);
+      }
+
+      const verifyResp: VerifyOtpResponse = {
+        is_registered: session.is_registered,
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+        user: session.user,
+        mobile_number: backendMobile,
+        message: String((response.data as { message?: string })?.message || "OTP verified successfully"),
+      };
+
+      setVerifyOtpState({ loading: false, success: true, error: null, response: verifyResp });
+      return verifyResp;
+    } catch (err) {
+      const friendlyError = mapFirebasePhoneAuthError(err);
+      setVerifyOtpState({ loading: false, success: false, error: friendlyError, response: null });
+      showErrorToast(friendlyError);
+      return null;
+    }
   };
 
   const resendOtpAction = async (): Promise<boolean> => {
     if (!authModalPhone) return false;
-    const result = await runApiAction({
-      setState: setResendOtpState,
-      action: () => sendOtpRequest(authModalPhone, authModalCountryCode),
-      successMessage: "OTP resent successfully",
-      fallbackError: "Failed to resend OTP code",
-    });
-    return !!result;
+    const formattedMobile = formatMobileNumber(authModalCountryCode, authModalPhone);
+    setResendOtpState({ loading: true, success: false, error: null, response: null });
+
+    try {
+      clearRecaptchaVerifier();
+      const confirmationResult = await requestFirebasePhoneOtp(formattedMobile, "recaptcha-container");
+      confirmationResultRef.current = confirmationResult;
+      setSessionMobileNumber(formattedMobile);
+
+      const resp: SendOtpResponse = {
+        mobile_number: formattedMobile,
+        message: "OTP resent successfully via Firebase",
+      };
+
+      setResendOtpState({ loading: false, success: true, error: null, response: resp });
+      return true;
+    } catch (err) {
+      const friendlyError = mapFirebasePhoneAuthError(err);
+      setResendOtpState({ loading: false, success: false, error: friendlyError, response: null });
+      showErrorToast(friendlyError);
+      return false;
+    }
   };
 
   const registerAction = async (formData: RegisterRequest): Promise<RegisterResponse | null> => {
@@ -482,13 +519,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const deleteAccountAction = async (): Promise<boolean> => {
     try {
       await deleteProfile();
+      await signOutOfFirebase();
+      clearRecaptchaVerifier();
+      confirmationResultRef.current = null;
       clearSession();
       setIsAuthModalOpen(false);
       setIsCompleteProfileOpen(false);
       setAuthModalStep("login");
       setAuthModalRole(null);
       setAuthModalPhone("");
-      setFirebaseVerificationId(null);
       setSessionMobileNumber(null);
       resetSendOtp();
       resetVerifyOtp();

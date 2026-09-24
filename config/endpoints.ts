@@ -1,6 +1,5 @@
 export const API_ENDPOINTS = {
-  SEND_OTP: "/auth/send-otp",
-  VERIFY_OTP: "/auth/verify-otp",
+  FIREBASE_PHONE_LOGIN: "/auth/firebase-phone-login",
   REGISTER: "/auth/register",
   REFRESH_TOKEN: "/auth/refresh-token",
   LOGOUT: "/auth/logout",

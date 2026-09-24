@@ -1,13 +1,14 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getMessaging, isSupported, type Messaging } from "firebase/messaging";
+import { getAuth, type Auth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "AIzaSyA69_MjbZ22YnkFxPqLWOGSOfuJPB44Ni0",
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? "firebase-adminsdk-fbsvc@tradehub-b7b28.iam.gserviceaccount.com",
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "tradehub-b7b28",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? "",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? "",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? "",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "tradehub-b7b28.firebaseapp.com",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "tradehub-b7b28",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "",
 };
 
 export function isFirebaseConfigured(): boolean {
@@ -26,6 +27,13 @@ export function getFirebaseApp(): FirebaseApp | null {
   return initializeApp(firebaseConfig);
 }
 
+export function getFirebaseAuth(): Auth | null {
+  if (typeof window === "undefined") return null;
+  const app = getFirebaseApp();
+  if (!app) return null;
+  return getAuth(app);
+}
+
 export async function getFirebaseMessaging(): Promise<Messaging | null> {
   if (typeof window === "undefined") return null;
   if (!isFirebaseConfigured()) return null;
@@ -41,3 +49,4 @@ export async function getFirebaseMessaging(): Promise<Messaging | null> {
 
 export const FIREBASE_VAPID_KEY =
   process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY?.trim() || "";
+
