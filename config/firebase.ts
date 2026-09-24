@@ -1,23 +1,15 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getMessaging, isSupported, type Messaging } from "firebase/messaging";
-import { getAuth, type Auth } from "firebase/auth";
 
-export const firebaseConfig = {
-  apiKey: "AIzaSyA69_MjbZ22YnkFxPqLWOGSOfuJPB44Ni0",
-  authDomain: "tradehub-b7b28.firebaseapp.com",
-  projectId: "tradehub-b7b28",
-  storageBucket: "tradehub-b7b28.firebasestorage.app",
-  messagingSenderId: "42547333485",
-  appId: "1:42547333485:web:5c4dbbdc1ee9f95cb6b264",
-  measurementId: "G-4BWH7SKJQH",
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "AIzaSyA69_MjbZ22YnkFxPqLWOGSOfuJPB44Ni0",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? "firebase-adminsdk-fbsvc@tradehub-b7b28.iam.gserviceaccount.com",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "tradehub-b7b28",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? "",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? "",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? "",
 };
 
-/** Checks if core Firebase Auth is configured */
-export function isFirebaseAuthConfigured(): boolean {
-  return Boolean(firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId);
-}
-
-/** Checks if Firebase Cloud Messaging is fully configured */
 export function isFirebaseConfigured(): boolean {
   return Boolean(
     firebaseConfig.apiKey &&
@@ -29,15 +21,9 @@ export function isFirebaseConfigured(): boolean {
 
 export function getFirebaseApp(): FirebaseApp | null {
   if (typeof window === "undefined") return null;
-  if (!isFirebaseAuthConfigured()) return null;
+  if (!isFirebaseConfigured()) return null;
   if (getApps().length > 0) return getApps()[0]!;
   return initializeApp(firebaseConfig);
-}
-
-export function getFirebaseAuth(): Auth | null {
-  const app = getFirebaseApp();
-  if (!app) return null;
-  return getAuth(app);
 }
 
 export async function getFirebaseMessaging(): Promise<Messaging | null> {
