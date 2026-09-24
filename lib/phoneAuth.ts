@@ -41,8 +41,8 @@ export async function getOrCreateRecaptchaVerifier(
     throw new Error(`reCAPTCHA container element with id '${containerId}' not found in DOM.`);
   }
 
-  // Reuse existing verifier if it belongs to the same container and is still in DOM
-  if (recaptchaVerifierInstance && currentContainerId === containerId) {
+  // Reuse existing verifier if it belongs to the same container and is still populated in DOM
+  if (recaptchaVerifierInstance && currentContainerId === containerId && container.hasChildNodes()) {
     return recaptchaVerifierInstance;
   }
 
