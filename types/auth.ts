@@ -23,7 +23,7 @@ export interface User {
 }
 
 export interface SendOtpResponse {
-  firebase_verification_id: string;
+  firebase_verification_id?: string;
   mobile_number: string;
   message?: string;
 }
@@ -34,6 +34,15 @@ export interface VerifyOtpResponse {
   refresh_token?: string;
   user?: User;
   message?: string;
+  mobile_number?: string | null;
+}
+
+export interface FirebasePhoneLoginRequest {
+  idToken: string;
+  device?: {
+    device_type?: "android" | "ios" | "web";
+    device_token?: string;
+  };
 }
 
 export interface RegisterRequest {

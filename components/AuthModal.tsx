@@ -14,6 +14,7 @@ import type { ApiBusinessType } from "@/types/businessType";
 import { scrollToFirstFormError } from "@/utils/scrollToFormError";
 import { Button } from "@/components/common/Button";
 import { Input } from "@/components/common/Input";
+import { clearRecaptchaVerifier } from "@/lib/phoneAuth";
 import {
   ensureNotificationPermission,
   getFcmToken,
@@ -225,6 +226,13 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
   // Timer State
   const [timeLeft, setTimeLeft] = useState(90); // 01:30
   const [timerActive, setTimerActive] = useState(false);
+
+  // Clean up reCAPTCHA verifier on unmount
+  useEffect(() => {
+    return () => {
+      clearRecaptchaVerifier();
+    };
+  }, []);
 
   // Registration Form Fields
   const [regForm, setRegForm] = useState({
@@ -946,6 +954,7 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
       footer={isRegisterStep ? registerFooter : undefined}
       maxWidth="sm"
     >
+      <div id="recaptcha-container" />
       <AnimatePresence mode="wait">{renderStep()}</AnimatePresence>
     </Modal>
   );
