@@ -609,6 +609,8 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
               {errors.phone && <FieldError message={errors.phone} />}
             </div>
 
+            <div id="recaptcha-container" className="my-2 flex justify-center min-h-[78px]" />
+
             {sendOtpState.error && <ErrorBanner message={sendOtpState.error} />}
 
             <Button
@@ -709,6 +711,8 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
                 Change phone number
               </TextLinkButton>
             </div>
+
+            <div id="recaptcha-container" className="my-2 flex justify-center" />
 
             <Button
               type="submit"
@@ -976,7 +980,6 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
       footer={isRegisterStep ? registerFooter : undefined}
       maxWidth="sm"
     >
-      <div id="recaptcha-container" className="flex justify-center my-3" />
       <AnimatePresence mode="wait">{renderStep()}</AnimatePresence>
     </Modal>
   );
