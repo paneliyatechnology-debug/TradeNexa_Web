@@ -68,7 +68,7 @@ export interface ApiUserProfile {
 function profileCanSell(profile: ApiUserProfile): boolean {
   const role = typeof profile.role === "string" ? profile.role : "";
   if (role === "seller" || role === "buyer_seller") return true;
-  if (profile.role_id === 2 || profile.role_id === 3) return true;
+  if (profile.role_id === 2 || profile.role_id === 3 || profile.role_id === 4) return true;
   return false;
 }
 
