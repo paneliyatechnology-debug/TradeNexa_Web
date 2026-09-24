@@ -8,25 +8,32 @@ import { getFirebaseAuth } from "@/config/firebase";
 
 /**
  * Singleton holder for the Firebase RecaptchaVerifier instance.
- * Avoids creating duplicate reCAPTCHA instances during React Strict Mode or re-renders.
+ * Avoids creating duplicate reCAPTCHA widgets during React re-renders.
  */
 let recaptchaVerifierInstance: RecaptchaVerifier | null = null;
 let currentContainerId: string | null = null;
 
 /**
- * Initialize or reuse an invisible RecaptchaVerifier on a stable DOM container.
- * Safely cleans up stale widgets if the DOM container was unmounted.
+ * Check if the current environment is a browser.
  */
-export function getOrCreateRecaptchaVerifier(
+function isBrowser(): boolean {
+  return typeof window !== "undefined" && typeof document !== "undefined";
+}
+
+/**
+ * Initialize or reuse a stable visible (normal) RecaptchaVerifier on a DOM container.
+ * Reuses existing verifier if attached to the same container; clears and recreates if expired or missing.
+ */
+export async function getOrCreateRecaptchaVerifier(
   containerId: string = "recaptcha-container"
-): RecaptchaVerifier {
-  const auth = getFirebaseAuth();
-  if (!auth) {
-    throw new Error("Firebase Auth is not initialized. Check your Firebase web config.");
+): Promise<RecaptchaVerifier> {
+  if (!isBrowser()) {
+    throw new Error("reCAPTCHA can only be initialized in the browser.");
   }
 
-  if (typeof window === "undefined") {
-    throw new Error("reCAPTCHA can only be initialized in the browser.");
+  const auth = getFirebaseAuth();
+  if (!auth) {
+    throw new Error("Firebase Auth is not initialized. Check your Firebase web configuration.");
   }
 
   const container = document.getElementById(containerId);
@@ -34,37 +41,53 @@ export function getOrCreateRecaptchaVerifier(
     throw new Error(`reCAPTCHA container element with id '${containerId}' not found in DOM.`);
   }
 
-  // If already instantiated on the same container and still valid in DOM, reuse it
+  // Reuse existing verifier if it belongs to the same container and is still in DOM
   if (recaptchaVerifierInstance && currentContainerId === containerId) {
     return recaptchaVerifierInstance;
   }
 
-  // Clean up any existing verifier
+  // Clear any stale verifier before creating a fresh one
   clearRecaptchaVerifier();
 
-  recaptchaVerifierInstance = new RecaptchaVerifier(auth, containerId, {
-    size: "invisible",
-    callback: () => {
-      // reCAPTCHA solved — will proceed with submit
-    },
-    "expired-callback": () => {
-      clearRecaptchaVerifier();
-    },
-  });
+  try {
+    // Clear container contents to prevent duplicate widgets
+    container.innerHTML = "";
 
-  currentContainerId = containerId;
-  return recaptchaVerifierInstance;
+    recaptchaVerifierInstance = new RecaptchaVerifier(auth, containerId, {
+      size: "normal",
+      callback: () => {
+        // reCAPTCHA solved
+        console.log("[Firebase Phone Auth] reCAPTCHA solved.");
+      },
+      "expired-callback": () => {
+        console.warn("[Firebase Phone Auth] reCAPTCHA expired, clearing verifier.");
+        clearRecaptchaVerifier();
+      },
+      "error-callback": () => {
+        console.error("[Firebase Phone Auth] reCAPTCHA error occurred.");
+        clearRecaptchaVerifier();
+      },
+    });
+
+    await recaptchaVerifierInstance.render();
+    currentContainerId = containerId;
+    return recaptchaVerifierInstance;
+  } catch (error) {
+    console.error("[Firebase Phone Auth] Failed to initialize RecaptchaVerifier:", error);
+    clearRecaptchaVerifier();
+    throw error;
+  }
 }
 
 /**
- * Clean up and reset the RecaptchaVerifier widget.
+ * Safely clean up and reset the RecaptchaVerifier widget.
  */
 export function clearRecaptchaVerifier(): void {
   if (recaptchaVerifierInstance) {
     try {
       recaptchaVerifierInstance.clear();
-    } catch {
-      // Ignore cleanup error if widget was already removed from DOM
+    } catch (err) {
+      console.warn("[Firebase Phone Auth] Error while clearing RecaptchaVerifier:", err);
     }
     recaptchaVerifierInstance = null;
     currentContainerId = null;
@@ -72,7 +95,7 @@ export function clearRecaptchaVerifier(): void {
 }
 
 /**
- * Request real SMS OTP using Firebase Web Phone Authentication.
+ * Request real SMS OTP using Firebase Phone Authentication with visible reCAPTCHA.
  *
  * @param formattedPhoneNumber - E.164 phone number (e.g. +919876543210)
  * @param containerId - ID of DOM element for reCAPTCHA (defaults to "recaptcha-container")
@@ -82,21 +105,40 @@ export async function requestFirebasePhoneOtp(
   formattedPhoneNumber: string,
   containerId: string = "recaptcha-container"
 ): Promise<ConfirmationResult> {
-  const auth = getFirebaseAuth();
-  if (!auth) {
-    throw new Error("Firebase Auth is not initialized. Please configure Firebase.");
+  if (!isBrowser()) {
+    throw new Error("Firebase Phone Auth can only be requested in the browser.");
   }
 
+  const auth = getFirebaseAuth();
+  if (!auth) {
+    throw new Error("Firebase Auth is not initialized. Please verify your Firebase configuration.");
+  }
+
+  console.log(`[Firebase Phone Auth] Sending OTP to ${formattedPhoneNumber}...`);
+
   try {
-    const appVerifier = getOrCreateRecaptchaVerifier(containerId);
+    const appVerifier = await getOrCreateRecaptchaVerifier(containerId);
+
     const confirmationResult = await signInWithPhoneNumber(
       auth,
       formattedPhoneNumber,
       appVerifier
     );
+
+    console.log("[Firebase Phone Auth] OTP request successful.");
     return confirmationResult;
   } catch (error) {
-    // If reCAPTCHA or phone request fails, reset verifier so user can retry cleanly
+    const errorCode = (error as { code?: string })?.code || "unknown";
+    const errorMessage = (error as { message?: string })?.message || "Unknown error";
+
+    console.error("[Firebase Phone Auth] OTP request failed:", {
+      code: errorCode,
+      message: errorMessage,
+      hostname: typeof window !== "undefined" ? window.location.hostname : "unknown",
+      authInitialized: Boolean(auth),
+      containerExists: Boolean(document.getElementById(containerId)),
+    });
+
     clearRecaptchaVerifier();
     throw error;
   }
@@ -117,38 +159,45 @@ export async function signOutOfFirebase(): Promise<void> {
 }
 
 /**
- * Map Firebase error codes to friendly, user-facing error messages.
+ * Map Firebase error codes to friendly, user-facing error messages while logging actual codes.
  */
 export function mapFirebasePhoneAuthError(error: unknown): string {
   const code = (error as { code?: string })?.code || "";
   const message = (error as { message?: string })?.message || "";
 
+  // Always log the actual Firebase code and message for developer visibility (no sensitive credentials)
+  if (code || message) {
+    console.warn(`[Firebase Phone Auth Error] code: "${code}", message: "${message}"`);
+  }
+
   switch (code) {
     case "auth/invalid-phone-number":
-      return "Please enter a valid phone number with country code.";
+      return "Please enter a valid phone number with a valid country code.";
     case "auth/missing-phone-number":
       return "Phone number is required.";
     case "auth/quota-exceeded":
-      return "SMS quota exceeded. Please try again later or contact support.";
+      return "SMS quota exceeded for this project. Please try again later or contact support.";
     case "auth/too-many-requests":
       return "Too many attempts from this device. Please wait a few minutes and try again.";
     case "auth/captcha-check-failed":
-      return "Security verification failed. Please try again.";
+      return "Security reCAPTCHA verification failed. Please check the box and try again.";
     case "auth/invalid-verification-code":
-      return "Invalid OTP code. Please check and try again.";
+      return "Invalid OTP code. Please enter the correct 6-digit code received via SMS.";
     case "auth/code-expired":
-      return "OTP code has expired. Please request a new one.";
+      return "The OTP code has expired. Please click Resend OTP to receive a new code.";
     case "auth/network-request-failed":
       return "Network connection error. Please check your internet connection.";
+    case "auth/operation-not-allowed":
+      return "Phone authentication is not enabled in Firebase Console. Please contact support.";
+    case "auth/invalid-app-credential":
+      return "Firebase app verification failed. Please refresh the page and try again.";
+    case "auth/internal-error":
+      return "Firebase authentication internal error. Please try again.";
     case "auth/popup-closed-by-user":
       return "Verification was closed before completion. Please try again.";
-    case "auth/operation-not-allowed":
-      return "Phone authentication is not enabled. Please contact support.";
-    case "auth/internal-error":
-      return "Firebase authentication error. Please try again.";
     default:
-      if (message.includes("reCAPTCHA")) {
-        return "Security verification failed. Please refresh and try again.";
+      if (message.includes("reCAPTCHA") || message.includes("recaptcha")) {
+        return "Security verification failed. Please solve the reCAPTCHA and try again.";
       }
       return message || "Failed to complete phone verification. Please try again.";
   }

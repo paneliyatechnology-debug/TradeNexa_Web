@@ -1,4 +1,4 @@
-import type { User, UserRole } from "@/types/auth";
+import type { User } from "@/types/auth";
 import type { CompleteProfileFormData } from "@/types/auth";
 import { parseUserRole } from "@/utils/roleHelpers";
 import { resolveImageUrl } from "@/utils/catalogHelpers";

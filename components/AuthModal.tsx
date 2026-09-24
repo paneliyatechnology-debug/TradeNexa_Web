@@ -14,7 +14,7 @@ import type { ApiBusinessType } from "@/types/businessType";
 import { scrollToFirstFormError } from "@/utils/scrollToFormError";
 import { Button } from "@/components/common/Button";
 import { Input } from "@/components/common/Input";
-import { clearRecaptchaVerifier } from "@/lib/phoneAuth";
+import { clearRecaptchaVerifier, getOrCreateRecaptchaVerifier } from "@/lib/phoneAuth";
 import {
   ensureNotificationPermission,
   getFcmToken,
@@ -343,6 +343,14 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
   // 1. LOGIN SUBMIT
   const handleSendOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (sendOtpState.loading) return;
+
+    const recaptchaContainer = document.getElementById("recaptcha-container");
+    if (!recaptchaContainer) {
+      setErrors({ phone: "Verification container is not ready. Please refresh the page." });
+      return;
+    }
+
     if (!phone) {
       setErrors({ phone: "Phone number is required" });
       scrollToFirstFormError({ phone: "Phone number is required" }, {
@@ -426,6 +434,7 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
 
   const handleVerifyOtpSubmit = async (e?: React.FormEvent, otpOverride?: string[]) => {
     if (e) e.preventDefault();
+    if (verifyOtpState.loading) return;
     const otpCode = (otpOverride ?? otp).join("");
     if (otpCode.length < 6) {
       setErrors({ otp: "Please enter the complete 6-digit OTP code" });
@@ -458,6 +467,7 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
 
   // 3. RESEND OTP
   const handleResendOtp = async () => {
+    if (resendOtpState.loading) return;
     const success = await resendOtpAction();
     if (success) {
       startTimer();
@@ -523,8 +533,20 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
   };
 
   const handleClose = () => {
+    clearRecaptchaVerifier();
     closeAuthModal();
   };
+
+  useEffect(() => {
+    if (isOpen && authModalStep === "login") {
+      const timer = setTimeout(() => {
+        void getOrCreateRecaptchaVerifier("recaptcha-container").catch((err) => {
+          console.warn("[AuthModal] RecaptchaVerifier render notice:", err);
+        });
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, authModalStep]);
 
   const phoneDisplay =
     sessionMobileNumber || `${authModalCountryCode} ${authModalPhone}`;
@@ -954,7 +976,7 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
       footer={isRegisterStep ? registerFooter : undefined}
       maxWidth="sm"
     >
-      <div id="recaptcha-container" />
+      <div id="recaptcha-container" className="flex justify-center my-3" />
       <AnimatePresence mode="wait">{renderStep()}</AnimatePresence>
     </Modal>
   );

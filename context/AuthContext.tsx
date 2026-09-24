@@ -367,8 +367,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSessionMobileNumber(verifiedPhone);
       }
 
-      // 2. Obtain Firebase ID Token
-      const idToken = await firebaseUser.getIdToken();
+      // 2. Obtain Firebase ID Token with forced refresh
+      const idToken = await firebaseUser.getIdToken(true);
 
       // 3. Send Firebase ID Token to TradeNexa backend
       const device = await buildLoginDevicePayload();
@@ -416,6 +416,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setResendOtpState({ loading: true, success: false, error: null, response: null });
 
     try {
+      clearRecaptchaVerifier();
       const confirmationResult = await requestFirebasePhoneOtp(formattedMobile, "recaptcha-container");
       confirmationResultRef.current = confirmationResult;
       setSessionMobileNumber(formattedMobile);
