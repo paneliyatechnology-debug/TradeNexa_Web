@@ -9,15 +9,15 @@ const REGISTERABLE_ROLE_CODES: Record<UserRole, string> = {
 };
 
 const FALLBACK_ROLE_IDS: Record<UserRole, number> = {
-  buyer: 1,
-  seller: 2,
-  both: 3,
+  buyer: 2,
+  seller: 3,
+  both: 4,
 };
 
 /** Static roles used for registration / account type selection. */
 export const STATIC_API_ROLES: ApiRole[] = [
   {
-    id: 3,
+    id: 4,
     code: "buyer_seller",
     name: "Buyer + Seller",
     description: "User who buys and sells products",
@@ -26,7 +26,7 @@ export const STATIC_API_ROLES: ApiRole[] = [
     updated_at: "2026-07-01T17:47:10.000Z",
   },
   {
-    id: 2,
+    id: 3,
     code: "seller",
     name: "Seller",
     description: "User who sells products",
@@ -35,10 +35,19 @@ export const STATIC_API_ROLES: ApiRole[] = [
     updated_at: "2026-07-01T17:47:10.000Z",
   },
   {
-    id: 1,
+    id: 2,
     code: "buyer",
     name: "Buyer",
     description: "User who purchases products",
+    is_active: 1,
+    created_at: "2026-07-01T17:47:10.000Z",
+    updated_at: "2026-07-01T17:47:10.000Z",
+  },
+  {
+    id: 1,
+    code: "admin",
+    name: "Admin",
+    description: "Platform administrator",
     is_active: 1,
     created_at: "2026-07-01T17:47:10.000Z",
     updated_at: "2026-07-01T17:47:10.000Z",
