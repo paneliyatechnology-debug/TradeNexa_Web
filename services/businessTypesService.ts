@@ -22,7 +22,7 @@ function isBusinessTypeActive(item: ApiBusinessType): boolean {
 function normalizeBusinessTypes(items: ApiBusinessType[]): ApiBusinessType[] {
   const seen = new Set<number>();
   return items.filter((item) => {
-    if (!item?.id || seen.has(item.id)) return false;
+    if (item?.id === undefined || item?.id === null || seen.has(item.id)) return false;
     if (!isBusinessTypeActive(item)) return false;
     seen.add(item.id);
     return true;
