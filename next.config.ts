@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const RAILWAY_BACKEND = "https://tradenexabackend-production.up.railway.app";
+
 const nextConfig: NextConfig = {
   // Allow LAN access (mobile, other PCs) for dev server HMR without websocket blocking
   allowedDevOrigins: [
@@ -9,6 +11,17 @@ const nextConfig: NextConfig = {
     "192.168.1.103",
     "192.168.*.*",
   ],
+
+  // Proxy /api/v1/* → Railway backend (server-side, no CORS in browser)
+  async rewrites() {
+    return [
+      {
+        source: "/api/v1/:path*",
+        destination: `${RAILWAY_BACKEND}/api/v1/:path*`,
+      },
+    ];
+  },
+
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "t3.storageapi.dev" },
@@ -27,3 +40,4 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+

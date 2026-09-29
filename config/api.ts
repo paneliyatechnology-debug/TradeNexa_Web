@@ -86,6 +86,10 @@ export function getBackendOrigin(): string {
 }
 
 export function getApiBaseUrl(): string {
+  // Env variable takes priority (set NEXT_PUBLIC_API_BASE_URL=/api/v1 in .env.local for proxy)
+  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+    return process.env.NEXT_PUBLIC_API_BASE_URL.trim().replace(/\/$/, "");
+  }
   return `${getBackendOrigin()}/api/v1`;
 }
 
