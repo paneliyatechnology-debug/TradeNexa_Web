@@ -15,8 +15,8 @@ export const URL_CONFIG = {
     apiUrl: "http://localhost:5000/api/v1",
   },
   live: {
-    origin: "https://tradenexabackend-dev.up.railway.app",
-    apiUrl: "https://tradenexabackend-dev.up.railway.app/api/v1",
+    origin: "https://tradenexabackend-production.up.railway.app",
+    apiUrl: "https://tradenexabackend-production.up.railway.app/api/v1",
   },
 } as const;
 
@@ -38,7 +38,7 @@ export const IS_LIVE = CURRENT_ENV === "live";
 /**
  * Dynamically resolves Backend Origin.
  * - On production/deployed sites (Vercel, HTTPS, .vercel.app, tradenexa domains),
- *   automatically uses the live Railway backend (https://tradenexabackend-dev.up.railway.app).
+ *   automatically uses the live Railway backend (https://tradenexabackend-production.up.railway.app).
  * - On local LAN/mobile devices accessing via local Wi-Fi (e.g. http://192.168.1.103:3000),
  *   points to http://192.168.1.103:5000.
  * - On local development machine (localhost / 127.0.0.1),
