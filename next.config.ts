@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const RAILWAY_BACKEND = "https://tradenexabackend-production.up.railway.app";
+const RAILWAY_BACKEND = "https://tradenexabackend-dev.up.railway.app";
 
 const nextConfig: NextConfig = {
   // Allow LAN access (mobile, other PCs) for dev server HMR without websocket blocking

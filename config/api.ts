@@ -15,8 +15,8 @@ export const URL_CONFIG = {
     apiUrl: "http://localhost:5000/api/v1",
   },
   live: {
-    origin: "https://tradenexabackend-production.up.railway.app",
-    apiUrl: "https://tradenexabackend-production.up.railway.app/api/v1",
+    origin: "https://tradenexabackend-dev.up.railway.app",
+    apiUrl: "https://tradenexabackend-dev.up.railway.app/api/v1",
   },
 } as const;
 
