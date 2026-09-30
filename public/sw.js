@@ -1,6 +1,6 @@
 // TradeNexa PWA Service Worker (Focused on Image Caching & Offline support)
-const CACHE_NAME = "tradenexa-pwa-v3";
-const IMAGE_CACHE = "tradenexa-images-v1";
+const CACHE_NAME = "tradenexa-pwa-v4";
+const IMAGE_CACHE = "tradenexa-images-v2";
 
 self.addEventListener("install", () => {
   self.skipWaiting();
@@ -22,11 +22,15 @@ self.addEventListener("activate", (event) => {
 });
 
 function isImageRequest(request, url) {
+  // Never intercept or cache API calls
+  if (url.pathname.startsWith("/api/") || url.pathname.includes("/api/v1/")) {
+    return false;
+  }
+
   return (
     request.destination === "image" ||
     url.pathname.match(/\.(png|jpg|jpeg|svg|webp|ico|gif|avif)$/i) ||
-    url.hostname.includes("storageapi.dev") ||
-    url.hostname.includes("railway.app") ||
+    url.pathname.startsWith("/media/") ||
     url.pathname.startsWith("/uploads/")
   );
 }
