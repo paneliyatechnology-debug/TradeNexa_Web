@@ -5,7 +5,7 @@ import { AlertCircle } from "lucide-react";
 
 interface FormFieldProps {
   label: string;
-  htmlFor: string;
+  htmlFor?: string;
   error?: string;
   required?: boolean;
   children: React.ReactNode;
@@ -25,13 +25,14 @@ export function FormField({
   fieldKey,
   hint,
 }: FormFieldProps) {
+  const targetId = htmlFor ?? fieldKey;
   return (
     <div
       className={`space-y-1.5 ${className}`}
       data-form-field={fieldKey ?? htmlFor}
     >
       <label
-        htmlFor={htmlFor}
+        htmlFor={targetId}
         className="mb-0 block text-sm font-medium text-foreground"
       >
         {label}

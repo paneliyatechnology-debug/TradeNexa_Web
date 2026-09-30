@@ -853,7 +853,13 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
               />
             </FormField>
 
-            <FormField label="I am a" fieldKey="reg-role-select" required error={errors.role}>
+            <FormField
+              label="I am a"
+              htmlFor="reg-role-select"
+              fieldKey="reg-role-select"
+              required
+              error={errors.role}
+            >
               <RoleSelector
                 compact
                 value={regForm.role}
