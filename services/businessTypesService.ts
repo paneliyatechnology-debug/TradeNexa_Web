@@ -30,16 +30,17 @@ function normalizeBusinessTypes(items: ApiBusinessType[]): ApiBusinessType[] {
 }
 
 export async function fetchBusinessTypesPage(
-  roleId: number,
+  roleId?: number,
   page = 1,
   limit = 100
 ): Promise<BusinessTypesPageResult> {
+  const params: Record<string, unknown> = { page, limit };
+  if (roleId && roleId > 0) {
+    params.role_id = roleId;
+  }
+
   const response = await apiClient.get(API_ENDPOINTS.BUSINESS_TYPES, {
-    params: {
-      role_id: roleId,
-      page,
-      limit,
-    },
+    params,
   });
 
   const payload = unwrapApiPayload<unknown>(response.data);

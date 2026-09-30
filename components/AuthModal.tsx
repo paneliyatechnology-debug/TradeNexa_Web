@@ -264,7 +264,15 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
       try {
         await ensureRolesLoaded();
         const roleId = userRoleToRoleId(regForm.role);
-        const results = await fetchBusinessTypes(roleId);
+        let results = await fetchBusinessTypes(roleId);
+
+        // Fallback: if role-specific returned 0, fetch all active business types
+        if (!results || results.length === 0) {
+          const { results: allResults } = await fetchBusinessTypesPage(0, 1, 100);
+          if (allResults && allResults.length > 0) {
+            results = allResults;
+          }
+        }
 
         if (cancelled) return;
 
@@ -842,6 +850,17 @@ function AuthModalFlow({ isOpen }: { isOpen: boolean }) {
                 placeholder="you@company.com"
                 icon={Mail}
                 error={!!errors.email}
+              />
+            </FormField>
+
+            <FormField label="I am a" fieldKey="reg-role-select" required error={errors.role}>
+              <RoleSelector
+                compact
+                value={regForm.role}
+                onChange={(role) => {
+                  setRegForm((prev) => ({ ...prev, role, businessTypeId: "" }));
+                  if (errors.role) setErrors({ ...errors, role: "" });
+                }}
               />
             </FormField>
 
