@@ -168,15 +168,15 @@ export async function ensureRolesLoaded(): Promise<RegisterableRoleOption[]> {
 export function parseUserRole(role: unknown, roleId?: number | null): UserRole {
   ensureStaticRoles();
 
-  if (roleId != null) {
-    const fromId = roleIdToUserRole(roleId);
-    if (fromId) return fromId;
-  }
-
   if (typeof role === "string") {
     const fromCode = apiCodeToUserRole(role);
     if (fromCode) return fromCode;
     if (role === "seller" || role === "buyer" || role === "both") return role;
+  }
+
+  if (roleId != null) {
+    const fromId = roleIdToUserRole(roleId);
+    if (fromId) return fromId;
   }
 
   return "buyer";
