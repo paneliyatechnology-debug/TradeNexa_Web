@@ -20,18 +20,20 @@ export async function GET(
     const cleanPath = rawPath.replace(/^(uploads|media)\//, "");
     const search = request.nextUrl.search;
 
-    const candidateUrls = [
-      `${BACKEND_ORIGIN}/media/${cleanPath}${search}`,
-      `${BACKEND_ORIGIN}/uploads/${cleanPath}${search}`,
-      `${BACKEND_ORIGIN}/api/media/${cleanPath}${search}`,
-      `${BACKEND_ORIGIN}/api/uploads/${cleanPath}${search}`,
-      `http://localhost:5000/media/${cleanPath}${search}`,
-      `http://localhost:5000/uploads/${cleanPath}${search}`,
-      `${URL_CONFIG.live.origin}/media/${cleanPath}${search}`,
-      `${URL_CONFIG.live.origin}/uploads/${cleanPath}${search}`,
-      `${URL_CONFIG.live.origin}/api/media/${cleanPath}${search}`,
-      `${URL_CONFIG.live.origin}/api/uploads/${cleanPath}${search}`,
-    ];
+    const candidateUrls = Array.from(
+      new Set([
+        `${BACKEND_ORIGIN}/media/${cleanPath}${search}`,
+        `${BACKEND_ORIGIN}/uploads/${cleanPath}${search}`,
+        `${BACKEND_ORIGIN}/api/media/${cleanPath}${search}`,
+        `${BACKEND_ORIGIN}/api/uploads/${cleanPath}${search}`,
+        `${URL_CONFIG.live.origin}/media/${cleanPath}${search}`,
+        `${URL_CONFIG.live.origin}/uploads/${cleanPath}${search}`,
+        `${URL_CONFIG.dev.origin}/media/${cleanPath}${search}`,
+        `${URL_CONFIG.dev.origin}/uploads/${cleanPath}${search}`,
+        `${URL_CONFIG.local.origin}/media/${cleanPath}${search}`,
+        `${URL_CONFIG.local.origin}/uploads/${cleanPath}${search}`,
+      ])
+    );
 
     for (const targetUrl of candidateUrls) {
       try {

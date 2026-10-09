@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
-const RAILWAY_BACKEND = "https://tradenexabackend-production.up.railway.app";
+const BACKEND_TARGET =
+  process.env.NEXT_PUBLIC_BACKEND_ORIGIN ||
+  (process.env.NEXT_PUBLIC_ENV === "dev"
+    ? "https://tradenexabackend-dev.up.railway.app"
+    : process.env.NEXT_PUBLIC_ENV === "local"
+      ? "http://localhost:5000"
+      : "https://tradenexabackend-production.up.railway.app");
 
 const nextConfig: NextConfig = {
   // Allow LAN access (mobile, other PCs) for dev server HMR without websocket blocking
@@ -12,12 +18,12 @@ const nextConfig: NextConfig = {
     "192.168.*.*",
   ],
 
-  // Proxy /api/v1/* → Railway backend (server-side, no CORS in browser)
+  // Proxy /api/v1/* → Active backend target
   async rewrites() {
     return [
       {
         source: "/api/v1/:path*",
-        destination: `${RAILWAY_BACKEND}/api/v1/:path*`,
+        destination: `${BACKEND_TARGET}/api/v1/:path*`,
       },
     ];
   },

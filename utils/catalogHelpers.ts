@@ -86,11 +86,22 @@ export function resolveImageUrl(url: unknown): string | null {
 
   if (normalized.startsWith("http://") || normalized.startsWith("https://")) {
     let clean = normalized;
-    if (clean.includes("tradenexabackend-production.up.railway.app")) {
-      clean = clean.replace(
-        "tradenexabackend-production.up.railway.app",
-        "tradenexabackend-dev.up.railway.app"
-      );
+    // When pointing to Railway backends, harmonize with the active BACKEND_ORIGIN
+    if (
+      clean.includes("tradenexabackend-dev.up.railway.app") ||
+      clean.includes("tradenexabackend-production.up.railway.app")
+    ) {
+      if (BACKEND_ORIGIN.includes("railway.app")) {
+        try {
+          const parsed = new URL(clean);
+          const active = new URL(BACKEND_ORIGIN);
+          parsed.protocol = active.protocol;
+          parsed.host = active.host;
+          return parsed.toString();
+        } catch {
+          /* fall back to clean */
+        }
+      }
     }
     return clean;
   }

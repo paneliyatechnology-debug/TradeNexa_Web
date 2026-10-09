@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { BACKEND_ORIGIN, URL_CONFIG, CURRENT_ENV } from "@/config/api";
 
-const otherOrigin = CURRENT_ENV === "local" ? URL_CONFIG.live.origin : URL_CONFIG.local.origin;
-
 async function proxyRequest(request: NextRequest, path: string[]) {
   const targetPath = path.join("/");
   const search = request.nextUrl.search;
@@ -16,10 +14,11 @@ async function proxyRequest(request: NextRequest, path: string[]) {
     new Set(
       [
         !isSelfCall ? BACKEND_ORIGIN : null,
-        otherOrigin,
-        "http://localhost:5000",
-        "http://127.0.0.1:3000",
+        URL_CONFIG[CURRENT_ENV]?.origin,
         URL_CONFIG.live.origin,
+        URL_CONFIG.dev.origin,
+        URL_CONFIG.local.origin,
+        "http://localhost:5000",
       ].filter(Boolean) as string[]
     )
   );

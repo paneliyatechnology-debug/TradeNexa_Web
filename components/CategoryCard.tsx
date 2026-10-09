@@ -10,7 +10,6 @@ import type { LucideIcon } from "lucide-react";
 
 interface CategoryCardProps {
   icon?: LucideIcon | string | null;
-
   slug?: string;
   title: string;
   description?: string;
@@ -22,7 +21,6 @@ interface CategoryCardProps {
 
 export default function CategoryCard({
   icon: iconProp,
-
   slug,
   title,
   description,
@@ -40,13 +38,13 @@ export default function CategoryCard({
 
   const LucideIconComp = typeof iconProp === "function" ? iconProp : undefined;
   const FallbackIcon = LucideIconComp ?? getCategoryFallbackIcon(slug, title);
-  const imageSrc = (typeof iconProp === "string" ? iconProp : null);
+  const iconUrl = typeof iconProp === "string" && iconProp.trim() ? iconProp.trim() : null;
 
   const inner = (
     <>
       <div className="relative h-28 overflow-hidden bg-gradient-to-br from-primary/10 via-primary/5 to-muted">
         <CatalogImage
-          src={imageSrc}
+          src={iconUrl}
           alt={title}
           fallbackIcon={FallbackIcon}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -74,8 +72,6 @@ export default function CategoryCard({
       </div>
     </>
   );
-
-  console.log(`[CategoryCard] Title: "${title}", Image URL:`, imageSrc);
 
   const className =
     "group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-primary/25";
