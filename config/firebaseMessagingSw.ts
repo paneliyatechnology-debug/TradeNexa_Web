@@ -235,11 +235,11 @@ self.addEventListener("notificationclick", (event) => {
 
 export function getFirebaseWebConfigFromEnv(): Record<string, string> {
   return {
-    apiKey: "AIzaSyA69_MjbZ22YnkFxPqLWOGSOfuJPB44Ni0",
-    authDomain: "tradehub-b7b28.firebaseapp.com",
-    projectId: "tradehub-b7b28",
-    storageBucket: "tradehub-b7b28.firebasestorage.app",
-    messagingSenderId: "42547333485",
-    appId: "1:42547333485:web:5c4dbbdc1ee9f95cb6b264",
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "",
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "",
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "",
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "",
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "",
   };
 }

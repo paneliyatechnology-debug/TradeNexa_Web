@@ -2,22 +2,26 @@ import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getMessaging, isSupported, type Messaging } from "firebase/messaging";
 import { getAuth, type Auth } from "firebase/auth";
 
-// Direct Firebase configuration — no dependence on process.env
+// Firebase configuration loaded from environment variables (.env / .env.local)
 export const firebaseConfig = {
-  apiKey: "AIzaSyA69_MjbZ22YnkFxPqLWOGSOfuJPB44Ni0",
-  authDomain: "tradehub-b7b28.firebaseapp.com",
-  projectId: "tradehub-b7b28",
-  storageBucket: "tradehub-b7b28.firebasestorage.app",
-  messagingSenderId: "42547333485",
-  appId: "1:42547333485:web:5c4dbbdc1ee9f95cb6b264",
-  measurementId: "G-4BWH7SKJQH",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "",
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "",
 };
 
 let appInstance: FirebaseApp | null = null;
 let authInstance: Auth | null = null;
 
 export function isFirebaseConfigured(): boolean {
-  return true;
+  return Boolean(
+    firebaseConfig.apiKey &&
+    firebaseConfig.projectId &&
+    firebaseConfig.appId
+  );
 }
 
 export function getFirebaseApp(): FirebaseApp | null {
@@ -71,5 +75,5 @@ export async function getFirebaseMessaging(): Promise<Messaging | null> {
   }
 }
 
-export const FIREBASE_VAPID_KEY = "";
+export const FIREBASE_VAPID_KEY = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || "";
 

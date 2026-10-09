@@ -20,20 +20,23 @@ export async function GET(
     const cleanPath = rawPath.replace(/^(uploads|media)\//, "");
     const search = request.nextUrl.search;
 
-    const candidateUrls = Array.from(
-      new Set([
-        `${BACKEND_ORIGIN}/media/${cleanPath}${search}`,
-        `${BACKEND_ORIGIN}/uploads/${cleanPath}${search}`,
-        `${BACKEND_ORIGIN}/api/media/${cleanPath}${search}`,
-        `${BACKEND_ORIGIN}/api/uploads/${cleanPath}${search}`,
-        `${URL_CONFIG.live.origin}/media/${cleanPath}${search}`,
-        `${URL_CONFIG.live.origin}/uploads/${cleanPath}${search}`,
-        `${URL_CONFIG.dev.origin}/media/${cleanPath}${search}`,
-        `${URL_CONFIG.dev.origin}/uploads/${cleanPath}${search}`,
-        `${URL_CONFIG.local.origin}/media/${cleanPath}${search}`,
-        `${URL_CONFIG.local.origin}/uploads/${cleanPath}${search}`,
-      ])
+    const origins = Array.from(
+      new Set(
+        [
+          BACKEND_ORIGIN,
+          URL_CONFIG.live.origin,
+          URL_CONFIG.dev.origin,
+          URL_CONFIG.local.origin,
+        ].filter(Boolean)
+      )
     );
+
+    const candidateUrls = origins.flatMap((origin) => [
+      `${origin}/media/${cleanPath}${search}`,
+      `${origin}/uploads/${cleanPath}${search}`,
+      `${origin}/api/media/${cleanPath}${search}`,
+      `${origin}/api/uploads/${cleanPath}${search}`,
+    ]);
 
     for (const targetUrl of candidateUrls) {
       try {

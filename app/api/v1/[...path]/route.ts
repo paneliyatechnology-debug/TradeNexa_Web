@@ -8,7 +8,7 @@ async function proxyRequest(request: NextRequest, path: string[]) {
 
   // Guard against self-looping when Web & Backend share the same host/port in local mode
   const isSelfCall =
-    BACKEND_ORIGIN.includes(reqHost) && !BACKEND_ORIGIN.includes("railway.app");
+    Boolean(reqHost && BACKEND_ORIGIN.includes(reqHost) && !BACKEND_ORIGIN.startsWith("https://"));
 
   const candidateOrigins = Array.from(
     new Set(
@@ -18,7 +18,6 @@ async function proxyRequest(request: NextRequest, path: string[]) {
         URL_CONFIG.live.origin,
         URL_CONFIG.dev.origin,
         URL_CONFIG.local.origin,
-        "http://localhost:5000",
       ].filter(Boolean) as string[]
     )
   );
@@ -53,6 +52,16 @@ async function proxyRequest(request: NextRequest, path: string[]) {
       clearTimeout(timeout);
 
       const body = await response.text();
+
+      if (process.env.NODE_ENV !== "production") {
+        const modeColor = CURRENT_ENV === "live" ? "\x1b[32m" : CURRENT_ENV === "dev" ? "\x1b[35m" : "\x1b[33m";
+        const methodColor = request.method === "GET" ? "\x1b[32m" : request.method === "POST" ? "\x1b[34m" : "\x1b[35m";
+        const statusColor = response.status < 400 ? "\x1b[32m" : "\x1b[31m";
+        console.log(
+          `\x1b[1m[API Proxy]\x1b[0m ${modeColor}[${CURRENT_ENV.toUpperCase()}]\x1b[0m ${methodColor}${request.method}\x1b[0m /api/v1/${targetPath} ➔ \x1b[36m${origin}\x1b[0m (${statusColor}${response.status}\x1b[0m)`
+        );
+      }
+
       return new NextResponse(body, {
         status: response.status,
         headers: {
@@ -62,6 +71,12 @@ async function proxyRequest(request: NextRequest, path: string[]) {
     } catch {
       /* Try next candidate */
     }
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    console.error(
+      `\x1b[31m\x1b[1m[API Proxy 502]\x1b[0m [${CURRENT_ENV.toUpperCase()}] Failed to reach backend for /api/v1/${targetPath}. Target: ${candidateOrigins.join(", ")}`
+    );
   }
 
   return NextResponse.json(

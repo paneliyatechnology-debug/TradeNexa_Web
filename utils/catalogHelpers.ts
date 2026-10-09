@@ -1,5 +1,5 @@
 import type { PaginatedResult, ApiProductListItem } from "@/types/catalog";
-import { API_BASE_URL, BACKEND_ORIGIN } from "@/config/api";
+import { API_BASE_URL, BACKEND_ORIGIN, URL_CONFIG } from "@/config/api";
 import { extractApprovalStatus, parseApprovalStatus } from "@/utils/productApprovalHelpers";
 import { parseWishlistFlag, readProductWishlistFlag } from "@/utils/wishlistHelpers";
 
@@ -23,12 +23,22 @@ function proxyBackendMediaUrl(url: URL): string | null {
     return uploadPath ? `/api/uploads/${uploadPath}${url.search}` : null;
   }
 
-  const backendHost = new URL(BACKEND_ORIGIN).host;
+  let backendHost = "";
+  try {
+    backendHost = BACKEND_ORIGIN ? new URL(BACKEND_ORIGIN).host : "";
+  } catch {
+    backendHost = "";
+  }
+
   const isKnownBackend =
-    url.host === backendHost ||
-    url.host === "localhost:3000" ||
-    url.host === "127.0.0.1:3000" ||
-    url.host.includes("railway.app");
+    Boolean(backendHost && url.host === backendHost) ||
+    Object.values(URL_CONFIG).some((cfg) => {
+      try {
+        return Boolean(cfg.origin && new URL(cfg.origin).host === url.host);
+      } catch {
+        return false;
+      }
+    });
 
   if (isKnownBackend) {
     return `/api/media/proxy?url=${encodeURIComponent(url.toString())}`;
@@ -86,22 +96,28 @@ export function resolveImageUrl(url: unknown): string | null {
 
   if (normalized.startsWith("http://") || normalized.startsWith("https://")) {
     let clean = normalized;
-    // When pointing to Railway backends, harmonize with the active BACKEND_ORIGIN
-    if (
-      clean.includes("tradenexabackend-dev.up.railway.app") ||
-      clean.includes("tradenexabackend-production.up.railway.app")
-    ) {
-      if (BACKEND_ORIGIN.includes("railway.app")) {
+    try {
+      const parsed = new URL(clean);
+      // Check if URL points to one of our configured backend environments (local, dev, live)
+      const isConfiguredBackend = Object.values(URL_CONFIG).some((cfg) => {
         try {
-          const parsed = new URL(clean);
-          const active = new URL(BACKEND_ORIGIN);
+          return new URL(cfg.origin).hostname.toLowerCase() === parsed.hostname.toLowerCase();
+        } catch {
+          return false;
+        }
+      });
+
+      // Harmonize with active BACKEND_ORIGIN if pointing to one of our backend environments
+      if (isConfiguredBackend && BACKEND_ORIGIN) {
+        const active = new URL(BACKEND_ORIGIN);
+        if (active.protocol.startsWith("http")) {
           parsed.protocol = active.protocol;
           parsed.host = active.host;
           return parsed.toString();
-        } catch {
-          /* fall back to clean */
         }
       }
+    } catch {
+      /* fall back to clean */
     }
     return clean;
   }

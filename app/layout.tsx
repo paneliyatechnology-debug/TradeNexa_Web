@@ -16,6 +16,10 @@ import { FcmListener } from "@/components/fcm/FcmListener";
 import { ClientToaster } from "@/components/common/ClientToaster";
 import PwaInstallPrompt from "@/components/common/PwaInstallPrompt";
 import RouteNavigationWatcher from "@/components/layout/RouteNavigationWatcher";
+import { printServerBanner } from "@/config/api";
+
+// Print running environment mode & URLs in server terminal
+printServerBanner();
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
