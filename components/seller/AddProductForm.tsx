@@ -262,7 +262,6 @@ function getFormErrors(
   if (!toFormString(form.name).trim()) errors.name = "Product name is required.";
   if (!form.categoryId) errors.category = "Please select a category.";
   if (!form.subcategoryId) errors.subcategory = "Please select a subcategory.";
-  if (!toFormString(form.brandName || form.brandId).trim()) errors.brand = "Brand name is required.";
 
   const shortLen = toFormString(form.shortDescription).trim().length;
   if (shortLen < 10 || shortLen > 500) {
@@ -273,7 +272,6 @@ function getFormErrors(
   if (!toFormString(form.currency).trim()) errors.currency = "Currency is required.";
   if (!toFormString(form.moq).trim()) errors.moq = "MOQ is required.";
   if (!toFormString(form.unit).trim()) errors.unit = "Unit is required.";
-  if (!toFormString(form.material).trim()) errors.material = "Material is required.";
   if (!toFormString(form.countryOfOrigin).trim()) {
     errors.countryOfOrigin = "Country of origin is required.";
   }
@@ -319,8 +317,8 @@ const WIZARD_STEPS: { key: WizardStepKey; label: string; shortLabel: string }[] 
 
 const ERROR_KEYS_BY_STEP: Record<WizardStepKey, ProductFormErrorKey[]> = {
   media: ["seller", "thumbnail", "gallery"],
-  details: ["seller", "name", "category", "subcategory", "brand", "shortDescription"],
-  pricing: ["seller", "price", "currency", "moq", "unit", "material", "countryOfOrigin"],
+  details: ["seller", "name", "category", "subcategory", "shortDescription"],
+  pricing: ["seller", "price", "currency", "moq", "unit", "countryOfOrigin"],
   settings: ["seller"],
   additional: ["seller"],
 };
@@ -1120,7 +1118,7 @@ export default function AddProductForm({ productId }: { productId?: number } = {
           </FormField>
         </div>
 
-        <FormField label="Brand Name" htmlFor="brand" fieldKey="brand" required error={errors.brand}>
+        <FormField label="Brand Name" htmlFor="brand" fieldKey="brand" error={errors.brand}>
           <Input
             id="brand"
             value={form.brandName ?? ""}
@@ -1128,9 +1126,8 @@ export default function AddProductForm({ productId }: { productId?: number } = {
               updateForm("brandName", e.target.value);
               updateForm("brandId", 0);
             }}
-            placeholder="Enter brand name (e.g. Havells, Sony, Generic)"
+            placeholder="Enter brand name (optional)"
             error={!!errors.brand}
-            aria-required
           />
         </FormField>
 
@@ -1221,14 +1218,13 @@ export default function AddProductForm({ productId }: { productId?: number } = {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <FormField label="Material" htmlFor="material" fieldKey="material" required error={errors.material}>
+          <FormField label="Material" htmlFor="material" fieldKey="material" error={errors.material}>
             <Input
               id="material"
               value={form.material}
               onChange={(e) => updateForm("material", e.target.value)}
-              placeholder="ABS Plastic"
+              placeholder="ABS Plastic (optional)"
               error={!!errors.material}
-              aria-required
             />
           </FormField>
 

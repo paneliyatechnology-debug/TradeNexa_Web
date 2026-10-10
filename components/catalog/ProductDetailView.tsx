@@ -34,7 +34,8 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useLanguage } from "@/context/LanguageContext";
-import { isUserProductOwner } from "@/utils/productDetailHelpers";
+import { isUserProductOwner, parseProductSpecifications } from "@/utils/productDetailHelpers";
+import ProductSpecificationsSection from "@/components/portal/ProductSpecificationsSection";
 import { showErrorToast } from "@/utils/toast";
 
 interface ProductDetailViewProps {
@@ -161,6 +162,12 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
   const isOwnProduct = isUserProductOwner(product, user);
   const { basic_details: basic, pricing, seller, marketplace, ratings } = product;
   const theme = getMarketplaceTheme(product.id);
+
+  const rawSpecifications =
+    product.specifications ?? (product as any).basic_details?.specifications;
+  const hasCustomSpecs = useMemo(() => {
+    return parseProductSpecifications(rawSpecifications).length > 0;
+  }, [rawSpecifications]);
 
   const gallery = useMemo(() => {
     const rawUrls = [
@@ -537,8 +544,12 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
               </section>
             )}
 
+            <ProductSpecificationsSection specifications={rawSpecifications} />
+
             <section className="rounded-xl border border-border bg-card p-6 shadow-sm lg:p-8">
-              <h2 className="text-lg font-semibold text-foreground">Product Specifications</h2>
+              <h2 className="text-lg font-semibold text-foreground">
+                {hasCustomSpecs ? "General Information" : "Product Specifications"}
+              </h2>
               <dl className="mt-5 divide-y divide-border">
                 {fullSpecs.map((spec) => (
                   <div

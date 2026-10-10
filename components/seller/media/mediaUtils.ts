@@ -28,6 +28,15 @@ export function formatDuration(seconds: number) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+const fileIdMap = new WeakMap<File, string>();
+let fileIdCounter = 0;
+
 export function imageItemId(file: File) {
-  return `img-${file.name}-${file.size}-${file.lastModified}`;
+  let id = fileIdMap.get(file);
+  if (!id) {
+    fileIdCounter += 1;
+    id = `img-${file.name}-${file.size}-${file.lastModified}-${fileIdCounter}`;
+    fileIdMap.set(file, id);
+  }
+  return id;
 }

@@ -9,6 +9,7 @@ import type {
 } from "@/types/product";
 import { resolveImageUrl } from "@/utils/catalogHelpers";
 import { toFormString } from "@/utils/buildProductFormData";
+import { parseProductSpecifications } from "@/utils/productDetailHelpers";
 
 const EMPTY_SPEC: ProductSpecificationRow = { key: "", value: "" };
 
@@ -63,23 +64,15 @@ export function parseApiMediaEntry(entry: unknown): ExistingMediaItem | null {
 function parseSpecifications(raw: unknown): ProductSpecificationRow[] {
   if (!raw) return [{ ...EMPTY_SPEC }];
 
-  let obj: Record<string, string> = {};
-  if (typeof raw === "string") {
-    try {
-      obj = JSON.parse(raw) as Record<string, string>;
-    } catch {
-      return [{ ...EMPTY_SPEC }];
-    }
-  } else if (typeof raw === "object" && raw !== null) {
-    obj = raw as Record<string, string>;
+  const parsed = parseProductSpecifications(raw);
+  if (parsed.length > 0) {
+    return parsed.map((item) => ({
+      key: item.key,
+      value: toFormString(item.value),
+    }));
   }
 
-  const rows = Object.entries(obj).map(([key, value]) => ({
-    key,
-    value: toFormString(value),
-  }));
-
-  return rows.length > 0 ? rows : [{ ...EMPTY_SPEC }];
+  return [{ ...EMPTY_SPEC }];
 }
 
 function readCategoryId(product: ApiProductDetail): number {

@@ -65,7 +65,7 @@ export function buildProductFormData(
   formData.append("currency", toFormString(data.currency).trim());
   formData.append("moq", toFormString(data.moq).trim());
   formData.append("unit", toFormString(data.unit).trim());
-  formData.append("material", toFormString(data.material).trim());
+  appendIfPresent(formData, "material", data.material);
   formData.append("country_of_origin", toFormString(data.countryOfOrigin).trim());
   formData.append("product_condition", data.productCondition);
   formData.append("stock_status", data.stockStatus);

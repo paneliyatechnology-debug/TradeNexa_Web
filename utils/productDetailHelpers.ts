@@ -1,6 +1,60 @@
 import type { User } from "@/types/auth";
-import type { ApiProductDetail, ApiProductListItem } from "@/types/catalog";
+import type { ApiProductDetail, ApiProductListItem, ProductSpecificationItem } from "@/types/catalog";
 import { formatListedAgo } from "@/utils/catalogHelpers";
+
+export type { ProductSpecificationItem };
+
+export function parseProductSpecifications(raw: unknown): ProductSpecificationItem[] {
+  if (!raw) return [];
+
+  let data = raw;
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (
+      !trimmed ||
+      trimmed === "null" ||
+      trimmed === "undefined" ||
+      trimmed === "[]" ||
+      trimmed === "{}"
+    ) {
+      return [];
+    }
+    try {
+      data = JSON.parse(trimmed);
+    } catch {
+      return [];
+    }
+  }
+
+  if (Array.isArray(data)) {
+    const result: ProductSpecificationItem[] = [];
+    for (const item of data) {
+      if (item && typeof item === "object") {
+        const record = item as Record<string, unknown>;
+        const k = String(record.key ?? record.name ?? record.label ?? "").trim();
+        const v = String(record.value ?? record.val ?? "").trim();
+        if (k || v) {
+          result.push({ key: k, value: v });
+        }
+      }
+    }
+    return result;
+  }
+
+  if (typeof data === "object" && data !== null) {
+    const result: ProductSpecificationItem[] = [];
+    for (const [k, v] of Object.entries(data)) {
+      const keyStr = (k ?? "").toString().trim();
+      const valStr = (v != null ? String(v) : "").trim();
+      if (keyStr || valStr) {
+        result.push({ key: keyStr, value: valStr });
+      }
+    }
+    return result;
+  }
+
+  return [];
+}
 
 export function isUserProductOwner(
   product: ApiProductDetail | ApiProductListItem | null | undefined,

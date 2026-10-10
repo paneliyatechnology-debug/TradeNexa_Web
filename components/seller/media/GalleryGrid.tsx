@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { motion, Reorder } from "framer-motion";
 import { Eye, Film, Image as ImageIcon, Plus, RefreshCw, Trash2 } from "lucide-react";
 import {
+  fileKey,
   filterImageFiles,
   filterVideoFiles,
   formatDuration,
@@ -408,10 +409,17 @@ export default function GalleryGrid({
     existingImageUrls.length > 0 ||
     existingVideoUrls.length > 0;
 
-  const imageItems = useMemo<ImageItem[]>(
-    () => images.map((file) => ({ id: imageItemId(file), file })),
-    [images]
-  );
+  const imageItems = useMemo<ImageItem[]>(() => {
+    const seen = new Set<string>();
+    return images.map((file, index) => {
+      let id = imageItemId(file);
+      if (seen.has(id)) {
+        id = `${id}-${index}`;
+      }
+      seen.add(id);
+      return { id, file };
+    });
+  }, [images]);
 
   const handleImageReorder = (reordered: ImageItem[]) => {
     onReorderImages(reordered.map((item) => item.file));
@@ -460,7 +468,7 @@ export default function GalleryGrid({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {!hasMedia ? uploadTiles : null}
         {existingImageUrls.map((url, index) => (
-          <div key={`existing-image-${url}`} className={GRID_CELL}>
+          <div key={`existing-image-${url}-${index}`} className={GRID_CELL}>
             <ExistingUrlImageCard
               url={url}
               index={index}
@@ -470,7 +478,7 @@ export default function GalleryGrid({
           </div>
         ))}
         {existingVideoUrls.map((url, index) => (
-          <div key={`existing-video-${url}`} className={GRID_CELL}>
+          <div key={`existing-video-${url}-${index}`} className={GRID_CELL}>
             <ExistingUrlVideoCard
               url={url}
               index={index}
@@ -500,7 +508,7 @@ export default function GalleryGrid({
         </Reorder.Group>
 
         {videos.map((file, index) => (
-          <div key={`vid-${file.name}-${file.size}-${file.lastModified}`} className={GRID_CELL}>
+          <div key={fileKey(file, index)} className={GRID_CELL}>
             <VideoCard
               file={file}
               url={videoUrls[index] || null}

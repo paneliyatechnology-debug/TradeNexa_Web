@@ -81,6 +81,11 @@ export interface ApiProductMediaItem {
   is_primary?: boolean | null;
 }
 
+export interface ProductSpecificationItem {
+  key: string;
+  value: string;
+}
+
 export interface ApiProductDetail {
   id: number;
   slug: string;
@@ -172,7 +177,7 @@ export interface ApiProductDetail {
   updated_at: string;
   warranty?: string | null;
   search_tags?: string | string[] | null;
-  specifications?: Record<string, string> | string | null;
+  specifications?: ProductSpecificationItem[] | Record<string, string> | string | null;
   /** @deprecated Legacy flat fields — prefer nested API shapes above */
   material?: string | null;
   product_condition?: string | null;

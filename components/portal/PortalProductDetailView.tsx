@@ -47,10 +47,12 @@ import {
   getSellerContactPhone,
   isUserProductOwner,
   listedDaysLabel,
+  parseProductSpecifications,
 } from "@/utils/productDetailHelpers";
 import PortalProductCard from "@/components/portal/PortalProductCard";
 import PortalSection from "@/components/portal/PortalSection";
 import PortalStatCard from "@/components/portal/PortalStatCard";
+import ProductSpecificationsSection from "@/components/portal/ProductSpecificationsSection";
 import DeleteProductButton from "@/components/seller/DeleteProductButton";
 import ProductApprovalBadge from "@/components/seller/ProductApprovalBadge";
 import { useWishlist } from "@/hooks/useWishlist";
@@ -100,9 +102,8 @@ function IconAction({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className={`flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-fg transition hover:border-primary/30 hover:text-primary ${
-        danger && active ? "border-error/20 bg-error-soft text-error hover:text-error" : ""
-      }`}
+      className={`flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-muted-fg transition hover:border-primary/30 hover:text-primary ${danger && active ? "border-error/20 bg-error-soft text-error hover:text-error" : ""
+        }`}
     >
       {children}
     </button>
@@ -212,11 +213,10 @@ function ProductGallery({
                 key={item.id}
                 type="button"
                 onClick={() => onSelect(item.id)}
-                className={`relative aspect-square overflow-hidden rounded-xl border-2 transition ${
-                  isActive
+                className={`relative aspect-square overflow-hidden rounded-xl border-2 transition ${isActive
                     ? "border-primary ring-2 ring-primary/15"
                     : "border-border hover:border-primary/40"
-                }`}
+                  }`}
               >
                 {item.kind === "image" ? (
                   <Image src={item.src} alt="" fill className="object-cover" unoptimized />
@@ -265,15 +265,13 @@ function SupplierCard({
 
   return (
     <div
-      className={`overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] ${
-        compact ? "p-4" : "p-5 lg:p-6"
-      }`}
+      className={`overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-card)] ${compact ? "p-4" : "p-5 lg:p-6"
+        }`}
     >
       <div className="flex items-start justify-between gap-3">
         <span
-          className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-primary/10 bg-primary-soft font-semibold text-primary ${
-            compact ? "h-11 w-11 text-sm" : "h-14 w-14 text-base"
-          }`}
+          className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-primary/10 bg-primary-soft font-semibold text-primary ${compact ? "h-11 w-11 text-sm" : "h-14 w-14 text-base"
+            }`}
         >
           {showLogo ? (
             <Image
@@ -298,9 +296,8 @@ function SupplierCard({
       </div>
 
       <p
-        className={`mt-3 font-semibold tracking-tight text-foreground ${
-          compact ? "text-sm" : "mt-4 text-base lg:text-lg"
-        }`}
+        className={`mt-3 font-semibold tracking-tight text-foreground ${compact ? "text-sm" : "mt-4 text-base lg:text-lg"
+          }`}
       >
         {companyName}
       </p>
@@ -322,9 +319,8 @@ function SupplierCard({
         </div>
         <div className={`rounded-xl bg-primary-soft/50 text-center ${compact ? "p-2" : "p-3"}`}>
           <p
-            className={`inline-flex items-center justify-center gap-1 font-semibold text-foreground ${
-              compact ? "text-xs" : "text-sm"
-            }`}
+            className={`inline-flex items-center justify-center gap-1 font-semibold text-foreground ${compact ? "text-xs" : "text-sm"
+              }`}
           >
             {Number(rating).toFixed(1)}
             <Star className="h-3 w-3 fill-warning text-warning" aria-hidden />
@@ -347,9 +343,8 @@ function SupplierCard({
         {supplierHref ? (
           <Link
             href={supplierHref(seller.id)}
-            className={`flex flex-1 items-center justify-center rounded-xl border border-primary/20 bg-card font-bold text-primary transition hover:border-primary/40 hover:bg-primary-soft ${
-              compact ? "py-2 text-xs" : "py-2.5 text-sm"
-            }`}
+            className={`flex flex-1 items-center justify-center rounded-xl border border-primary/20 bg-card font-bold text-primary transition hover:border-primary/40 hover:bg-primary-soft ${compact ? "py-2 text-xs" : "py-2.5 text-sm"
+              }`}
           >
             {t("specs.viewProfile", "View Profile")}
           </Link>
@@ -453,6 +448,12 @@ export default function PortalProductDetailView({
     [product, t]
   );
 
+  const rawSpecifications =
+    product.specifications ?? (product as any).basic_details?.specifications;
+  const hasCustomSpecs = useMemo(() => {
+    return parseProductSpecifications(rawSpecifications).length > 0;
+  }, [rawSpecifications]);
+
   const description = getProductDescription(product);
   const showReadMore = description.length > 280;
   const displayDesc = descExpanded ? description : description.slice(0, 280);
@@ -550,9 +551,8 @@ export default function PortalProductDetailView({
 
   return (
     <div
-      className={`mx-auto px-4 sm:px-6 lg:px-8 lg:pb-6 ${links.pagePaddingClass} ${
-        compact ? "max-w-6xl py-3" : "max-w-7xl py-5 lg:pb-8"
-      }`}
+      className={`mx-auto px-4 sm:px-6 lg:px-8 lg:pb-6 ${links.pagePaddingClass} ${compact ? "max-w-6xl py-3" : "max-w-7xl py-5 lg:pb-8"
+        }`}
     >
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -563,9 +563,8 @@ export default function PortalProductDetailView({
           {links.back.href ? (
             <Link
               href={links.back.href}
-              className={`mb-2 inline-flex items-center gap-1.5 font-semibold text-muted-fg transition hover:text-primary ${
-                compact ? "text-xs" : "mb-3 text-sm"
-              }`}
+              className={`mb-2 inline-flex items-center gap-1.5 font-semibold text-muted-fg transition hover:text-primary ${compact ? "text-xs" : "mb-3 text-sm"
+                }`}
             >
               <ArrowLeft className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
               {isSellerView
@@ -576,9 +575,8 @@ export default function PortalProductDetailView({
             <button
               type="button"
               onClick={() => router.back()}
-              className={`mb-2 inline-flex items-center gap-1.5 font-semibold text-muted-fg transition hover:text-primary ${
-                compact ? "text-xs" : "mb-3 text-sm"
-              }`}
+              className={`mb-2 inline-flex items-center gap-1.5 font-semibold text-muted-fg transition hover:text-primary ${compact ? "text-xs" : "mb-3 text-sm"
+                }`}
             >
               <ArrowLeft className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
               {isSellerView
@@ -587,9 +585,8 @@ export default function PortalProductDetailView({
             </button>
           )}
           <h2
-            className={`font-semibold text-foreground ${
-              compact ? "text-lg sm:text-xl" : "text-xl sm:text-2xl lg:text-3xl"
-            }`}
+            className={`font-semibold text-foreground ${compact ? "text-lg sm:text-xl" : "text-xl sm:text-2xl lg:text-3xl"
+              }`}
           >
             {basic.name}
           </h2>
@@ -667,15 +664,14 @@ export default function PortalProductDetailView({
 
       {isSellerView && approvalStatus ? (
         <div
-          className={`mb-4 rounded-xl border px-4 py-3 ${
-            approvalStatus === "rejected"
+          className={`mb-4 rounded-xl border px-4 py-3 ${approvalStatus === "rejected"
               ? "border-error/20 bg-error-soft"
               : approvalStatus === "revision_required"
                 ? "border-warning/25 bg-warning-soft"
                 : approvalStatus === "approved"
                   ? "border-success/20 bg-success-soft"
                   : "border-warning/20 bg-warning-soft"
-          }`}
+            }`}
         >
           <div className="flex flex-wrap items-center gap-2">
             <ProductApprovalBadge status={approvalStatus} />
@@ -709,9 +705,8 @@ export default function PortalProductDetailView({
 
         <div className={`lg:col-span-7 ${compact ? "space-y-4" : "space-y-6"}`}>
           <div
-            className={`overflow-hidden rounded-xl bg-gradient-to-br from-primary to-primary-hover text-white ${
-              compact ? "p-4" : "p-6"
-            }`}
+            className={`overflow-hidden rounded-xl bg-gradient-to-br from-primary to-primary-hover text-white ${compact ? "p-4" : "p-6"
+              }`}
           >
             <p className={`text-white/80 ${compact ? "text-xs" : "text-sm"}`}>
               {t("specs.wholesalePrice", "Wholesale B2B Price")}
@@ -821,7 +816,7 @@ export default function PortalProductDetailView({
           ) : null}
 
           {keySpecs.length > 0 ? (
-            <div className={`${cardClass} hidden lg:block ${compact ? "p-4" : "p-5"}`}>
+            <div className={`${cardClass} ${compact ? "p-4" : "p-5"}`}>
               <h3 className={`mb-3 font-semibold text-foreground ${compact ? "text-sm" : "mb-4 text-base"}`}>
                 {t("specs.keySpecifications", "Key Specifications")}
               </h3>
@@ -844,23 +839,6 @@ export default function PortalProductDetailView({
 
       <div className={`grid grid-cols-1 lg:grid-cols-12 ${compact ? "mt-5 gap-5" : "mt-8 gap-8"}`}>
         <div className={`${isSellerView ? "lg:col-span-12" : "lg:col-span-8"} ${compact ? "space-y-5" : "space-y-8"}`}>
-          {keySpecs.length > 0 ? (
-            <PortalSection
-              title={t("specs.keySpecifications", "Key Specifications")}
-              subtitle={t("specs.fromProductDetails", "From product details")}
-              compact={compact}
-            >
-              <div className="flex gap-3 overflow-x-auto pb-1 lg:hidden">
-                {keySpecs.map((spec) => (
-                  <div key={spec.label} className={`${cardClass} shrink-0 px-4 py-3`}>
-                    <p className="text-xs font-semibold text-muted-fg">{spec.label}</p>
-                    <p className="mt-0.5 text-sm font-semibold text-foreground">{spec.value}</p>
-                  </div>
-                ))}
-              </div>
-            </PortalSection>
-          ) : null}
-
           <PortalSection title={t("specs.aboutProduct", "About this Product")} compact={compact}>
             <div className={`${cardClass} ${compact ? "p-4" : "p-5 lg:p-6"}`}>
               {description ? (
@@ -890,17 +868,27 @@ export default function PortalProductDetailView({
             </div>
           </PortalSection>
 
+          <ProductSpecificationsSection
+            specifications={rawSpecifications}
+            compact={compact}
+          />
+
           {fullSpecs.length > 0 ? (
-            <PortalSection title={t("specs.productSpecifications", "Product Specifications")} compact={compact}>
+            <PortalSection
+              title={
+                hasCustomSpecs
+                  ? t("specs.generalDetails", "General Information")
+                  : t("specs.productSpecifications", "Product Specifications")
+              }
+              compact={compact}
+            >
               <div className={`${cardClass} overflow-hidden`}>
                 {fullSpecs.map((spec, i) => (
                   <div
                     key={`${spec.label}-${i}`}
-                    className={`grid grid-cols-2 gap-3 ${
-                      compact ? "px-4 py-2.5" : "gap-4 px-5 py-3.5"
-                    } ${
-                      i < fullSpecs.length - 1 ? "border-b border-border" : ""
-                    } ${i % 2 === 0 ? "bg-card" : "bg-muted"}`}
+                    className={`grid grid-cols-2 gap-3 ${compact ? "px-4 py-2.5" : "gap-4 px-5 py-3.5"
+                      } ${i < fullSpecs.length - 1 ? "border-b border-border" : ""
+                      } ${i % 2 === 0 ? "bg-card" : "bg-muted"}`}
                   >
                     <span className="text-sm text-muted-fg">{spec.label}</span>
                     <span className="text-sm font-bold text-foreground">{spec.value}</span>
