@@ -11,12 +11,10 @@ import {
   ChevronDown,
   Clock,
   Heart,
-  Mail,
   MapPin,
   MessageCircle,
   Package,
   Pencil,
-  Phone,
   Play,
   Share2,
   ShoppingBag,
@@ -246,8 +244,6 @@ function SupplierCard({
   const { t } = useLanguage();
   const { seller } = product;
   const contactPhone = getSellerContactPhone(product);
-  const contactPhoneDisplay = seller.contact?.phone;
-  const contactEmail = seller.contact?.email;
 
   const [logoFailed, setLogoFailed] = useState(false);
   const companyName = seller.company?.name?.trim() || "Supplier";
@@ -358,24 +354,6 @@ function SupplierCard({
             aria-label="Contact on WhatsApp"
           >
             <MessageCircle className="h-5 w-5" />
-          </a>
-        ) : null}
-        {contactPhoneDisplay ? (
-          <a
-            href={`tel:${contactPhoneDisplay}`}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-primary-soft text-primary transition hover:border-primary/30"
-            aria-label="Call seller"
-          >
-            <Phone className="h-5 w-5" />
-          </a>
-        ) : null}
-        {contactEmail ? (
-          <a
-            href={`mailto:${contactEmail}`}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-warning/20 bg-warning-soft text-accent transition hover:border-warning/40"
-            aria-label="Email seller"
-          >
-            <Mail className="h-5 w-5" />
           </a>
         ) : null}
       </div>

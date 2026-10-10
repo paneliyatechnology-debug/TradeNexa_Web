@@ -144,8 +144,6 @@ export function buildProductSpecs(
   const stockQuantity = inventory?.stock_quantity ?? product.stock_quantity;
   const companyName = seller?.company?.name;
   const locationAddress = seller?.location?.address;
-  const contactEmail = seller?.contact?.email;
-  const contactPhone = seller?.contact?.phone;
 
   const keySpecs: ProductSpecRow[] = [
     basic.brand && { label: tr("specs.brand", "Brand"), value: basic.brand.name },
@@ -176,8 +174,6 @@ export function buildProductSpecs(
     { label: tr("specs.lastUpdated", "Last Updated"), value: formatListedAgo(product.updated_at) },
     companyName && { label: tr("specs.supplier", "Supplier"), value: companyName },
     locationAddress && { label: tr("specs.supplierAddress", "Supplier Address"), value: locationAddress },
-    contactEmail && { label: tr("specs.supplierEmail", "Supplier Email"), value: contactEmail },
-    contactPhone && { label: tr("specs.supplierPhone", "Supplier Phone"), value: contactPhone },
   ].filter(Boolean) as ProductSpecRow[];
 
   return { keySpecs, fullSpecs };

@@ -25,7 +25,6 @@ import {
   Heart,
   MessageCircle,
   Package,
-  Phone,
   Share2,
   ShoppingBag,
   Sparkles,
@@ -230,7 +229,6 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
 
   const inquiryMessage = `Hi, I'm interested in "${basic.name}" listed on TradeNexa. Please share more details.`;
   const contactHref = `/contact?product=${encodeURIComponent(basic.name)}&seller=${encodeURIComponent(seller.company?.name ?? "Supplier")}`;
-  const phone = seller.contact?.phone;
   const whatsapp = seller.contact?.whatsapp || seller.contact?.phone;
 
   const handleShare = async () => {
@@ -502,15 +500,6 @@ export default function ProductDetailView({ product }: ProductDetailViewProps) {
                     >
                       <MessageCircle className="h-4 w-4" />
                       {t("specs.whatsapp", "WhatsApp")}
-                    </a>
-                  )}
-                  {phone && (
-                    <a
-                      href={`tel:${phone}`}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-6 py-3.5 text-sm font-bold text-foreground transition hover:bg-muted"
-                    >
-                      <Phone className="h-4 w-4" />
-                      Call
                     </a>
                   )}
                 </>
